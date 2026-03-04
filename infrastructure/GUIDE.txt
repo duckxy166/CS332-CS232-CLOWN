@@ -1,0 +1,1 @@
+โค้ดเพื่อสั่งให้ AWS สร้าง Server, Database หรือ Network ให้เราอัตโนมัติ

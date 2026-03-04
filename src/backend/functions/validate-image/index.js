@@ -1,0 +1,1 @@
+// * Lambda: validate-image
