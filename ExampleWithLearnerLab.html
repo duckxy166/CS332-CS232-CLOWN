@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ทดสอบ AWS Rekognition (Student Lab)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; }
+        .box { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        #result { background: #f9f9f9; padding: 10px; white-space: pre-wrap; min-height: 50px; }
+        img { max-width: 100%; margin-top: 10px; border-radius: 4px; display: none; }
+    </style>
+</head>
+<body>
+
+    <h2>ระบบตรวจภาพ Rekognition</h2>
+    
+    <input type="file" id="imageInput" accept="image/jpeg, image/png">
+    <button id="uploadBtn"> check </button>
+    
+    <img id="preview" alt="Image Preview">
+
+    <div class="box">
+        <strong>ผลการตรวจจับ:</strong>
+        <div id="result">????</div>
+    </div>
+
+    <script type="module">
+        import { RekognitionClient, DetectLabelsCommand } from "https://cdn.jsdelivr.net/npm/@aws-sdk/client-rekognition@3/+esm";
+
+        //เอา Key จาก aws detail ในหน้า learner lab 
+        const AWS_REGION = "us-east-1"; 
+        const ACCESS_KEY = "xxx";//access key ใน learner lab
+        const SECRET_KEY = "xxx";// secret key ใน learner lab
+        // token key ใน learner lab
+        const SESSION_TOKEN = "xxxxx";
+        // ตั้งค่า Client สำหรับlearner Lab
+        const client = new RekognitionClient({
+            region: AWS_REGION,
+            credentials: {
+                accessKeyId: ACCESS_KEY,
+                secretAccessKey: SECRET_KEY,
+                sessionToken: SESSION_TOKEN 
+            }
+        });
+
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const resultDiv = document.getElementById('result');
+
+        imageInput.addEventListener('change', (e) => {
+            if(e.target.files[0]){
+                preview.src = URL.createObjectURL(e.target.files[0]);
+                preview.style.display = 'block';
+            }
+        });
+
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const file = imageInput.files[0];
+            if (!file) {
+                alert("กรุณาเลือกรูปด้วย");
+                return;
+            }
+
+            resultDiv.innerText = "กำลังใช้ AI ตรวจรูป... รอแป๊บ";
+
+            const arrayBuffer = await file.arrayBuffer();
+            const imageBytes = new Uint8Array(arrayBuffer);
+
+            const command = new DetectLabelsCommand({
+                Image: { Bytes: imageBytes },
+                MaxLabels: 10,       
+                MinConfidence: 70    
+            });
+
+            try {
+                const response = await client.send(command);
+                
+                let outputText = "";
+                response.Labels.forEach(label => {
+                    outputText += `✅ พบ: ${label.Name} (ความมั่นใจ: ${label.Confidence.toFixed(2)}%)\n`;
+                });
+                
+                resultDiv.innerText = outputText || "Rekognition มองไม่ออก ลองรูปอื่นดูไหม?";
+
+            } catch (error) {
+                console.error("Error:", error);
+                resultDiv.innerText = `มี error:\n${error.message}\n(บางที Key อาจจะหมดอายุ ลองก๊อปมาใส่ใหม่ดู)`;
+            }
+        });
+    </script>
+</body>
+</html>
