@@ -28,16 +28,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             // Status 200 with status: true means success
-            if (response.ok && data.status) {
+           if (response.ok && data.status) {
                 console.log('Login successful data:', data);
                 messageDiv.textContent = 'Login successful! Welcome, ' + (data.displayname_en || data.username);
                 messageDiv.style.color = 'green';
 
-                // Example of redirecting and storing user data
-                // localStorage.setItem('user', JSON.stringify(data));
-                // setTimeout(() => {
-                //     window.location.href = 'index.html';
-                // }, 1000);
+                // เก็บข้อมูลผู้ใช้ไว้ในเครื่อง
+                localStorage.setItem('user', JSON.stringify(data));
+
+                // รอ 1 วินาทีแล้วเปลี่ยนหน้าไปที่ main.html
+                setTimeout(() => {
+                    window.location.href = 'main.html';
+                }, 1000);
             } else {
                 // API returned 400 Bad Request or status: false
                 console.error('Login failed data:', data);

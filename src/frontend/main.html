@@ -6,18 +6,40 @@
 </head>
 <body>
 
+    <h1>ยินดีต้อนรับสู่ระบบตรวจงาน</h1>
+    <p id="userDisplay"></p>
+
+    <hr>
+
+    <h3>เมนูการทำงาน</h3>
     <ul>
-        <li><a href="dashboard.html">สรุปภาพรวมระบบ (Dashboard)</a></li>
-        <li><a href="task-list.html">รายการงานทั้งหมด (Task List)</a></li>
-        <li><a href="new-inspection.html">สร้างแบบตรวจงานใหม่ (New Inspection)</a></li>
-        <li><a href="pending-tasks.html">งานที่รอการตรวจสอบ (Pending)</a></li>
-        <li><a href="rejected-tasks.html">งานที่ต้องแก้ไข (Rejected)</a></li>
-        <li><a href="approved-tasks.html">งานที่ผ่านการอนุมัติ (Approved)</a></li>
-        <li><a href="reports.html">ออกรายงานสรุปผล (Reports)</a></li>
-        <li><a href="user-management.html">จัดการรายชื่อผู้ตรวจและพนักงาน (User Management)</a></li>
-        <li><a href="settings.html">ตั้งค่าระบบ (Settings)</a></li>
-        <li><a href="logout.html">ออกจากระบบ (Logout)</a></li>
+        <li><a href="index.html">ส่งงานและอัปโหลดรูปภาพ (Upload)</a></li>
+        <li><a href="task-list.html">ดูรายการรูปภาพและสถานะ (View Submissions)</a></li>
     </ul>
+
+    <hr>
+
+    <button onclick="logout()">ออกจากระบบ (Logout)</button>
+
+    <script>
+        // ตรวจสอบว่าได้ Login หรือยัง
+        const userData = localStorage.getItem('user');
+        
+        if (!userData) {
+            // ถ้าไม่มีข้อมูล ให้เด้งกลับไปหน้า Login
+            window.location.href = 'login.html';
+        } else {
+            // แสดงชื่อผู้ใช้ที่ Login เข้ามา
+            const user = JSON.parse(userData);
+            document.getElementById('userDisplay').innerText = "ผู้ใช้งาน: " + (user.displayname_en || user.username);
+        }
+
+        // ฟังก์ชัน Logout
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+    </script>
 
 </body>
 </html>
