@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <title>หน้าหลัก - ระบบตรวจงาน</title>
 </head>
+
 <body>
 
     <h1>ยินดีต้อนรับสู่ระบบตรวจงาน</h1>
@@ -15,31 +17,14 @@
     <ul>
         <li><a href="index.html">ส่งงานและอัปโหลดรูปภาพ (Upload)</a></li>
         <li><a href="task-list.html">ดูรายการรูปภาพและสถานะ (View Submissions)</a></li>
+        <li><a href="ExampleWithLearnerLab.html">ทดสอบระบบ AI ตรวจภาพ (Example With Learner Lab)</a></li>
     </ul>
 
     <hr>
 
     <button onclick="logout()">ออกจากระบบ (Logout)</button>
 
-    <script>
-        // ตรวจสอบว่าได้ Login หรือยัง
-        const userData = localStorage.getItem('user');
-        
-        if (!userData) {
-            // ถ้าไม่มีข้อมูล ให้เด้งกลับไปหน้า Login
-            window.location.href = 'login.html';
-        } else {
-            // แสดงชื่อผู้ใช้ที่ Login เข้ามา
-            const user = JSON.parse(userData);
-            document.getElementById('userDisplay').innerText = "ผู้ใช้งาน: " + (user.displayname_en || user.username);
-        }
-
-        // ฟังก์ชัน Logout
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
-    </script>
-
+    <script src="main.js"></script>
 </body>
+
 </html>
