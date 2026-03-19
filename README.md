@@ -61,7 +61,17 @@ src/
 
 5. กด **Save changes**
 
-### 4. ตั้งค่า Lambda (ถ้าใช้ backend)
+### 4. ตั้ง Lifecycle Policy (ลบไฟล์เก่าอัตโนมัติ)
+
+ตั้ง policy ให้ S3 ลบไฟล์ submissions ที่อายุเกิน 30 วันโดยอัตโนมัติ:
+
+```bash
+./scripts/setup-lifecycle-policy.sh ชื่อ-bucket
+```
+
+script จะเช็ค bucket, แสดง policy ปัจจุบัน, ถาม confirm ก่อน apply
+
+### 5. ตั้งค่า Lambda (ถ้าใช้ backend)
 
 Learner Lab มี Lambda `ProcessImageWithRekognition` ให้อยู่แล้ว ถ้าจะสร้างเอง:
 
