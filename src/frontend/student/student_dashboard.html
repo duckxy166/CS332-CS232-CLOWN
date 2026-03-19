@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CLOWN – availableLAB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="dashboard_style.css"/>
+</head>
+<body>
+ 
+  <!-- HEADER -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <img class="logo-img" src="clown2.png" alt="CLOWN logo"/>
+      <span class="logo-text">CLOWN</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-name" id="user-name">กำลังโหลด...</span>
+      <div class="avatar"></div>
+      <button class="logout-btn" title="Logout">
+        <span class="logout-icon"></span>
+      </button>
+    </div>
+  </nav>
+ 
+  <!-- MAIN -->
+  <main class="main-content">
+ 
+    <!-- SEARCH -->
+    <div class="search-wrapper">
+      <input type="text" class="search-input" placeholder="courses search" id="search-input"/>
+      <button class="search-btn">
+        <span class="search-icon"></span>
+      </button>
+    </div>
+ 
+    <!-- CONTENT GRID -->
+    <div class="content-grid">
+ 
+      <!-- ALL LAB -->
+      <section class="section-all-lab">
+        <h2 class="section-title">All Lab</h2>
+        <div class="lab-grid" id="lab-grid"></div>
+      </section>
+ 
+      <!-- DIVIDER -->
+      <div class="vertical-divider"></div>
+ 
+      <!-- PRIORITY TO-DO -->
+      <section class="section-priority">
+        <h2 class="section-title">Priority To-do <span class="clock-icon">🕐</span></h2>
+        <div class="priority-card" id="priority-list"></div>
+      </section>
+ 
+    </div>
+  </main>
+ 
+  <script src="dachboad_script.js"></script>
+</body>
+</html>
