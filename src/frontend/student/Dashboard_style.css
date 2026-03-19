@@ -1,0 +1,154 @@
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body { background-color: #f5ede3; color: #333; }
+
+/* Navbar โค้งตามรูป */
+header {
+    background-color: #6d8299;
+    color: white;
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom-left-radius: 35px;
+    border-bottom-right-radius: 35px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    font-size: 1.4rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.avatar {
+    width: 35px;
+    height: 35px;
+    background: #ddd;
+    border-radius: 50%;
+}
+
+/* Layout */
+.container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+.search-container {
+    position: relative;
+    margin-bottom: 40px;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 12px 25px;
+    border-radius: 30px;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    outline: none;
+}
+.search-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1px 350px;
+    gap: 40px;
+}
+.divider {
+    background-color: #aaa;
+    height: 80%;
+    align-self: center;
+}
+h2 {
+    margin-bottom: 25px;
+    border-bottom: 2px solid #555;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+
+/* Lab Card */
+.lab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+.lab-card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.05);
+}
+
+.badge {
+    background: #b8c6db;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+.card-header {
+    margin-bottom: 20px;
+    color: #666; font-size: 0.9rem;
+}
+
+
+.lab-item {
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.lab-item:last-child {
+    border-bottom: none;
+}
+
+/* ทำให้ Due ชิดขวา */
+.lab-info-row {
+    display: flex;
+    justify-content: space-between; /* ดันซ้าย-ขวา */
+    align-items: center;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+
+/* Priority Section */
+.todo-container {
+    background: #ccd9e6;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.05);
+}
+.todo-item {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.deadline {
+    color: #d9534f;
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
