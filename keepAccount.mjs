@@ -8,9 +8,9 @@ const dynamoClient = new DynamoDBClient({});
 const dynamoDb = DynamoDBDocumentClient.from(dynamoClient);
 const cognitoClient = new CognitoIdentityProviderClient({});
 
-// --- กำหนด ชื่อ Table ใน DynamoDB & UserPool ID ตรงนี้ !!!!!!!!!!!!!!!!!
+// --- ใส่ Table Name ที่สร้างไว้ใน DynamoDB กับ UserPool ID ของ Cognito ที่สร้างไว้
 const TABLE_NAME = "User"; 
-const USER_POOL_ID = "us-east-1_zYQ70T0Jc"; 
+const USER_POOL_ID = "us-east-1_xxxxxxxxx"; 
 // -------------------------
 
 export const handler = async (event) => {
@@ -26,41 +26,57 @@ export const handler = async (event) => {
         const lines = csvString.split('\n').filter(line => line.trim() !== '');
 
         if (lines.length < 2) {
-            console.log("ไฟล์ว่างเปล่า หรือมีแค่หัวคอลัมน์");
             return { statusCode: 200, body: 'Empty file' };
         }
 
         const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
 
-        const idxUserID = headers.indexOf('userid');
+        const idxUserID = headers.indexOf('userid'); 
         const idxClassID = headers.indexOf('classid');
         const idxSection = headers.indexOf('section');
         const idxEmail = headers.indexOf('email');
         const idxRole = headers.indexOf('role');
 
-        if ([idxUserID, idxClassID, idxSection, idxEmail, idxRole].includes(-1)) {
-             throw new Error(`CSV ขาดคอลัมน์ที่จำเป็น! : ${headers.join(', ')}`);
+        if ([idxClassID, idxSection, idxEmail, idxRole].includes(-1)) {
+             throw new Error(`CSV ขาดคอลัมน์ที่จำเป็น (ต้องมี classID, section, email, Role)`);
         }
 
-        console.log("ตรวจสอบหัวคอลัมน์ผ่าน กำลังเริ่มดึงข้อมูล...");
-
-        // วนลูปอ่านข้อมูลทีละบรรทัด 
         for (let i = 1; i < lines.length; i++) { 
             const currentline = lines[i].split(',');
             
-            // เช็คว่าบรรทัดนี้มีข้อมูลครบตามจำนวนหัวคอลัมน์
-            if (currentline.length >= 5) {
+            if (currentline.length >= 4) {
                 
-                // ดึงข้อมูลตามตำแหน่งที่หามาได้แบบอัตโนมัติ
+                const userEmail = currentline[idxEmail] ? currentline[idxEmail].trim() : "";
+                const userRole = currentline[idxRole] ? currentline[idxRole].trim() : "Student";
+                
+                // 1. ดึง UserID (ถ้าในไฟล์ CSV มีและไม่ว่าง)
+                let rawUserID = "";
+                if (idxUserID !== -1 && currentline[idxUserID]) {
+                    rawUserID = currentline[idxUserID].trim();
+                }
+
+                // 2. ถ้าไม่มี UserID (หรือเว้นว่างมา)
+                if (!rawUserID) {
+                    if (userRole.toLowerCase() === 'ta') {
+                        // ถ้าเป็น TA -> สุ่มให้
+                        const uniqueNumber = Math.floor(10000 + Math.random() * 90000) + Date.now().toString().slice(-2);
+                        rawUserID = "TA-" + uniqueNumber; 
+                    } else {
+                        // 
+                        console.error(`ข้ามบรรทัดที่ ${i + 1}: อีเมล ${userEmail} เป็น Student แต่ไม่มี UserID (รหัสนักศึกษา)`);
+                        continue; 
+                    }
+                }
+
                 const user = {
-                    UserID: currentline[idxUserID].trim(),
-                    classID: currentline[idxClassID].trim(),
-                    section: currentline[idxSection].trim(),
-                    email: currentline[idxEmail].trim(),
-                    Role: currentline[idxRole].trim()
+                    UserID: rawUserID,
+                    classID: currentline[idxClassID] ? currentline[idxClassID].trim() : "",
+                    section: currentline[idxSection] ? currentline[idxSection].trim() : "",
+                    email: userEmail,
+                    Role: userRole
                 };
 
-                // ใช้ตัวนี้ส่งให้ DynamoDB เก็บ
+                // ส่งไปให้ DynamoDB
                 const dynamoParams = {
                     TableName: TABLE_NAME,
                     Item: {
@@ -73,7 +89,7 @@ export const handler = async (event) => {
                 };
                 await dynamoDb.send(new PutCommand(dynamoParams));
 
-                // สร้าง User ใน Cognito
+                // ส่งไปให้ Cognito
                 const cognitoParams = {
                     UserPoolId: USER_POOL_ID,
                     Username: user.email,
@@ -90,7 +106,7 @@ export const handler = async (event) => {
                     console.log(`สร้างบัญชีสำเร็จ: ${user.email}`);
                 } catch (error) {
                     if (error.name === 'UsernameExistsException') {
-                        console.log(`บัญชี ${user.email} มีอยู่แล้ว (ข้ามการสร้างใหม่)`);
+                        console.log(`บัญชี ${user.email} มีอยู่แล้ว (อัปเดตข้อมูลวิชาเรียบร้อย)`);
                     } else {
                         console.error(`Error สร้างบัญชี ${user.email}:`, error);
                     }
