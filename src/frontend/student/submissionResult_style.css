@@ -1,69 +1,120 @@
 :root {
     --bg-color: #f5eee6;
-    --nav-color: #6a829a;
+    --nav-color: #5D768C; /* เปลี่ยนเป็นสีเดียวกับ Dashboard */
     --card-dark: #5c6e82;
     --card-failed: #8a5a5a;
     --card-white: #ffffff;
     --success-green: #7ed321;
     --error-red: #ff4d4f;
-    --text-dark: #333;
-    --font-main: 'Kanit', sans-serif;
+    --font-main: 'Nunito', sans-serif;
+    --font-th: 'Sarabun', sans-serif;
 }
 
 body {
     margin: 0;
     font-family: var(--font-main);
     background-color: var(--bg-color);
+    /* ใช้ Grid จัดให้ Navbar อยู่บนสุด และ Content กินพื้นที่ที่เหลือ */
     display: grid;
     grid-template-rows: auto 1fr;
     height: 100vh;
 }
 
-/* ==================
-   อัปเดต Navbar CSS 
-   ================== */
+/* =========================================
+   1. HEADER (ดีไซน์เดียวกับหน้า Dashboard เป๊ะ)
+========================================= */
 .navbar {
     background-color: var(--nav-color);
     color: white;
-    padding: 10px 40px;
-    display: grid;
-    grid-template-columns: max-content max-content;
-    justify-content: space-between;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 60px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    /* เอาขอบโค้งด้านล่างออกหรือใส่ตาม Dashboard ของคุณ */
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
 }
 
 .nav-logo {
-    display: grid;
-    grid-template-columns: auto auto;
+    display: flex;
     align-items: center;
     gap: 10px;
+    cursor: pointer;
 }
-.logo-img { height: 35px; width: auto; object-fit: contain; }
-.logo-text { font-size: 20px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.nav-logo:hover .logo-img {
+    transform: scale(1.1) rotate(-5deg); /* เอฟเฟกต์ตอนชี้โลโก้ */
+}
+
+.logo-text {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
 
 .nav-right {
-    display: grid;
-    grid-template-columns: auto auto auto;
+    display: flex;
     align-items: center;
     gap: 15px;
 }
-.nav-name { font-size: 16px; }
-.avatar { width: 35px; height: 35px; background: #ddd; border-radius: 50%; }
-.logout-btn { background: none; border: none; color: white; cursor: pointer; display: grid; place-items: center; padding: 0; transition: opacity 0.2s;}
-.logout-btn:hover { opacity: 0.8; }
 
-/* ==================
-   Main Content Area 
-   ================== */
+.nav-name {
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.1);
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
+/* =========================================
+   2. MAIN CONTENT & CARD (ดีไซน์เดิมของคุณ)
+========================================= */
 .content-area {
     display: grid;
     place-items: center;
     padding: 20px;
 }
 
-/* Card */
 .result-card {
     background: white;
     width: 100%;
@@ -107,7 +158,6 @@ body {
     font-size: 14px;
 }
 
-/* Card Body */
 .card-body { 
     padding: 25px 35px;
     display: grid;
@@ -137,7 +187,6 @@ body {
 .status-icon.failed { color: var(--error-red); border: 1.5px solid var(--error-red); }
 .status-text { font-size: 14px; color: #555; }
 
-/* Buttons */
 .card-footer {
     padding: 0 35px 35px;
     display: grid;
@@ -145,14 +194,16 @@ body {
     gap: 15px;
 }
 
-.btn { padding: 10px; border-radius: 12px; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: 0.2s; text-align: center; }
+.btn { padding: 10px; border-radius: 12px; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: 0.2s; text-align: center; text-decoration: none; display: flex; justify-content: center; align-items: center;}
 .btn-secondary { background-color: #d8e1e8; color: #444; }
 .btn-outline { background: white; border: 1px solid #ccc; color: #444; }
 .btn:hover { filter: brightness(0.95); }
 
-/* Responsive */
+/* =========================================
+   3. RESPONSIVE (สำหรับมือถือ)
+========================================= */
 @media (max-width: 600px) {
-    .navbar { padding: 10px 20px; }
+    .navbar { padding: 0 16px; }
     .nav-name { display: none; } /* ซ่อนชื่อบนจอมือถือ */
     .card-body { padding: 20px; }
     .card-footer { padding: 0 20px 25px; grid-template-columns: 1fr; gap: 10px; }

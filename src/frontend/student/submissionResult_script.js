@@ -1,8 +1,6 @@
 // ==========================================
-// 1. Mock Data (จำลองข้อมูลที่ตอบกลับมาจาก Backend)
+// 1. Mock Data (ข้อมูลจำลอง)
 // ==========================================
-
-// กรณีที่ 1: ผ่านทั้งหมด (นำมาใช้เป็นค่าเริ่มต้น)
 const mockDataSuccess = {
     labId: "Lab 01: xxxxxxxxxxxxxxx",
     isOverallSuccess: true,
@@ -13,19 +11,8 @@ const mockDataSuccess = {
     ]
 };
 
-// กรณีที่ 2: มีบางอันไม่ผ่าน (เตรียมไว้เผื่อทดสอบ)
-const mockDataFailed = {
-    labId: "Lab 01: xxxxxxxxxxxxxxx",
-    isOverallSuccess: false,
-    steps: [
-        { task: "successfully created", status: "success" },
-        { task: "integration-lab", status: "failed" }, 
-        { task: "us-east-1", status: "success" }
-    ]
-};
-
 // ==========================================
-// 2. ฟังก์ชันหลักสำหรับ Render ข้อมูลลงหน้าจอ
+// 2. ฟังก์ชันหลักสำหรับแสดงผล
 // ==========================================
 function renderResult(data) {
     const headerContainer = document.getElementById('main-status-header');
@@ -34,10 +21,12 @@ function renderResult(data) {
     const labNameText = document.getElementById('lab-name');
     const listContainer = document.getElementById('status-list-container');
 
+    if (!headerContainer || !listContainer) return;
+
     // อัปเดตชื่อ Lab
     labNameText.textContent = data.labId;
 
-    // ตรวจสอบสถานะภาพรวม
+    // เปลี่ยนสีและข้อความตามสถานะ
     if (data.isOverallSuccess) {
         headerContainer.classList.remove('is-failed');
         mainIcon.textContent = "✓";
@@ -48,9 +37,8 @@ function renderResult(data) {
         mainText.textContent = "ไม่ผ่านการตรวจสอบ";
     }
 
-    // ล้างข้อมูลเดิมและวาดรายการสถานะย่อย
+    // วาดรายการย่อย
     listContainer.innerHTML = ''; 
-
     data.steps.forEach(step => {
         const isSuccess = step.status === 'success';
         const iconClass = isSuccess ? 'success' : 'failed';
@@ -67,35 +55,19 @@ function renderResult(data) {
 }
 
 // ==========================================
-// 3. จำลองการดึง API เมื่อหน้าเว็บโหลดเสร็จ
+// 3. เริ่มทำงานเมื่อเปิดหน้าเว็บ
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // จำลองเวลาดีเลย์เหมือนกำลังดึง API (0.5 วินาที)
+    // หน่วงเวลา 0.5 วิ ให้เหมือนโหลดจริง แล้วค่อยแสดงข้อมูล
     setTimeout(() => {
-        // *** เปลี่ยนตรงนี้เป็น mockDataSuccess เพื่อให้ขึ้นสถานะผ่านทั้งหมด ***
         renderResult(mockDataSuccess); 
     }, 500);
-
 });
 
 // ==========================================
-// 4. ฟังก์ชันของปุ่มต่างๆ
+// 4. ฟังก์ชันปุ่มกด
 // ==========================================
 function goBack() {
-    alert("ระบบกำลังพากลับสู่หน้าหลัก");
-    // window.location.href = "/home";
-}
-
-function viewEvidence() {
-    alert("กำลังเปิดไฟล์หลักฐาน");
-}
-
-// ==========================================
-// ฟังก์ชันของปุ่มต่างๆ
-// ==========================================
-function goBack() {
-    // เปลี่ยนเส้นทางไปที่ไฟล์ student_dashboard.html ที่อยู่ในโฟลเดอร์เดียวกัน
     window.location.href = "student_dashboard.html";
 }
 
