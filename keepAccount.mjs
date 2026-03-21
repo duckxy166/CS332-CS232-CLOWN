@@ -81,10 +81,10 @@ export const handler = async (event) => {
                         { Name: "email_verified", Value: "true" }, //เสกให้ verify มาแล้ว
                         { Name: "custom:role", Value: userRole }
                     ],
-                    TemporaryPassword: `test1234`, // ตั้งรหัสผ่านแรกเข้า 
+                    TemporaryPassword: `Test1234!`, // ตั้งรหัสผ่านแรกเข้า 
                     MessageAction: "SUPPRESS" 
                 }));
-                console.log(`สร้างบัญชีสำเร็จ: ไอดี ${rawUserID} (รหัสผ่าน: test1234`);
+                console.log(`สร้างบัญชีสำเร็จ: ไอดี ${rawUserID} (รหัสผ่าน: Test1234!`);
                 
             } catch (error) {
                 if (error.name === 'UsernameExistsException') {
