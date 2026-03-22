@@ -1,0 +1,210 @@
+:root {
+    --bg-color: #f5eee6;
+    --nav-color: #5D768C; /* เปลี่ยนเป็นสีเดียวกับ Dashboard */
+    --card-dark: #5c6e82;
+    --card-failed: #8a5a5a;
+    --card-white: #ffffff;
+    --success-green: #7ed321;
+    --error-red: #ff4d4f;
+    --font-main: 'Nunito', sans-serif;
+    --font-th: 'Sarabun', sans-serif;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-main);
+    background-color: var(--bg-color);
+    /* ใช้ Grid จัดให้ Navbar อยู่บนสุด และ Content กินพื้นที่ที่เหลือ */
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+}
+
+/* =========================================
+   1. HEADER (ดีไซน์เดียวกับหน้า Dashboard เป๊ะ)
+========================================= */
+.navbar {
+    background-color: var(--nav-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 60px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    /* เอาขอบโค้งด้านล่างออกหรือใส่ตาม Dashboard ของคุณ */
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.nav-logo:hover .logo-img {
+    transform: scale(1.1) rotate(-5deg); /* เอฟเฟกต์ตอนชี้โลโก้ */
+}
+
+.logo-text {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-name {
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.1);
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
+/* =========================================
+   2. MAIN CONTENT & CARD (ดีไซน์เดิมของคุณ)
+========================================= */
+.content-area {
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.result-card {
+    background: white;
+    width: 100%;
+    max-width: 450px;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    background-color: var(--card-dark);
+    color: white;
+    text-align: center;
+    padding: 30px 20px 20px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    transition: background-color 0.3s;
+}
+
+.card-header.is-failed { background-color: var(--card-failed); }
+.card-header h2 { margin: 10px 0 5px; font-weight: 500; font-size: 22px;}
+.card-header p { margin: 0; font-size: 14px; opacity: 0.8; }
+
+.check-icon-wrapper {
+    background: rgba(255,255,255,0.2);
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    border-radius: 15px;
+    display: grid;
+    place-items: center;
+}
+
+.check-icon {
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+}
+
+.card-body { 
+    padding: 25px 35px;
+    display: grid;
+    gap: 12px;
+}
+
+.status-item {
+    background: #f8f1eb;
+    padding: 12px 20px;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-icon {
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+.status-icon.success { color: var(--success-green); border: 1.5px solid var(--success-green); }
+.status-icon.failed { color: var(--error-red); border: 1.5px solid var(--error-red); }
+.status-text { font-size: 14px; color: #555; }
+
+.card-footer {
+    padding: 0 35px 35px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.btn { padding: 10px; border-radius: 12px; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: 0.2s; text-align: center; text-decoration: none; display: flex; justify-content: center; align-items: center;}
+.btn-secondary { background-color: #d8e1e8; color: #444; }
+.btn-outline { background: white; border: 1px solid #ccc; color: #444; }
+.btn:hover { filter: brightness(0.95); }
+
+/* =========================================
+   3. RESPONSIVE (สำหรับมือถือ)
+========================================= */
+@media (max-width: 600px) {
+    .navbar { padding: 0 16px; }
+    .nav-name { display: none; } /* ซ่อนชื่อบนจอมือถือ */
+    .card-body { padding: 20px; }
+    .card-footer { padding: 0 20px 25px; grid-template-columns: 1fr; gap: 10px; }
+}

@@ -1,0 +1,79 @@
+:root {
+    --primary: #5D768C;
+    --bg: #FDFBFA;
+    --card-bg: #FFFFFF;
+}
+
+body {
+    margin: 0;
+    font-family: 'Sarabun', sans-serif;
+    background-color: var(--bg);
+    color: #333;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--primary);
+    padding: 10px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logo-img { height: 35px; }
+.logo-text { font-family: 'Nunito'; font-weight: 800; font-size: 1.2rem; }
+.nav-right { display: flex; align-items: center; gap: 15px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #ccc; border: 2px solid white; }
+.logout-btn { background: none; border: none; color: white; cursor: pointer; }
+
+/* Main Content */
+.container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+.back-link { text-decoration: none; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
+
+.submission-card {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.lab-header h1 { margin: 0; font-family: 'Nunito'; font-weight: 800; font-size: 24px; }
+.lab-sub-detail { margin-top: 8px; color: #666; font-size: 14px; display: flex; gap: 20px; }
+.deadline-label { color: #D32F2F; font-weight: 600; }
+
+.header-line { border: none; border-top: 2px solid var(--primary); margin: 20px 0; }
+
+.status-row { margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+.status-badge {
+    background: #FFF9E6; color: #856404; padding: 5px 15px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; font-family: 'Nunito';
+}
+.status-badge.success { background: #E8F5E9; color: #2E7D32; }
+
+/* Tabs */
+.tabs-list { display: flex; gap: 10px; margin-bottom: 15px; }
+.tab-item {
+    padding: 8px 20px; background: #EEE; border-radius: 20px; cursor: pointer;
+    font-size: 14px; border: none; font-family: 'Sarabun';
+}
+.tab-item.active { background: #C1CDD7; color: #2C3E50; font-weight: 600; }
+
+/* Dropzone */
+.drop-area {
+    border: 2px dashed #CCC; border-radius: 10px; min-height: 250px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #FAFAFA; cursor: pointer; position: relative;
+}
+.cloud-icon { font-size: 40px; margin-bottom: 10px; }
+.main-msg { font-weight: 600; margin: 0; }
+.sub-msg { font-size: 12px; color: #888; margin: 5px 0 0 0; }
+.preview-img { position: absolute; width: 100%; height: 100%; object-fit: contain; background: white; display: none; }
+
+/* Button */
+.btn-submit {
+    width: 100%; background: var(--primary); color: white; border: none;
+    padding: 15px; border-radius: 10px; font-weight: 600; margin-top: 30px; cursor: pointer;
+    font-size: 16px; transition: 0.2s;
+}
+.btn-submit:hover { opacity: 0.9; }

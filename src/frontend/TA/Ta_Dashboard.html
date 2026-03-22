@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>CLOWN – Available Lab (TA Dashboard)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@500;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="TaDashboard_style.css">
+</head>
+<body>
+
+     <!-- HEADER -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <img class="logo-img" src="clown2.png" alt="CLOWN logo"/>
+      <span class="logo-text">CLOWN</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-name" id="user-name">กำลังโหลด...</span>
+      <div class="avatar"></div>
+      <button class="logout-btn" title="Logout">
+        <span class="logout-icon"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+           <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+ 
+  <!-- MAIN -->
+  <main class="main-content">
+ 
+    <!-- SEARCH -->
+    <div class="search-wrapper">
+      <input type="text" class="search-input" placeholder="courses search" id="search-input"/>
+      <button class="search-btn">
+        <span class="search-icon"></span>
+      </button>
+    </div>
+
+    <h1 class="section-title">All Lab</h1>
+ 
+    <!-- CONTENT GRID -->
+    <div class="lab-grid" id="labGrid"></div>
+  </main>
+ 
+  <script src="TaDashboard_script.js"></script>
+</body>
+</html>
