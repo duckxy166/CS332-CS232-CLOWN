@@ -1,0 +1,224 @@
+:root {
+    --bg-page: #F5EFEB;
+    --nav-blue: #5D768C;
+    --card-header: #5D768C;
+    --card-rejected: #2F4156; 
+    --white: #ffffff;
+    --text-dark: #333333;
+    --success: #4caf50;
+    --danger: #f44336;
+    --warning-bg: #fff3e0;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-page); 
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--nav-blue);
+    padding: 10px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Logo Image Styling */
+.logo-container {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.nav-logo-img {
+    height: 45px; 
+    width: auto;
+    object-fit: contain;
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Avatar with User Icon */
+.avatar {
+    width: 38px;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: var(--nav-blue); 
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.avatar:hover {
+    background-color: var(--white);
+    transform: scale(1.1);
+}
+
+.logout-icon {
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.logout-icon:hover {
+    color: #ffcccc;
+}
+
+/* Layout Content */
+.container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.dashboard-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.main-title {
+    font-size: 24px;
+    color: #444;
+    margin: 0;
+}
+
+/* Button Styling */
+.btn-create-lab-modern {
+    background-color: #5e7285;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s;
+}
+
+.btn-create-lab-modern:hover {
+    background-color: #4a5b6a;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.card-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.class-name-display {
+    color: var(--nav-blue); 
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+/* --- ส่วนประกอบของ Lab Card --- */
+.lab-card-modern {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #dbe2e8;
+    border-radius: 12px;
+    padding: 15px 25px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.lab-card-modern:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+.lab-info-main {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    cursor: pointer; /* ทำให้กดที่ชื่อเพื่อแก้ไขได้ */
+}
+
+.lab-icon-box {
+    background: #f7f3f0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    margin-right: 20px;
+    color: #5d768c;
+    font-size: 20px;
+}
+
+.lab-name-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.lab-sub-detail {
+    margin: 3px 0 0;
+    font-size: 14px;
+    color: #888;
+}
+
+.lab-stats-group {
+    display: flex;
+    gap: 35px;
+    margin-right: 30px;
+}
+
+.stat-item { text-align: center; }
+.stat-label { display: block; font-size: 11px; color: #aaa; margin-bottom: 2px; }
+.stat-value { font-size: 16px; font-weight: 600; color: #333; }
+.pending-text { color: #f39c12; }
+
+.btn-download-outline {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+}
+
+.delete-icon {
+    color: #555;
+    margin-left: 15px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.delete-icon:hover { color: #f44336; }
