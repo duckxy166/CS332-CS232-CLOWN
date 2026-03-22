@@ -7,8 +7,17 @@ const db = new DynamoDBClient({ region: "us-east-1" });
 export const handler = async (event) => {
 
   try {
-    /* ── รับข้อมูลจาก frontend ── */
-    const body = JSON.parse(event.body || event);
+    /* ── parse body ── */
+    let body;
+    if (typeof event.body === 'string') {
+      body = JSON.parse(event.body);
+    } else if (event.body !== undefined) {
+      body = event.body;
+    } else {
+      body = event;
+    }
+
+    console.log('body received:', JSON.stringify(body));
 
     const labID = randomUUID();
 
