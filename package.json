@@ -1,0 +1,25 @@
+{
+  "name": "cs332-cs232-clown-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1012.0",
+    "@aws-sdk/client-lambda": "^3.1012.0",
+    "@aws-sdk/client-rekognition": "^3.1012.0",
+    "@aws-sdk/client-s3": "^3.1012.0",
+    "@aws-sdk/lib-dynamodb": "^3.1012.0",
+    "@aws-sdk/s3-request-presigner": "^3.1012.0"
+  }
+}
