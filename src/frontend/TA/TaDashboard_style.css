@@ -1,0 +1,380 @@
+:root {
+  --bg:            #f5efeb;
+  --navbar-bg:     #5D768C;
+  --navbar-text:   #ffffff;
+  --card-bg:       #ffffff;
+  --priority-card: #c7d9e8;
+  --badge-bg:      #a8c0d4;
+  --badge-text:    #2c4a60;
+  --text-primary:  #2c2c2c;
+  --text-meta:     #6b6b6b;
+  --text-urgent:   #cc2a2a;
+  --divider:       #d0ccc5;
+  --shadow:        0 2px 10px rgba(0, 0, 0, 0.08);
+  --radius-card:   14px;
+  --radius-badge:  20px;
+  --font-main:     'Nunito', sans-serif;
+  --font-th:       'Sarabun', sans-serif;
+}
+ 
+/* RESET & BASE */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+ 
+html, body { height: 100%; }
+ 
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+ 
+/* HEADER */
+.navbar {
+  background-color: var(--navbar-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  animation: fadeIn 0.4s ease both;
+  border-bottom-left-radius: 35px;
+  border-bottom-right-radius: 35px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+ 
+/* โลโก้รูปภาพ */
+.logo-img {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+.nav-logo:hover .logo-img {
+  animation: logoBounce 0.6s ease;
+}
+ 
+.logo-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--navbar-text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+ 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+ 
+.nav-name {
+  color: var(--navbar-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+ 
+/* Avatar ขยายเมื่อ hover */
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.avatar:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+ 
+/* ปุ่ม Logout เลื่อนขวาเมื่อ hover */
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--navbar-text);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+} 
+ 
+/* MAIN CONTENT */
+.main-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+ 
+/* SEARCH BAR */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--card-bg);
+  border-radius: 30px;
+  padding: 0 16px 0 20px;
+  height: 46px;
+  box-shadow: var(--shadow);
+  margin-bottom: 36px;
+  border: 1.5px solid #ddd;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+  animation: fadeInUp 0.5s ease 0.1s both;
+}
+.search-wrapper:focus-within {
+  border-color: var(--navbar-bg);
+  box-shadow: 0 0 0 3px rgba(106, 140, 170, 0.2);
+  transform: scaleX(1.005);
+}
+ 
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: transparent;
+}
+.search-input::placeholder { color: #aaa; }
+ 
+/* ปุ่ม search ขยายเมื่อ hover */
+.search-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-meta);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.search-btn:hover {
+  color: var(--navbar-bg);
+  transform: scale(1.2);
+}
+ 
+/* ไอคอน search ทำจาก CSS ล้วน */
+.search-icon {
+  display: inline-block;
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+ 
+/* วงกลม */
+.search-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border: 2.2px solid currentColor;
+  border-radius: 50%;
+}
+ 
+/* ด้ามจับ */
+.search-icon::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 6px;
+  height: 2.2px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  transform-origin: right center;
+}
+
+ 
+    /* ── HEADING ── */
+    h1.section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 24px; font-weight: 700;
+      color: var(--txt);
+      border-bottom: 3px solid var(--accent);
+      display: inline-block;
+      padding-bottom: 4px;
+      margin-bottom: 28px;
+    }
+ 
+    /* ── GRID ── */
+    .lab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 22px;
+    }
+ 
+    /* ── CARD ── */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      padding: 20px 20px 22px;
+      box-shadow: var(--shadow);
+      transition: transform .2s, box-shadow .2s;
+      animation: fadeUp .4s ease both;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(74,101,128,.22);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+ 
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-meta { display: flex; align-items: center; gap: 10px; }
+    .course-tag {
+      background: var(--tag-bg);
+      color: var(--tag-txt);
+      font-size: 12.5px; font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 50px;
+      letter-spacing: .5px;
+    }
+    .course-name {
+      font-size: 13px; color: var(--sub); font-weight: 600;
+    }
+    .add-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 22px; font-weight: 300;
+      box-shadow: 0 2px 8px rgba(74,101,128,.35);
+      transition: background .2s, transform .2s, box-shadow .2s;
+      flex-shrink: 0;
+    }
+    .add-btn:hover {
+      background: var(--accent-lt);
+      transform: scale(1.12);
+      box-shadow: 0 4px 14px rgba(74,101,128,.4);
+    }
+ 
+    /* ── LAB ITEMS ── */
+    .lab-item { padding: 10px 0 8px; }
+    .lab-item + .lab-item { border-top: 1px solid var(--border); }
+    .lab-name {
+      font-size: 15px; font-weight: 700;
+      color: var(--txt);
+      margin-bottom: 3px;
+    }
+    .lab-info {
+      display: flex; gap: 18px;
+      font-size: 12.5px; color: var(--sub);
+    }
+ 
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--sub);
+      font-size: 15px;
+      grid-column: 1/-1;
+    }
+    .empty-state span { font-size: 42px; display: block; margin-bottom: 10px; }
+ 
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(44,62,80,.45);
+      backdrop-filter: blur(3px);
+      z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 30px 28px;
+      width: 400px; max-width: 94vw;
+      box-shadow: 0 16px 48px rgba(0,0,0,.2);
+      animation: popIn .25s ease;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px; font-weight: 700;
+      color: var(--txt);
+      margin-bottom: 6px;
+    }
+    .modal p.modal-sub {
+      font-size: 13px; color: var(--sub); margin-bottom: 22px;
+    }
+    .modal label {
+      display: block;
+      font-size: 13px; font-weight: 700; color: var(--sub);
+      margin-bottom: 5px; margin-top: 14px;
+    }
+    .modal input, .modal select {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      color: var(--txt);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .modal input:focus, .modal select:focus {
+      border-color: var(--accent-lt);
+    }
+    .modal-actions {
+      display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end;
+    }
+    .btn-cancel {
+      background: #eee; border: none; border-radius: 8px;
+      padding: 9px 20px; font-family: 'Nunito', sans-serif;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      color: var(--sub); transition: background .2s;
+    }
+    .btn-cancel:hover { background: #ddd; }
+    .btn-save {
+      background: var(--accent); border: none; border-radius: 8px;
+      padding: 9px 22px; font-family: 'Nunito', sans-serif;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(74,101,128,.3);
+      transition: background .2s, transform .2s;
+    }
+    .btn-save:hover { background: var(--accent-lt); transform: translateY(-1px); }
+ 
+    /* staggered card animation */
+    .card:nth-child(1) { animation-delay: .05s; }
+    .card:nth-child(2) { animation-delay: .1s; }
+    .card:nth-child(3) { animation-delay: .15s; }
+    .card:nth-child(4) { animation-delay: .2s; }

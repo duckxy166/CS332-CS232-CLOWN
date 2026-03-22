@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Page - CLOWN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="submissionPage_style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo" onclick="window.location.href='student_dashboard.html'">
+           <img class="logo-img" src="image/clown.png" alt="CLOWN" onerror="this.src='https://via.placeholder.com/45?text=C'"/>
+        </div>
+        <div class="nav-right">
+            <span class="nav-name" id="user-name">Student Name</span>
+            <div class="avatar"></div>
+            <button class="logout-btn" title="Logout" onclick="window.location.href='index.html'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <a href="student_dashboard.html" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+            </svg>
+            กลับหน้าหลัก
+        </a>
+
+        <div class="card">
+            
+            <div class="card-header">
+                <h1 class="lab-title" id="lab-title">กำลังโหลดข้อมูล Lab...</h1>
+                <div class="lab-meta">
+                    <span class="course-code" id="course-code">รหัสวิชา : -</span>
+                    <span class="deadline">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0
