@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตั้งค่ากล่องส่งแลป (AI Rules)</title>
+    <link rel="stylesheet" href="taCreateLab.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Kanit:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo-container" onclick="window.location.href='Ta_Dashboard.html'">
+            <img src="../../../image/clown.png" alt="Clown Logo" class="nav-logo-img">
+        </div>
+
+        <div class="user-controls">
+            <div id="user-avatar" class="avatar" onclick="window.location.href='account.html'">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <i class="fa-solid fa-arrow-right-from-bracket logout-icon" onclick="handleLogout()"></i>
+        </div>
+    </header>
+    
+    <div class="container">
+
+        <div class="header-section">
+             <div class="back-link" onclick="window.location.href='taViewsubmission_PAGE.html'">
+                <i class="fa-solid fa-chevron-left"></i> ยกเลิกและกลับ
+            </div>
+            <div class="title-bar">
+                <h1>ตั้งค่ากล่องส่งแลป (AI Rules)</h1>
+                <button id="moreInfoBtn" class="more-info-btn">More Info</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-tag">ข้อมูล Lab</div>
+            <div class="input-group">
+                <label>ชื่อ Lab</label>
+                <input type="text" id="labName" placeholder="เช่น S3 Bucket Creation">
+            </div>
+            
+            <div class="form-row">
+                <div class="input-group">
+                    <label>ชื่อวิชา</label>
+                    <select id="subjectSelect">
+                        <option value="">กำลังโหลดข้อมูล...</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Section</label>
+                    <select id="sectionSelect">
+                        <option value="">เลือก Section</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>คำอธิบาย</label>
+                <textarea id="description" placeholder="เช่น รายละเอียดวิชา..."></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-tag">Reference Image</div>
+            <div class="tab-container" id="tabContainer">
+                <button class="add-tab-btn" id="addTabBtn" type="button">+</button>
+            </div>
+
+            <input type="file" id="fileInput" hidden accept="image/*">
+            <div class="upload-zone" id="uploadZone">
+                <div id="previewContainer" class="preview-mode" style="display: none;">
+                    <img id="imagePreview" src="" alt="Preview">
+                    <div class="preview-overlay">
+                        <button type="button" class="action-img-btn" id="changeImgBtn">เปลี่ยนรูปภาพ</button>
+                        <button type="button" class="action-img-btn btn-danger" id="deleteImgBtn">ลบรูปนี้</button>
+                    </div>
+                </div>
+                <div id="uploadPrompt" class="upload-content">
+                    <span class="upload-icon">🖼️</span>
+                    <p><span class="highlight-text">คลิกเพื่ออัปโหลด</span> <span id="currentTabLabel">รูปที่ 1</span></p>
+                    <p class="sub-text">PNG, JPG ขนาดไม่เกิน 5MB</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-tag">ตั้งค่า Key Rules และ Weight</div>
+            
+            <div class="card-content">
+                <div class="rules-header">
+                    <span>#</span>
+                    <span>Text Keyword Rule (คำที่ต้องตรวจพบ)</span>
+                    <span class="text-center">Weight (%)</span>
+                    <span></span> </div>
+
+                <div id="rulesListContainer"></div>
+
+                <button type="button" class="add-rule-btn" id="addRuleBtn">
+                    + เพิ่ม Key Rule ใน <span id="addRuleTabLabel">รูปที่ 1</span>
+                </button>
+
+                <div class="wbar-block-group" id="wbarBlocksContainer">
+                    </div>
+            </div>
+        </div>
+
+
+
+        <button class="create-lab-full-btn" id="submitBtn" onclick="window.location.href='taView.html'">CREATE LAB</button>
+    </div>
+
+   <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="guide-container">
+                <h3>วิธีที่ระบบคำนวณ Score</h3>
+                <div class="info-block">
+                    <p>⚖️ <strong>Weight</strong>: สัดส่วนคะแนนรวมกันแต่ละรูปต้องได้ 100%</p>
+                    <p>📌 <strong>Mandatory</strong>: ถ้าเปิดไว้ นิสิตต้องผ่านกฎนี้ ไม่งั้นรูปนั้นจะได้ 0 คะแนนทันที</p>
+                    <p>🎯 <strong>Pass Threshold</strong>: คะแนนรวมต่ำสุดที่นิสิตต้องได้ เพื่อให้รูปนั้นถือว่า "ผ่าน"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="taCreateLab.js"></script>
+    
+</body>
+</html>

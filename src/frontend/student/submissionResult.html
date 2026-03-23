@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Result - CLOWN</title>
+    <link rel="stylesheet" href="submissionResult_style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">
+            <img class="logo-img" src="clown2.png" alt="CLOWN logo"/>
+            <span class="logo-text">CLOWN</span>
+        </div>
+        <div class="nav-right">
+            <span class="nav-name" id="user-name">กำลังโหลด...</span>
+            <div class="avatar"></div>
+            <button class="logout-btn" title="Logout">
+                <span class="logout-icon"></span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <main class="content-area">
+        <div class="result-card">
+            <div class="card-header" id="main-status-header">
+                <div class="check-icon-wrapper">
+                    <div class="check-icon" id="main-status-icon">...</div>
+                </div>
+                <h2 id="main-status-text">กำลังตรวจสอบ...</h2>
+                <p id="lab-name">Lab: กำลังโหลดข้อมูล</p>
+            </div>
+            
+            <div class="card-body" id="status-list-container">
+                </div>
+
+            <div class="card-footer">
+                <button class="btn btn-secondary" onclick="goBack()">กลับสู่หน้าหลัก</button>
+                <button class="btn btn-outline" onclick="viewEvidence()">ดูหลักฐานที่ส่ง</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="submissionResult_script.js"></script>
+</body>
+</html>

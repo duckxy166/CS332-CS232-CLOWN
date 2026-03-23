@@ -1,0 +1,394 @@
+:root {
+    --bg-color: #FDFBFA;
+    --border-color: #AAB7B8;
+    --input-bg: #F9F4F0;
+    --primary-blue: #5D768C;
+    --accent-orange: #F39C12;
+    --text-color: #333;
+     --nav-blue: #5D768C;
+    --card-header: #5D768C;
+    --card-rejected: #2F4156; 
+}
+
+
+body { background-color: var(--bg-color); font-family: 'Inter', 'Kanit', sans-serif; margin: 0; padding: 20px; }
+.container { max-width: 850px; margin: 0 auto; }
+/* Navbar */
+
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', 'Kanit', sans-serif;
+    background-color: var(--bg-page);
+    min-height: 100vh;
+}
+
+
+.navbar {
+    width: 100%;             
+    background-color: var(--nav-blue);
+    padding: 10px 60px;      
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;     
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+
+.container {
+    max-width: 1000px;
+    margin: 30px auto;      
+    padding: 0 20px;
+}
+
+/* Logo Image Styling */
+.logo-container {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.nav-logo-img {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Avatar with User Icon */
+.avatar {
+    width: 38px;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: var(--nav-blue); 
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.avatar:hover {
+    background-color: var(--white);
+    transform: scale(1.1);
+}
+
+.logout-icon {
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.logout-icon:hover {
+    color: #ffcccc;
+}
+
+/* Header & Cards */
+.header-section { margin-bottom: 40px; }
+.title-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; }
+.more-info-btn { background-color: #F5E6E0; border: none; padding: 8px 25px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+
+.card { border: 1.5px solid var(--border-color); border-radius: 20px; padding: 35px 30px; margin-top: 40px; position: relative; background: #fff; }
+.card-tag { position: absolute; top: -18px; left: 25px; background: #E8EDF2; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 6px 20px; font-weight: bold; font-size: 14px; }
+
+
+.form-row { display: flex; gap: 20px; width: 100%; align-items: flex-end; }
+.input-group { flex: 1; margin-bottom: 20px; display: flex; flex-direction: column; }
+.input-group label { font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+
+input, select, textarea { 
+    width: 100%; padding: 12px; border: 1.5px solid var(--border-color); 
+    border-radius: 12px; background-color: var(--input-bg); font-size: 14px;
+}
+input, select { height: 45px; box-sizing: border-box; }
+
+/* Tabs */
+.tab-container { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+.tab { background: #E0E0E0; border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.tab.active { background: var(--accent-orange); color: #000; }
+.close-tab { font-size: 18px; cursor: pointer; line-height: 1; }
+.add-tab-btn { background: #D5DBDB; border: none; width: 38px; height: 38px; border-radius: 50%; font-size: 22px; cursor: pointer; }
+
+/* Upload Zone - รูปเต็มกรอบ */
+.upload-zone {
+    border: 2px dashed var(--border-color); border-radius: 15px;
+    height: 380px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background-color: var(--input-bg); cursor: pointer;
+}
+.preview-mode { width: 100%; height: 100%; }
+.preview-mode img { width: 100%; height: 100%; object-fit: cover; }
+
+.preview-overlay {
+    position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6);
+    padding: 15px; display: flex; justify-content: center; gap: 10px;
+    opacity: 0; transition: 0.3s;
+}
+.upload-zone:hover .preview-overlay { opacity: 1; }
+.action-img-btn { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+.btn-danger { background: #ff4d4d; color: white; }
+
+/* Modal */
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
+.modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; position: relative; }
+.close-modal { position: absolute; right: 20px; top: 10px; font-size: 30px; cursor: pointer; }
+
+.create-lab-full-btn { display: block; width: 250px; margin: 30px auto; padding: 15px; background: #5D768C; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; }
+
+/* ══════════════════════════════════════════
+   KEY RULES LIST (โครงสร้างภาพ 1)
+══════════════════════════════════════════ */
+/* หัวตาราง */
+.rules-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 100px 40px;
+    gap: 15px; align-items: center;
+    padding-bottom: 10px; border-bottom: 2px solid var(--input-bg);
+    font-size: 13px; font-weight: 600; color: var(--text-sub);
+}
+
+/* แถวกฎแต่ละข้อ */
+.rule-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 100px 40px;
+    gap: 15px; align-items: center;
+    padding: 15px 0; border-bottom: 1px solid var(--input-bg);
+}
+
+.rule-num { font-weight: 600; color: var(--primary-blue); font-size: 15px; text-align: center; }
+
+.keyword-input-wrapper { display: flex; flex-direction: column; gap: 8px; }
+.keyword-input { height: 40px !important; }
+
+/* ส่วน Position Rule (ใต้ keyword input) */
+.pos-rule-section { padding: 5px 0 0 0; }
+.toggle-pos-label { 
+    display: inline-flex; align-items: center; gap: 8px; 
+    cursor: pointer; user-select: none;
+}
+.toggle-pos-label input[type="checkbox"] {
+    appearance: none; width: 16px; height: 16px; 
+    border: 2px solid var(--border-color); border-radius: 4px;
+    cursor: pointer; position: relative;
+}
+.toggle-pos-label input[type="checkbox"]:checked {
+    background: var(--primary-blue); border-color: var(--primary-blue);
+}
+.toggle-pos-label input[type="checkbox"]:checked::after {
+    content: '✓'; position: absolute; color: white;
+    font-size: 12px; top: -1px; left: 1.5px;
+}
+.pos-rule-text { font-size: 13px; color: var(--text-main); }
+.toggle-pos-label input[type="checkbox"]:checked + .pos-rule-text {
+    font-weight: 600; color: var(--primary-blue);
+}
+
+/* ส่วน Sensitivity (ปรากฏเมื่อติ๊ก SET Position) */
+.sensitivity-panel {
+    background: var(--input-bg); border: 1px solid var(--border-color);
+    border-radius: var(--r-sm); padding: 12px; margin-top: 10px;
+    display: none; flex-direction: column; gap: 8px;
+}
+.sensitivity-panel.visible { display: flex; }
+.sens-title { font-size: 12px; font-weight: 600; color: var(--primary-blue); }
+
+.sens-options { display: flex; gap: 8px; }
+.sens-btn {
+    flex: 1; background: #fff; border: 1px solid var(--border-color);
+    padding: 8px; border-radius: 6px; font-size: 13px; cursor: pointer;
+    font-weight: 500; text-align: center; font-family: inherit;
+    transition: 0.1s;
+}
+.sens-btn:hover { background: #F0F0F0; }
+.sens-btn.active {
+    background: var(--accent-orange); color: #000; font-weight: 600;
+    border-color: var(--accent-orange-dim);
+}
+
+/* Weight Input */
+.weight-input-wrapper { display: flex; align-items: center; gap: 5px; justify-content: center; }
+.weight-input { height: 40px !important; width: 65px !important; text-align: center; padding: 5px !important; }
+.weight-unit { font-size: 14px; font-weight: 600; color: var(--text-sub); }
+
+/* ปุ่มลบกฎ */
+.delete-rule-btn {
+    background: none; border: none; font-size: 20px; color: var(--text-sub);
+    cursor: pointer; transition: 0.1s; padding: 0; line-height: 1;
+}
+.delete-rule-btn:hover { color: var(--bad-red); scale: 1.1; }
+
+/* ปุ่มเพิ่มกฎใหม่ (เส้นประ โครงสร้างภาพ 1) */
+.add-rule-btn {
+    width: 100%; padding: 12px; margin-top: 15px;
+    background: #fff; border: 2px dashed var(--border-color);
+    border-radius: var(--r-md); color: var(--text-sub);
+    font-weight: 600; font-size: 14px; cursor: pointer;
+    transition: 0.2s; font-family: inherit;
+}
+.add-rule-btn:hover {
+    border-color: var(--primary-blue); color: var(--primary-blue);
+    background: var(--tag-bg);
+}
+
+/* ══════════════════════════════════════════
+   WEIGHT BARS & THRESHOLD 
+══════════════════════════════════════════ */
+.wbar-block-group { margin-top: 30px; display: flex; flex-direction: column; gap: 20px; }
+
+.wbar-block {
+    background-color: var(--tag-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--r-md);
+    padding: 20px;
+}
+
+.wbar-header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    margin-bottom: 12px; font-weight: 600; 
+}
+.wbar-title { color: var(--primary-blue); font-size: 15px; }
+.wbar-score-display { font-size: 15px; }
+.score-under { color: var(--accent-orange); }
+.score-ok { color: var(--good-green); }
+.score-over { color: var(--bad-red); }
+
+/* Progress Bar ล่างชื่อรูป */
+.wbar-track { 
+    height: 6px; background: #fff; border: 1px solid var(--border-color); 
+    border-radius: 10px; overflow: hidden; margin-bottom: 15px;
+}
+.wbar-fill { 
+    height: 100%; transition: width 0.3s ease, background 0.3s ease; 
+}
+
+/* รายการกฎย่อยในบล็อกสรุป */
+.summary-rules-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+.summary-rule-item { 
+    display: grid; grid-template-columns: 20px 1fr auto 40px; 
+    gap: 10px; align-items: center; font-size: 13px; 
+}
+.rule-dot { width: 8px; height: 8px; border-radius: 50%; }
+.rule-kw-text { color: var(--text-main); }
+.unnamed-kw { color: var(--text-sub); font-style: italic; }
+
+.badge { 
+    font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; 
+}
+.badge-blue { background: #D6EAF8; color: var(--primary-blue); }
+.badge-orange { background: #FDEBD0; color: var(--accent-orange-dim); }
+
+.summary-weight-val { font-weight: 600; color: var(--text-main); }
+
+/* ══════════════════════════════════════════
+   PASS THRESHOLD SECTION 
+══════════════════════════════════════════ */
+.threshold-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+.thresh-title {
+    font-size: 11px; font-weight: 600; color: var(--text-sub);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+}
+
+.thresh-row-group { display: flex; flex-direction: column; gap: 10px; }
+.thresh-row { display: flex; align-items: center; justify-content: space-between; }
+
+.thresh-left { display: flex; align-items: center; gap: 10px; }
+.thresh-main-cb { width: 15px; height: 15px; accent-color: var(--primary-blue); cursor: pointer; }
+.thresh-label { font-size: 14px; font-weight: 600; color: var(--text-main); }
+
+.thresh-input-area { display: flex; align-items: center; gap: 5px; }
+.symbol-geq { font-weight: 600; color: var(--text-sub); }
+.thresh-input { height: 32px !important; width: 50px !important; text-align: center; padding: 4px !important; }
+.percent-sign { font-size: 13px; color: var(--text-sub); }
+
+/* รายการ Mandatory Rules  */
+.mandatory-list { margin-left: 25px; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.mandatory-rule-item {
+    display: grid; grid-template-columns: auto 1fr auto; 
+    gap: 10px; align-items: center; background: #fff;
+    padding: 8px 15px; border-radius: var(--r-sm);
+    border: 1px solid var(--border-color);
+}
+.mand-kw-name { font-size: 13px; color: var(--text-main); }
+
+/* Toggle Switch สีแดง (Mandatory)*/
+.tog-switch { display: inline-flex; align-items: center; gap: 8px; user-select: none; }
+.mand-text { font-size: 11px; color: var(--text-sub); }
+.switch-box { position: relative; width: 30px; height: 17px; }
+.switch-box input { opacity: 0; width: 0; height: 0; }
+.switch-slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background-color: #AAB7B8; transition: .2s; border-radius: 17px;
+}
+.switch-slider:before {
+    position: absolute; content: ""; height: 13px; width: 13px;
+    left: 2px; bottom: 2px; background-color: white; transition: .2s; border-radius: 50%;
+}
+.switch-box input:checked + .switch-slider { background-color: var(--bad-red); }
+.switch-box input:checked + .switch-slider:before { transform: translateX(13px); }
+
+/* ══════════════════════════════════════════
+   MODAL (More Info) & Create Button
+══════════════════════════════════════════ */
+.create-lab-full-btn { 
+    display: block; width: 280px; margin: 50px auto 0 auto; padding: 15px; 
+    background: var(--primary-blue); color: white; border: none; 
+    border-radius: var(--r-pill); font-weight: 600; cursor: pointer; 
+    font-size: 16px; transition: 0.2s; font-family: inherit;
+}
+.create-lab-full-btn:hover { background: var(--primary-blue-dark); scale: 1.02; }
+
+.modal { display: none; position: fixed; z-index: 2000; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.modal-content { background: white; padding: 30px; border-radius: var(--r-lg); width: 90%; max-width: 500px; position: relative; animation: modalSlidIn 0.3s; }
+@keyframes modalSlidIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.close-modal { position: absolute; right: 20px; top: 10px; font-size: 30px; cursor: pointer; color: var(--text-sub); }
+.guide-container h3 { color: var(--primary-blue); margin-top: 0; }
+.info-block p { font-size: 14px; margin: 10px 0; }
+
+/* utility classes */
+.d-none { display: none !important; }
+
+.create-lab-full-btn { 
+    display: block; 
+    width: 280px; 
+    margin: 50px auto 0 auto; 
+    padding: 16px 30px; 
+    background: #5D768C; 
+    color: white; 
+    border: none; 
+    border-radius: 50px; 
+    font-weight: 600; 
+    font-size: 16px;
+    letter-spacing: 1px; 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+    font-family: 'Inter', 'Kanit', sans-serif;
+    box-shadow: 0 4px 15px rgba(93, 118, 140, 0.3); 
+}
+
+.create-lab-full-btn:hover { 
+    background: #4A5E70; 
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 20px rgba(93, 118, 140, 0.4);
+}
+
+.create-lab-full-btn:active {
+    transform: translateY(0); 
+    filter: brightness(0.9);
+}
