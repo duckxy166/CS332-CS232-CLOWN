@@ -1398,7 +1398,8 @@
     let rules = [];
     let ruleCount = 0;
 
-    // cache: imgId → { keyword → {x, y} }  (simulates Textract result per image)
+    // txCache: imgId → array of text blocks from real Textract
+    // each block: { text, left, top, right, bottom, cx, cy }
     let txCache = {};
 
     /* ══════════════════════════════════════════
@@ -1416,6 +1417,15 @@
     function rulesOf(imgId) { return rules.filter(r => r.imgId === imgId); }
     function wtOf(imgId) { return rulesOf(imgId).reduce((s, r) => s + (+r.wt || 0), 0); }
     function wCls(t) { return t === 100 ? 'ok' : t > 100 ? 'over' : 'under'; }
+
+    function toBase64(file){
+      return new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload  = () => res(reader.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+    }
 
     /* ══════════════════════════════════════════
        CHIPS
@@ -1498,11 +1508,53 @@
       renderAll(); toast(lbl + ' ถูกลบแล้ว');
     }
 
-    function onUpload(e, imgId) {
+    async function onUpload(e, imgId) {
       const f = e.target.files[0]; if (!f) return;
-      const im = imgBy(imgId); if (im) im.src = URL.createObjectURL(f);
+
+      /* show local preview immediately */
+      const im = imgBy(imgId);
+      if (im) im.src = URL.createObjectURL(f);
       renderImgTabs(); renderImgPanels();
-      toast('อัปโหลด ' + imgLbl(imgId) + ' สำเร็จ');
+      toast('กำลังอัปโหลดและสแกน ' + imgLbl(imgId) + '...');
+
+      /* reset cache for this image — new upload means old blocks invalid */
+      txCache[imgId] = null;
+
+      /* reset txStatus for all rules in this image */
+      rules.filter(r => r.imgId === imgId).forEach(r => {
+        if(r.pos){ r.pos = false; r.txStatus = null; r.refX = null; r.refY = null; }
+      });
+
+      try {
+        const base64 = await toBase64(f);
+
+        /* need a temp labID for S3 key — use timestamp if lab not created yet */
+        const tempLabID = 'ref-temp-' + Date.now();
+
+        const res  = await fetch(`${API_URL}/reference`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: base64,
+            imageType: f.type,
+            labID: tempLabID
+          })
+        });
+
+        const data   = await res.json();
+        const result = data.body ? JSON.parse(data.body) : data;
+
+        if(result.success){
+          /* store real Textract blocks in cache for this imgId */
+          txCache[imgId] = result.blocks;
+          toast('✓ ' + imgLbl(imgId) + ' พร้อมใช้งาน — พบ ' + result.blocks.length + ' text blocks');
+        } else {
+          toast('Textract error: ' + (result.error || 'unknown'));
+        }
+
+      } catch(err) {
+        toast('อัปโหลดไม่สำเร็จ — ' + err.message);
+      }
     }
 
     /* ══════════════════════════════════════════
@@ -1669,31 +1721,39 @@
       callTextract(r);
     }
 
-    /* simulate Textract — in production this calls your Lambda → Textract */
+    /* real Textract lookup — uses blocks cached from referenceUpload Lambda */
     function callTextract(r) {
-      const kw = r.kw.trim().toLowerCase();
-      // mock: known keywords return a position, unknown ones fail
-      const MOCK_POSITIONS = {
-        'successfully created': { x: 0.32, y: 0.22 },
-        'integration-lab': { x: 0.13, y: 0.45 },
-        'us-east-1': { x: 0.62, y: 0.18 },
-      };
+      const kw     = r.kw.trim().toLowerCase();
+      const blocks = txCache[r.imgId];
 
-      setTimeout(() => {
-        const match = Object.entries(MOCK_POSITIONS)
-          .find(([k]) => kw.includes(k) || k.includes(kw));
+      if(!blocks || blocks.length === 0){
+        /* no cache — image not uploaded yet or upload failed */
+        r.txStatus = 'notfound'; r.refX = null; r.refY = null;
+        r.pos = false;
+        const btn = document.getElementById('pab-' + r.id);
+        if(btn){ btn.classList.remove('on'); btn.querySelector('.pab-check').textContent = ''; }
+        patchPosPanel(r); renderWbars();
+        toast('อัปโหลด ' + imgLbl(r.imgId) + ' ก่อนใช้ Text Position');
+        return;
+      }
 
-        if (match) {
-          r.txStatus = 'found'; r.refX = match[1].x; r.refY = match[1].y;
-        } else {
-          r.txStatus = 'notfound'; r.refX = null; r.refY = null;
-          r.pos = false; // auto-turn off if not found
-          const btn = document.getElementById('pab-' + r.id);
-          if (btn) { btn.classList.remove('on'); btn.querySelector('.pab-check').textContent = ''; }
-        }
-        patchPosPanel(r);
-        renderWbars();
-      }, 1400); // simulated network delay
+      /* search keyword in real Textract blocks */
+      const match = blocks.find(b => b.text.toLowerCase().includes(kw));
+
+      if(match){
+        r.txStatus = 'found';
+        r.refX     = match.cx;
+        r.refY     = match.cy;
+        console.log(`keyword "${kw}" found at cx:${match.cx.toFixed(3)} cy:${match.cy.toFixed(3)}`);
+      } else {
+        r.txStatus = 'notfound'; r.refX = null; r.refY = null;
+        r.pos = false;
+        const btn = document.getElementById('pab-' + r.id);
+        if(btn){ btn.classList.remove('on'); btn.querySelector('.pab-check').textContent = ''; }
+      }
+
+      patchPosPanel(r);
+      renderWbars();
     }
 
     /* patch only the pos panel content without full re-render */
