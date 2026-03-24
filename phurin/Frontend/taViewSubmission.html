@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Submissions</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #f4f6fb;
+      --surface:     #ffffff;
+      --surface2:    #f0f3fa;
+      --border:      #dde2ef;
+      --border2:     #c5cde3;
+      --text:        #141928;
+      --text2:       #5a6380;
+      --text3:       #9aa0b8;
+      --blue:        #2563eb;
+      --blue-d:      #1a4fcf;
+      --blue-light:  #eff4ff;
+      --blue-mid:    #dbe8ff;
+      --blue-border: #b6ceff;
+      --green:       #16a34a;
+      --green-light: #f0fdf4;
+      --green-border:#bbf7d0;
+      --red:         #dc2626;
+      --red-light:   #fef2f2;
+      --red-border:  #fca5a5;
+      --amber:       #d97706;
+      --amber-light: #fffbeb;
+      --amber-border:#fde68a;
+      --r:           8px;
+      --r-sm:        5px;
+      --shadow:      0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md:   0 4px 14px rgba(0,0,0,.09);
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── topbar ── */
+    .bar {
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .bar-back {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      font-size: 12px; font-weight: 500;
+      font-family: 'Outfit', sans-serif;
+      padding: 5px 12px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      transition: .15s;
+    }
+    .bar-back:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+    .bar-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .bar-dot   { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); }
+    .bar-sub   { font-size: 12px; color: var(--text3); }
+
+    /* ── page ── */
+    .page { max-width: 960px; margin: 0 auto; padding: 28px 28px 120px; }
+
+    /* ── card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-n {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 11px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .card-label { font-size: 14px; font-weight: 600; }
+    .card-sub   { font-size: 12px; color: var(--text3); }
+    .card-body  { padding: 20px; }
+
+    /* ── lab list ── */
+    .lab-list { display: flex; flex-direction: column; gap: 8px; }
+    .lab-item {
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: .15s;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+    }
+    .lab-item:hover { border-color: var(--blue-border); background: var(--blue-light); }
+    .lab-item.selected { border-color: var(--blue); background: var(--blue-light); }
+    .lab-item-info { flex: 1; }
+    .lab-item-name { font-size: 14px; font-weight: 600; }
+    .lab-item-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .lab-radio {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border2);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: .15s;
+    }
+    .lab-item.selected .lab-radio { border-color: var(--blue); background: var(--blue); }
+    .lab-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; display: none; }
+    .lab-item.selected .lab-radio-dot { display: block; }
+
+    /* ── stats ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-top: 4px;
+    }
+    .stat-total .stat-val { color: var(--blue); }
+    .stat-passed .stat-val { color: var(--green); }
+    .stat-rejected .stat-val { color: var(--red); }
+    .stat-pending .stat-val { color: var(--amber); }
+
+    /* ── table ── */
+    .sub-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .sub-table th {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 2px solid var(--border);
+    }
+    .sub-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      vertical-align: top;
+    }
+    .sub-table tr:last-child td { border-bottom: none; }
+    .sub-table tr:hover { background: var(--surface2); }
+    .sub-row { cursor: pointer; transition: background .12s; }
+
+    /* ── badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: .02em;
+    }
+    .badge-passed  { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+    .badge-rejected{ background: var(--red-light);   color: var(--red);   border: 1px solid var(--red-border); }
+    .badge-pending { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-border); }
+
+    /* ── expanded detail ── */
+    .detail-row { display: none; }
+    .detail-row.open { display: table-row; }
+    .detail-cell { padding: 0 14px 16px !important; }
+    .detail-content {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+    }
+    .detail-imgs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .detail-img-card {
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+      background: var(--surface);
+      width: 180px;
+    }
+    .detail-img-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      display: block;
+      cursor: pointer;
+    }
+    .detail-img-card img:hover { opacity: .85; }
+    .detail-img-label {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .rb-img-head {
+      font-size: 12px; font-weight: 600; color: var(--text2);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin: 10px 0 6px;
+    }
+    .rb-rule {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 10px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+    .rb-icon  { font-size: 14px; flex-shrink: 0; }
+    .rb-kw    { flex: 1; color: var(--text2); }
+    .rb-score { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; }
+
+    /* ── download bar ── */
+    .dl-wrap {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 14px 20px 22px;
+      background: linear-gradient(transparent, var(--bg) 36%);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      z-index: 50;
+    }
+    .dl-btn {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      padding: 13px 36px;
+      font-size: 14px; font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      letter-spacing: .06em;
+      transition: .15s;
+      box-shadow: 0 2px 8px rgba(37,99,235,.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dl-btn:hover:not(:disabled) { background: var(--blue-d); transform: translateY(-1px); }
+    .dl-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .dl-progress {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      padding: 13px 0;
+    }
+
+    /* ── state / loading ── */
+    .state-msg {
+      text-align: center;
+      padding: 32px 0;
+      font-size: 13px;
+      color: var(--text3);
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── toast ── */
+    .toast {
+      position: fixed;
+      bottom: 80px; right: 20px;
+      background: var(--text); color: #fff;
+      padding: 10px 16px;
+      border-radius: var(--r);
+      font-size: 13px; font-weight: 500;
+      transform: translateY(12px); opacity: 0;
+      transition: .25s; z-index: 200;
+      pointer-events: none;
+      box-shadow: var(--shadow-md);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── mono text ── */
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- topbar -->
+<div class="bar">
+  <button class="bar-back" onclick="history.back()">← back</button>
+  <div class="bar-dot"></div>
+  <span class="bar-title">View Submissions</span>
+  <div class="bar-dot"></div>
+  <span class="bar-sub" id="barLab">เลือก Lab ก่อน</span>
+</div>
+
+<div class="page">
+
+  <!-- ① Select Lab -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-n">1</div>
+      <div>
+        <div class="card-label">เลือก Lab</div>
+        <div class="card-sub">เลือก Lab ที่ต้องการดูผลส่งงาน</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="labListWrap">
+        <div class="state-msg"><div class="spinner"></div>กำลังโหลด Lab...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② Stats -->
+  <div id="statsWrap" style="display:none">
+    <div class="stats" id="statsGrid"></div>
+  </div>
+
+  <!-- ③ Submissions Table -->
+  <div class="card" id="subCard" style="display:none">
+    <div class="card-head">
+      <div class="card-n">2</div>
+      <div>
+        <div class="card-label" id="subCardLabel">รายการส่งงาน</div>
+        <div class="card-sub" id="subCardSub">คลิกแถวเพื่อดูรายละเอียด</div>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+      <table class="sub-table" id="subTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Submitted</th>
+            <th>Checked</th>
+          </tr>
+        </thead>
+        <tbody id="subBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Download All -->
+<div class="dl-wrap" id="dlWrap" style="display:none">
+  <button class="dl-btn" id="dlBtn" onclick="downloadAll()">
+    📦 DOWNLOAD ALL PASSED
+  </button>
+  <span class="dl-progress" id="dlProgress"></span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const API_URL = 'https://s25zfr23j6.execute-api.us-east-1.amazonaws.com/dev';
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let allLabs       = [];
+let selectedLabID = null;
+let submissions   = [];
+let labInfo       = null;
+let expandedEmail = null;
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function fmtDate(iso){
+  if(!iso) return '—';
+  return new Date(iso).toLocaleDateString('th-TH', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function badgeHTML(status){
+  const map = {
+    PASSED:   { cls: 'badge-passed',   icon: '✓', label: 'PASSED' },
+    REJECTED: { cls: 'badge-rejected', icon: '✗', label: 'REJECTED' },
+    PENDING:  { cls: 'badge-pending',  icon: '⏳', label: 'PENDING' },
+  };
+  const b = map[status] || map.PENDING;
+  return `<span class="badge ${b.cls}">${b.icon} ${b.label}</span>`;
+}
+
+/* ══════════════════════════════════════════
+   LOAD LABS
+══════════════════════════════════════════ */
+async function loadLabs(){
+  try {
+    const res  = await fetch(`${API_URL}/labs`);
+    const data = await res.json();
+    const raw  = data.body ? JSON.parse(data.body) : data;
+    allLabs = raw.labs || [];
+    renderLabList();
+  } catch(err){
+    document.getElementById('labListWrap').innerHTML =
+      `<div class="state-msg">โหลด Lab ไม่ได้ — ${err.message}</div>`;
+  }
+}
+
+function renderLabList(){
+  if(!allLabs.length){
+    document.getElementById('labListWrap').innerHTML =
+      `<div class="state-msg">ยังไม่มี Lab</div>`;
+    return;
+  }
+  document.getElementById('labListWrap').innerHTML =
+    `<div class="lab-list">${allLabs.map(lab => `
+      <div class="lab-item ${selectedLabID === lab.labID ? 'selected' : ''}"
+           onclick="selectLab('${lab.labID}')">
+        <div class="lab-radio"><div class="lab-radio-dot"></div></div>
+        <div class="lab-item-info">
+          <div class="lab-item-name">${lab.labName}</div>
+          <div class="lab-item-meta">${lab.subjectId} · section ${(lab.sections||[]).join(', ')}</div>
+        </div>
+      </div>`).join('')}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   SELECT LAB → LOAD SUBMISSIONS
+══════════════════════════════════════════ */
+async function selectLab(labID){
+  selectedLabID = labID;
+  renderLabList();
+  document.getElementById('barLab').textContent = allLabs.find(l=>l.labID===labID)?.labName || labID;
+
+  /* show loading in table area */
+  document.getElementById('statsWrap').style.display = 'none';
+  document.getElementById('subCard').style.display   = 'block';
+  document.getElementById('dlWrap').style.display     = 'none';
+  document.getElementById('subBody').innerHTML =
+    `<tr><td colspan="6"><div class="state-msg"><div class="spinner"></div>กำลังโหลดรายการส่งงาน...</div></td></tr>`;
+
+  try {
+    const res  = await fetch(`${API_URL}/submissions?labID=${encodeURIComponent(labID)}`);
+    const data = await res.json();
+    const raw  = data.body ? JSON.parse(data.body) : data;
+
+    if(!raw.success){ toast('Error: ' + (raw.error||'unknown')); return; }
+
+    labInfo     = raw.lab;
+    submissions = raw.submissions || [];
+
+    renderStats(raw.stats);
+    renderTable();
+
+    /* show download button if any passed */
+    const hasPassed = submissions.some(s => s.status === 'PASSED');
+    document.getElementById('dlWrap').style.display = hasPassed ? 'flex' : 'none';
+
+  } catch(err){
+    document.getElementById('subBody').innerHTML =
+      `<tr><td colspan="6"><div class="state-msg">โหลดไม่ได้ — ${err.message}</div></td></tr>`;
+  }
+}
+
+/* ══════════════════════════════════════════
+   STATS
+══════════════════════════════════════════ */
+function renderStats(stats){
+  if(!stats) return;
+  document.getElementById('statsWrap').style.display = 'block';
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card stat-total">
+      <div class="stat-val">${stats.total}</div>
+      <div class="stat-lbl">Total</div>
+    </div>
+    <div class="stat-card stat-passed">
+      <div class="stat-val">${stats.passed}</div>
+      <div class="stat-lbl">Passed</div>
+    </div>
+    <div class="stat-card stat-rejected">
+      <div class="stat-val">${stats.rejected}</div>
+      <div class="stat-lbl">Rejected</div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-val">${stats.pending}</div>
+      <div class="stat-lbl">Pending</div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════ */
+function renderTable(){
+  if(!submissions.length){
+    document.getElementById('subBody').innerHTML =
+      `<tr><td colspan="6"><div class="state-msg">ยังไม่มีคนส่งงาน</div></td></tr>`;
+    return;
+  }
+
+  /* sort: PENDING first, then by submittedAt desc */
+  const sorted = [...submissions].sort((a,b) => {
+    if(a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+    if(b.status === 'PENDING' && a.status !== 'PENDING') return 1;
+    return new Date(b.submittedAt||0) - new Date(a.submittedAt||0);
+  });
+
+  document.getElementById('subBody').innerHTML = sorted.map((sub, i) => {
+    const isOpen = expandedEmail === sub.email;
+    return `
+      <tr class="sub-row" onclick="toggleDetail('${sub.email}')">
+        <td class="mono">${i+1}</td>
+        <td style="font-weight:500">${sub.email}</td>
+        <td>${badgeHTML(sub.status)}</td>
+        <td class="mono">${sub.totalScore != null ? sub.totalScore + '%' : '—'}</td>
+        <td class="mono" style="font-size:11px">${fmtDate(sub.submittedAt)}</td>
+        <td class="mono" style="font-size:11px">${fmtDate(sub.checkedAt)}</td>
+      </tr>
+      <tr class="detail-row ${isOpen ? 'open' : ''}" id="dr-${sub.email.replace(/[@.]/g,'_')}">
+        <td colspan="6" class="detail-cell">
+          ${detailHTML(sub)}
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function toggleDetail(email){
+  expandedEmail = expandedEmail === email ? null : email;
+  renderTable();
+}
+
+function detailHTML(sub){
+  /* screenshots */
+  let imgsHTML = '';
+  if(sub.screenshots?.length){
+    imgsHTML = `<div class="detail-imgs">${sub.screenshots.map((s,i) => `
+      <div class="detail-img-card">
+        ${s.url
+          ? `<img src="${s.url}" alt="img${s.imgId}" onclick="window.open('${s.url}','_blank')" title="คลิกเพื่อดูเต็ม">`
+          : `<div style="height:120px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px">ไม่สามารถโหลดรูปได้</div>`}
+        <div class="detail-img-label">รูปที่ ${i+1}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  /* score breakdown */
+  let breakdownHTML = '';
+  if(sub.scoreResult?.length){
+    sub.scoreResult.forEach((img, i) => {
+      const imgPassed = img.status === 'PASSED';
+      breakdownHTML += `<div class="rb-img-head">รูปที่ ${i+1} — ${imgPassed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'} (${img.score}%)</div>`;
+      (img.ruleResults||[]).forEach(r => {
+        breakdownHTML += `
+          <div class="rb-rule">
+            <span class="rb-icon">${r.passed ? '✓' : '✗'}</span>
+            <span class="rb-kw">${r.keyword}</span>
+            <span class="rb-score" style="color:${r.passed ? 'var(--green)' : 'var(--red)'}">${r.score}%</span>
+          </div>`;
+      });
+    });
+  }
+
+  return `<div class="detail-content">${imgsHTML}${breakdownHTML || '<div style="font-size:12px;color:var(--text3)">ยังไม่มีผลตรวจ</div>'}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   DOWNLOAD ALL
+══════════════════════════════════════════ */
+async function downloadAll(){
+  const passed = submissions.filter(s => s.status === 'PASSED');
+  if(!passed.length){ toast('ไม่มีรายการที่ผ่าน'); return; }
+
+  /* open each presigned URL in a new tab — avoids S3 CORS restriction */
+  let count = 0;
+  for(const sub of passed){
+    for(const shot of (sub.screenshots || [])){
+      if(!shot.url) continue;
+      const emailPrefix = sub.email.split('@')[0];
+      const a = document.createElement('a');
+      a.href     = shot.url;
+      a.target   = '_blank';
+      a.download = `${emailPrefix}_img${shot.imgId}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      count++;
+      /* small delay between tabs to avoid browser blocking pop-ups */
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }
+  toast(`✓ เปิด ${count} ลิงก์ดาวน์โหลดแล้ว — กรุณาอนุญาต pop-up หากถูกบล็อก`);
+
+  const btn = document.getElementById('dlBtn');
+  btn.disabled    = false;
+  btn.textContent = '📦 DOWNLOAD ALL PASSED';
+  document.getElementById('dlProgress').textContent = '';
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+loadLabs();
+</script>
+</body>
+</html>
