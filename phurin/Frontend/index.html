@@ -8,7 +8,7 @@
     <h2>กำลังตรวจสอบสิทธิ์...</h2>
 
     <script>
-        // ฟังก์ชันครอบจักรวาลสำหรับถอดรหัส JWT Token
+        // ฟังก์ชันถอดรหัส JWT Token
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
@@ -18,30 +18,57 @@
                 }).join(''));
                 return JSON.parse(jsonPayload);
             } catch (e) {
+                console.error("❌ ถอดรหัส Token ไม่สำเร็จ:", e);
                 return null;
             }
         }
 
-        // สมมติว่านี่คือ ID Token ที่ได้มาหลังจาก AWS Cognito Login สำเร็จ
-        // (ในการใช้งานจริง คุณจะดึงค่านี้มาจาก LocalStorage หรือ Session)
+        // ==========================================
+        // 🌟 1. ดักจับ Token จาก URL (จังหวะที่ Cognito เด้งกลับมา)
+        // ==========================================
+        // Cognito มักจะส่ง Token มาในรูปแบบ Hash (#id_token=...)
+        const hash = window.location.hash.substring(1); 
+        const urlParams = new URLSearchParams(hash);
+        const tokenFromUrl = urlParams.get('id_token');
+
+        if (tokenFromUrl) {
+            // ถ้าเจอ Token ใน URL ให้เซฟเก็บลงเครื่องทันที!
+            localStorage.setItem('cognito_id_token', tokenFromUrl);
+            console.log("✅ จับ Token จาก URL และบันทึกสำเร็จ!");
+            
+            // ล้าง URL ให้สะอาด (ซ่อน Token ไม่ให้ค้างอยู่บน Address Bar)
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+
+        // ==========================================
+        // 🌟 2. ดึง Token จากเครื่องมาตรวจ (เหมือนโค้ดเดิมของคุณ)
+        // ==========================================
         const idToken = localStorage.getItem('cognito_id_token');
+        console.log("🔍 Token ที่พร้อมใช้งาน:", idToken ? "มี Token แล้ว" : "Null");
 
         if (idToken) {
             const userData = parseJwt(idToken);
-            console.log("ข้อมูลผู้ใช้ทั้งหมด:", userData);
+            
+            if (userData) {
+                const userRole = userData['custom:role'] || userData['role'];
+                console.log("🎓 Role ของผู้ใช้คือ:", userRole);
 
-            // 🌟 ดึงค่า Role ออกมา (เช็คด้วยว่าคุณตั้งชื่อว่า custom:role หรือ role)
-            const userRole = userData['custom:role'] || userData['role'];
-
-            if (userRole && userRole.toLowerCase() === 'ta') {
-                // ถ้าเป็น TA ให้เด้งไปหน้าตรวจงาน
-                window.location.href = "indexTA.html";
+                // แยกทางไปหน้าต่างๆ
+                if (userRole && userRole.toLowerCase() === 'ta') {
+                    console.log("➡️ กำลังไปหน้า TA...");
+                    window.location.replace("indexTA.html");
+                } else {
+                    console.log("➡️ กำลังไปหน้า Student...");
+                    window.location.replace("submission.html");
+                }
             } else {
-                // ถ้าเป็น Student ให้เด้งไปหน้าส่งงาน
-                window.location.href = "submission.html";
+                alert("ข้อมูลล็อกอินผิดปกติ กรุณาล็อกอินใหม่ครับ");
+                window.location.replace("index.html"); 
             }
         } else {
-            alert("กรุณาล็อกอินก่อน!");
+            // ถ้าดึงจาก URL ก็ไม่ได้ ดึงจากเครื่องก็ไม่มี แปลว่าลักไก่พิมพ์ URL เข้ามาตรงๆ
+            alert("กรุณาล็อกอินก่อน! (ไม่พบ Token)");
+            window.location.replace("index.html"); 
         }
     </script>
 </body>
