@@ -416,6 +416,45 @@ input:focus {
 
 <script>
 /* ══════════════════════════════════════════
+   PROTECT ROUTE (STUDENT)
+══════════════════════════════════════════ */
+const studentToken = localStorage.getItem('cognito_id_token');
+if (!studentToken) {
+    window.location.replace("index.html");
+} else {
+    try {
+        const base64Url = studentToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const userData = JSON.parse(decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join('')));
+        
+        const role = userData['custom:role'] || userData['role'];
+        
+        // ถ้าเป็น TA หลงเข้ามา ให้ส่งกลับไปหน้า TA
+        if (role && role.toUpperCase() === 'TA') {
+            window.location.replace("indexTA.html");
+        }
+
+        // ดึงอีเมลมาแสดง/ใช้งานอัตโนมัติ (ถ้ามีใน Cognito)
+        if (userData.email) {
+            window.addEventListener('DOMContentLoaded', () => {
+                const emailInput = document.getElementById('studentEmail');
+                if(emailInput) {
+                    emailInput.value = userData.email;
+                    // อัปเดต state ตัวแปรของคุณ
+                    studentEmail = userData.email;
+                    document.getElementById('barEmail').textContent = studentEmail;
+                    loadLabs(); // โหลด lab อัตโนมัติเลย
+                }
+            });
+        }
+    } catch (e) {
+        localStorage.clear();
+        window.location.replace("index.html");
+    }
+}
+/* ══════════════════════════════════════════
    CONFIG
 ══════════════════════════════════════════ */
 const API_URL = 'https://s25zfr23j6.execute-api.us-east-1.amazonaws.com/dev';

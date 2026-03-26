@@ -1289,6 +1289,12 @@
     <button class="bar-back" onclick="toast('กลับหน้า Dashboard')">← back</button>
     <div class="bar-dot"></div>
     <span class="bar-title">Create Lab</span>
+    <!--ไปหน้า index-->
+    <a href="https://us-east-1qotxnmta1.auth.us-east-1.amazoncognito.com/login?client_id=1bftnq9opvc1n89m78eurjv7bb&response_type=token&scope=email+openid+profile&redirect_uri=https://incredible-sprinkles-0d48b2.netlify.app/" 
+      onclick="localStorage.clear(); sessionStorage.clear();" 
+      style="display: inline-block; padding: 10px 20px; background-color: #ff4d4d; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-family: sans-serif;">
+      ออกจากระบบ (Logout)
+    </a>
   </div>
 
   <div class="page">
@@ -1388,6 +1394,30 @@
   <div class="toast" id="toast"></div>
 
   <script>
+    /*══════════════════════════════════════════
+        PROTECT ROUTE (TA ONLY)
+      ══════════════════════════════════════════ */
+      const taToken = localStorage.getItem('cognito_id_token');
+      if (!taToken) {
+          window.location.replace("index.html");
+      } else {
+          try {
+              const base64Url = taToken.split('.')[1];
+              const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+              const userData = JSON.parse(decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                  return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+              }).join('')));
+              
+              const role = userData['custom:role'] || userData['role'];
+              if (!role || role.toUpperCase() !== 'TA') {
+                  alert("คุณไม่มีสิทธิ์เข้าถึงหน้า TA Dashboard");
+                  window.location.replace("submission.html");
+              }
+          } catch (e) {
+              localStorage.clear();
+              window.location.replace("index.html");
+          }
+      }
     /* ══════════════════════════════════════════
        STATE
     ══════════════════════════════════════════ */
