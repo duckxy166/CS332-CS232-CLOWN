@@ -1,133 +1,119 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ตั้งค่ากล่องส่งแลป (AI Rules)</title>
-    <link rel="stylesheet" href="taCreateLab.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Kanit:wght@300;400&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Lab</title>
+  <link rel="stylesheet" href="TaCreateLab_style.css">
 </head>
+
 <body>
-    <header class="navbar">
-        <div class="logo-container" onclick="window.location.href='Ta_Dashboard.html'">
-            <img src="../../../image/clown.png" alt="Clown Logo" class="nav-logo-img">
+
+  <div class="bar">
+    <button class="bar-back" onclick="toast('กลับหน้า Dashboard')">← back</button>
+    <div class="bar-dot"></div>
+    <span class="bar-title">Create Lab</span>
+  </div>
+
+  <div class="page">
+
+    <!-- ① Lab Info -->
+    <div class="step">
+      <div class="step-head">
+        <div class="step-n">1</div>
+        <div>
+          <div class="step-label">Lab Info</div>
+          <div class="step-sub">ชื่อ Lab, วิชา, section</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="field">
+          <label class="lbl">ชื่อ Lab</label>
+          <input type="text" id="labName" placeholder="เช่น Lab 01 — S3 Bucket Creation">
+        </div>
+        <div class="g2">
+          <div class="field" style="margin-bottom:0">
+            <label class="lbl">ชื่อวิชา</label>
+            <input class="chip-search" type="text" placeholder="🔍 เช่น CS232" oninput="filterChips('subj',this.value)"
+              id="subjSearch">
+            <div class="chip-wrap" id="subjOpts"></div>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="lbl">Section</label>
+            <input class="chip-search" type="text" placeholder="🔍 เช่น 1001" oninput="filterChips('sec',this.value)"
+              id="secSearch">
+            <div class="chip-wrap" id="secOpts"></div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label class="lbl">คำอธิบาย (optional)</label>
+          <textarea placeholder="อธิบายสั้น ๆ ว่า Lab นี้ต้องทำอะไร" rows="2"></textarea>
         </div>
 
-        <div class="user-controls">
-            <div id="user-avatar" class="avatar" onclick="window.location.href='account.html'">
-                <i class="fa-solid fa-user"></i>
-            </div>
-            <i class="fa-solid fa-arrow-right-from-bracket logout-icon" onclick="handleLogout()"></i>
+        <!-- Deadline -->
+        <div class="deadline-row">
+          <div class="field" style="margin-bottom:0">
+            <label class="lbl">วันหมดเขต</label>
+            <input type="date" id="deadlineDate" onchange="updateDeadlineBadge()">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="lbl">เวลาหมดเขต</label>
+            <input type="time" id="deadlineTime" value="23:59" onchange="updateDeadlineBadge()">
+          </div>
         </div>
-    </header>
-    
-    <div class="container">
-
-        <div class="header-section">
-             <div class="back-link" onclick="window.location.href='taViewsubmission_PAGE.html'">
-                <i class="fa-solid fa-chevron-left"></i> ยกเลิกและกลับ
-            </div>
-            <div class="title-bar">
-                <h1>ตั้งค่ากล่องส่งแลป (AI Rules)</h1>
-                <button id="moreInfoBtn" class="more-info-btn">More Info</button>
-            </div>
+        <!-- badge แสดงผลหลังเลือกวันแล้ว -->
+        <div class="deadline-badge" id="deadlineBadge">
+          <span class="dl-icon">🗓</span>
+          <span id="deadlineBadgeText"></span>
         </div>
-
-        <div class="card">
-            <div class="card-tag">ข้อมูล Lab</div>
-            <div class="input-group">
-                <label>ชื่อ Lab</label>
-                <input type="text" id="labName" placeholder="เช่น S3 Bucket Creation">
-            </div>
-            
-            <div class="form-row">
-                <div class="input-group">
-                    <label>ชื่อวิชา</label>
-                    <select id="subjectSelect">
-                        <option value="">กำลังโหลดข้อมูล...</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>Section</label>
-                    <select id="sectionSelect">
-                        <option value="">เลือก Section</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>คำอธิบาย</label>
-                <textarea id="description" placeholder="เช่น รายละเอียดวิชา..."></textarea>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-tag">Reference Image</div>
-            <div class="tab-container" id="tabContainer">
-                <button class="add-tab-btn" id="addTabBtn" type="button">+</button>
-            </div>
-
-            <input type="file" id="fileInput" hidden accept="image/*">
-            <div class="upload-zone" id="uploadZone">
-                <div id="previewContainer" class="preview-mode" style="display: none;">
-                    <img id="imagePreview" src="" alt="Preview">
-                    <div class="preview-overlay">
-                        <button type="button" class="action-img-btn" id="changeImgBtn">เปลี่ยนรูปภาพ</button>
-                        <button type="button" class="action-img-btn btn-danger" id="deleteImgBtn">ลบรูปนี้</button>
-                    </div>
-                </div>
-                <div id="uploadPrompt" class="upload-content">
-                    <span class="upload-icon">🖼️</span>
-                    <p><span class="highlight-text">คลิกเพื่ออัปโหลด</span> <span id="currentTabLabel">รูปที่ 1</span></p>
-                    <p class="sub-text">PNG, JPG ขนาดไม่เกิน 5MB</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-tag">ตั้งค่า Key Rules และ Weight</div>
-            
-            <div class="card-content">
-                <div class="rules-header">
-                    <span>#</span>
-                    <span>Text Keyword Rule (คำที่ต้องตรวจพบ)</span>
-                    <span class="text-center">Weight (%)</span>
-                    <span></span> </div>
-
-                <div id="rulesListContainer"></div>
-
-                <button type="button" class="add-rule-btn" id="addRuleBtn">
-                    + เพิ่ม Key Rule ใน <span id="addRuleTabLabel">รูปที่ 1</span>
-                </button>
-
-                <div class="wbar-block-group" id="wbarBlocksContainer">
-                    </div>
-            </div>
-        </div>
-
-
-
-        <button class="create-lab-full-btn" id="submitBtn" onclick="window.location.href='taView.html'">CREATE LAB</button>
+      </div>
     </div>
 
-   <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <div class="guide-container">
-                <h3>วิธีที่ระบบคำนวณ Score</h3>
-                <div class="info-block">
-                    <p>⚖️ <strong>Weight</strong>: สัดส่วนคะแนนรวมกันแต่ละรูปต้องได้ 100%</p>
-                    <p>📌 <strong>Mandatory</strong>: ถ้าเปิดไว้ นิสิตต้องผ่านกฎนี้ ไม่งั้นรูปนั้นจะได้ 0 คะแนนทันที</p>
-                    <p>🎯 <strong>Pass Threshold</strong>: คะแนนรวมต่ำสุดที่นิสิตต้องได้ เพื่อให้รูปนั้นถือว่า "ผ่าน"</p>
-                </div>
-            </div>
+    <!-- ② Reference Images -->
+    <div class="step">
+      <div class="step-head">
+        <div class="step-n">2</div>
+        <div>
+          <div class="step-label">Reference Images</div>
+          <div class="step-sub">รูปตัวอย่างหลักฐาน — แต่ละรูปตรวจแยกกันอิสระ</div>
         </div>
+      </div>
+      <div class="step-body">
+        <div class="img-tabs" id="imgTabs"></div>
+        <div id="imgPanels"></div>
+      </div>
     </div>
 
-    <script src="taCreateLab.js"></script>
-    
+    <!-- ③ Key Rules -->
+    <div class="step">
+      <div class="step-head">
+        <div class="step-n">3</div>
+        <div>
+          <div class="step-label">Key Rules</div>
+          <div class="step-sub">keyword ที่ต้องพบ — weight รวมต้องครบ 100% ต่อรูป</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <div id="ruleTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;"></div>
+        <div id="ruleContent"></div>
+        <div id="wbars"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CREATE LAB -->
+  <div class="create-wrap">
+    <button class="create-btn" onclick="createLab()">CREATE LAB</button>
+  </div>
+
+  <!-- BBox modal removed — Textract auto-extracts position from reference image -->
+
+  <div class="toast" id="toast"></div>
+
+  
+<script src="TaCreateLab_script.js"></script>
 </body>
+
 </html>

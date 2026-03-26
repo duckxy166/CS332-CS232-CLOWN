@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Submissions</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="stylesheet" href="TaViewSubmission_style.css">
+</head>
+<body>
+
+<!-- topbar -->
+<div class="bar">
+  <button class="bar-back" onclick="history.back()">← back</button>
+  <div class="bar-dot"></div>
+  <span class="bar-title">View Submissions</span>
+  <div class="bar-dot"></div>
+  <span class="bar-sub" id="barLab">เลือก Lab ก่อน</span>
+</div>
+
+<div class="page">
+
+  <!-- ① Select Lab -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-n">1</div>
+      <div>
+        <div class="card-label">เลือก Lab</div>
+        <div class="card-sub">เลือก Lab ที่ต้องการดูผลส่งงาน</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="labListWrap">
+        <div class="state-msg"><div class="spinner"></div>กำลังโหลด Lab...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② Stats -->
+  <div id="statsWrap" style="display:none">
+    <div class="stats" id="statsGrid"></div>
+  </div>
+
+  <!-- ③ Submissions Table -->
+  <div class="card" id="subCard" style="display:none">
+    <div class="card-head">
+      <div class="card-n">2</div>
+      <div>
+        <div class="card-label" id="subCardLabel">รายการส่งงาน</div>
+        <div class="card-sub" id="subCardSub">คลิกแถวเพื่อดูรายละเอียด</div>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+      <table class="sub-table" id="subTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Submitted</th>
+            <th>Checked</th>
+          </tr>
+        </thead>
+        <tbody id="subBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Download All -->
+<div class="dl-wrap" id="dlWrap" style="display:none">
+  <button class="dl-btn" id="dlBtn" onclick="downloadAll()">
+    📦 DOWNLOAD ALL PASSED
+  </button>
+  <span class="dl-progress" id="dlProgress"></span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<script src="TaViewSubmission_script.js"></script>
+</body>
+</html>

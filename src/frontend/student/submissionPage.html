@@ -1,42 +1,765 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submission Page - CLOWN</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="submissionPage_style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Lab Submission</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #f4f6fb;
+  --surface:     #ffffff;
+  --surface2:    #f0f3fa;
+  --border:      #dde2ef;
+  --border2:     #c5cde3;
+  --text:        #141928;
+  --text2:       #5a6380;
+  --text3:       #9aa0b8;
+  --blue:        #2563eb;
+  --blue-d:      #1a4fcf;
+  --blue-light:  #eff4ff;
+  --blue-border: #b6ceff;
+  --green:       #16a34a;
+  --green-light: #f0fdf4;
+  --green-border:#bbf7d0;
+  --red:         #dc2626;
+  --red-light:   #fef2f2;
+  --red-border:  #fca5a5;
+  --amber:       #d97706;
+  --amber-light: #fffbeb;
+  --r:           8px;
+  --r-sm:        5px;
+  --shadow:      0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:   0 4px 14px rgba(0,0,0,.09);
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Outfit', sans-serif;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── topbar ── */
+.bar {
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+.bar-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.bar-dot   { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); }
+.bar-sub   { font-size: 12px; color: var(--text3); }
+
+/* ── page ── */
+.page { max-width: 720px; margin: 0 auto; padding: 36px 28px 80px; }
+
+/* ── section card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.card-head {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-n {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.card-label { font-size: 14px; font-weight: 600; }
+.card-sub   { font-size: 12px; color: var(--text3); }
+.card-body  { padding: 20px; }
+
+/* ── lbl ── */
+.lbl {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .07em;
+  margin-bottom: 6px; display: block;
+}
+
+/* ── input ── */
+input[type=text], input[type=email] {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  transition: .15s;
+}
+input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+
+/* ── lab list ── */
+.lab-list { display: flex; flex-direction: column; gap: 10px; }
+.lab-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: .15s;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+}
+.lab-card:hover { border-color: var(--blue-border); background: var(--blue-light); }
+.lab-card.selected { border-color: var(--blue); background: var(--blue-light); }
+.lab-card.expired  { opacity: .5; cursor: not-allowed; }
+.lab-radio {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: .15s;
+}
+.lab-card.selected .lab-radio { border-color: var(--blue); background: var(--blue); }
+.lab-radio-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  display: none;
+}
+.lab-card.selected .lab-radio-dot { display: block; }
+.lab-info { flex: 1; }
+.lab-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.lab-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.lab-deadline {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.dl-ok      { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+.dl-expired { background: var(--red-light);   color: var(--red);   border: 1px solid var(--red-border); }
+
+/* loading / empty state */
+.state-msg {
+  text-align: center;
+  padding: 32px 0;
+  font-size: 13px;
+  color: var(--text3);
+}
+
+/* ── image upload slots ── */
+.slots { display: flex; flex-direction: column; gap: 14px; }
+.slot-block {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.slot-head {
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.slot-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--border2);
+  color: var(--surface);
+  font-size: 11px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.slot-block.ready .slot-num { background: var(--green); }
+.slot-body { padding: 14px; }
+
+/* upload zone */
+.upload-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r-sm);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface2);
+  transition: .2s;
+  position: relative;
+  overflow: hidden;
+}
+.upload-zone:hover { border-color: var(--blue); background: var(--blue-light); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 20px; margin-bottom: 4px; }
+.upload-text { font-size: 12px; color: var(--text2); }
+.upload-text strong { color: var(--blue); }
+
+/* preview */
+.slot-preview { position: relative; }
+.slot-preview img { width: 100%; border-radius: var(--r-sm); display: block; max-height: 240px; object-fit: contain; background: var(--surface2); }
+.slot-change {
+  font-size: 11px; color: var(--blue);
+  text-align: center; margin-top: 5px;
+  cursor: pointer; text-decoration: underline;
+}
+.slot-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 6px;
+  font-size: 11px; font-weight: 600;
+  padding: 3px 8px; border-radius: 4px;
+}
+.slot-badge.ok { background: var(--green-light); color: var(--green); border: 1px solid var(--green-border); }
+
+/* ── submit btn ── */
+.submit-wrap {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  padding: 14px 20px 22px;
+  background: linear-gradient(transparent, var(--bg) 36%);
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+}
+.submit-btn {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  padding: 13px 48px;
+  font-size: 14px; font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  letter-spacing: .06em;
+  transition: .15s;
+  max-width: 360px; width: 100%;
+  box-shadow: 0 2px 8px rgba(37,99,235,.3);
+}
+.submit-btn:hover:not(:disabled) { background: var(--blue-d); transform: translateY(-1px); }
+.submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ── result panel ── */
+.result-panel {
+  border-radius: var(--r);
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+.result-panel.passed { background: var(--green-light); border-color: var(--green-border); }
+.result-panel.rejected { background: var(--red-light); border-color: var(--red-border); }
+.result-icon { font-size: 40px; margin-bottom: 10px; }
+.result-status {
+  font-size: 22px; font-weight: 700;
+  margin-bottom: 4px;
+}
+.result-panel.passed  .result-status { color: var(--green); }
+.result-panel.rejected .result-status { color: var(--red); }
+.result-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 16px;
+}
+.result-breakdown { text-align: left; }
+.rb-img-head {
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .06em;
+  margin: 12px 0 6px;
+}
+.rb-rule {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+.rb-icon { font-size: 14px; flex-shrink: 0; }
+.rb-kw   { flex: 1; color: var(--text2); }
+.rb-score { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; }
+
+/* polling spinner */
+.polling {
+  text-align: center;
+  padding: 32px 0;
+  font-size: 13px;
+  color: var(--text2);
+}
+.spinner {
+  width: 28px; height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── toast ── */
+.toast {
+  position: fixed;
+  bottom: 80px; right: 20px;
+  background: var(--text); color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--r);
+  font-size: 13px; font-weight: 500;
+  transform: translateY(12px); opacity: 0;
+  transition: .25s; z-index: 200;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-logo" onclick="window.location.href='student_dashboard.html'">
-           <img class="logo-img" src="image/clown.png" alt="CLOWN" onerror="this.src='https://via.placeholder.com/45?text=C'"/>
-        </div>
-        <div class="nav-right">
-            <span class="nav-name" id="user-name">Student Name</span>
-            <div class="avatar"></div>
-            <button class="logout-btn" title="Logout" onclick="window.location.href='index.html'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
-                </svg>
-            </button>
-        </div>
-    </nav>
+<!-- topbar -->
+<div class="bar">
+  <span class="bar-title">Lab Submission</span>
+  <div class="bar-dot"></div>
+  <span class="bar-sub" id="barEmail">—</span>
+</div>
 
-    <main class="container">
-        <a href="student_dashboard.html" class="back-link">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
-            </svg>
-            กลับหน้าหลัก
-        </a>
+<div class="page" id="mainPage">
 
-        <div class="card">
-            
-            <div class="card-header">
-                <h1 class="lab-title" id="lab-title">กำลังโหลดข้อมูล Lab...</h1>
-                <div class="lab-meta">
-                    <span class="course-code" id="course-code">รหัสวิชา : -</span>
-                    <span class="deadline">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0
+  <!-- ① Student Email -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-n">1</div>
+      <div>
+        <div class="card-label">ข้อมูลนักศึกษา</div>
+        <div class="card-sub">ใส่อีเมลมหาวิทยาลัยของคุณ</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label class="lbl">Email</label>
+        <input type="email" id="studentEmail" placeholder="เช่น 6709650001@dome.tu.ac.th"
+          oninput="onEmailInput(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- ② Select Lab -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-n">2</div>
+      <div>
+        <div class="card-label">เลือก Lab</div>
+        <div class="card-sub">Lab ที่เปิดให้ส่งงานในขณะนี้</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="labListWrap">
+        <div class="state-msg">กรุณาใส่ Email ก่อน</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ Upload Screenshots -->
+  <div class="card" id="uploadCard" style="display:none">
+    <div class="card-head">
+      <div class="card-n">3</div>
+      <div>
+        <div class="card-label">อัปโหลดหลักฐาน</div>
+        <div class="card-sub" id="uploadSub">อัปโหลดรูป screenshot ตามลำดับ</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="slots" id="slots"></div>
+    </div>
+  </div>
+
+  <!-- ④ Result -->
+  <div id="resultWrap" style="display:none"></div>
+
+</div>
+
+<!-- Submit button -->
+<div class="submit-wrap" id="submitWrap" style="display:none">
+  <button class="submit-btn" id="submitBtn" onclick="submitLab()">SUBMIT</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const API_URL = 'https://s25zfr23j6.execute-api.us-east-1.amazonaws.com/dev';
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let allLabs      = [];
+let selectedLab  = null;
+let studentEmail = '';
+/* slots: { imgId, file, base64, type } */
+let slots        = [];
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function isExpired(deadline){
+  return new Date(deadline) < new Date();
+}
+
+function fmtDeadline(iso){
+  return new Date(iso).toLocaleDateString('th-TH', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function toBase64(file){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ══════════════════════════════════════════
+   EMAIL INPUT
+══════════════════════════════════════════ */
+function onEmailInput(val){
+  studentEmail = val.trim();
+  document.getElementById('barEmail').textContent = studentEmail || '—';
+
+  if(studentEmail.includes('@')){
+    loadLabs();
+  } else {
+    document.getElementById('labListWrap').innerHTML =
+      `<div class="state-msg">กรุณาใส่ Email ให้ถูกต้อง</div>`;
+    resetSelection();
+  }
+}
+
+/* ══════════════════════════════════════════
+   LOAD LABS
+══════════════════════════════════════════ */
+async function loadLabs(){
+  document.getElementById('labListWrap').innerHTML =
+    `<div class="state-msg">⏳ กำลังโหลด Lab...</div>`;
+
+  try {
+    const res  = await fetch(`${API_URL}/labs`);
+    const data = await res.json();
+    const raw  = data.body ? JSON.parse(data.body) : data;
+
+    allLabs = raw.labs || [];
+    renderLabList();
+  } catch(err){
+    document.getElementById('labListWrap').innerHTML =
+      `<div class="state-msg">โหลด Lab ไม่ได้ — ${err.message}</div>`;
+  }
+}
+
+function renderLabList(){
+  if(!allLabs.length){
+    document.getElementById('labListWrap').innerHTML =
+      `<div class="state-msg">ยังไม่มี Lab ที่เปิดให้ส่ง</div>`;
+    return;
+  }
+
+  const html = allLabs.map(lab => {
+    const expired = isExpired(lab.deadline);
+    const sel     = selectedLab?.labID === lab.labID;
+    const dlClass = expired ? 'dl-expired' : 'dl-ok';
+    const dlText  = expired ? 'หมดเขตแล้ว' : fmtDeadline(lab.deadline);
+
+    return `
+    <div class="lab-card ${sel ? 'selected' : ''} ${expired ? 'expired' : ''}"
+      onclick="${expired ? '' : `selectLab('${lab.labID}')`}">
+      <div class="lab-radio">
+        <div class="lab-radio-dot"></div>
+      </div>
+      <div class="lab-info">
+        <div class="lab-name">${lab.labName}</div>
+        <div class="lab-meta">${lab.subjectId} · section ${lab.sections.join(', ')}</div>
+      </div>
+      <span class="lab-deadline ${dlClass}">${dlText}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('labListWrap').innerHTML =
+    `<div class="lab-list">${html}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   SELECT LAB
+══════════════════════════════════════════ */
+function selectLab(labID){
+  selectedLab = allLabs.find(l => l.labID === labID);
+  if(!selectedLab) return;
+
+  renderLabList();
+  buildSlots();
+
+  document.getElementById('uploadCard').style.display = 'block';
+  document.getElementById('submitWrap').style.display = 'flex';
+  document.getElementById('resultWrap').style.display = 'none';
+
+  document.getElementById('uploadSub').textContent =
+    `อัปโหลด ${selectedLab.images.length} รูป ตามลำดับที่กำหนด`;
+}
+
+/* ══════════════════════════════════════════
+   BUILD UPLOAD SLOTS
+══════════════════════════════════════════ */
+function buildSlots(){
+  const imgCount = selectedLab.images.length;
+  slots = selectedLab.images.map(im => ({ imgId: im.id, file: null, base64: null, type: null }));
+
+  const html = slots.map((s, i) => `
+    <div class="slot-block" id="slot-${s.imgId}">
+      <div class="slot-head">
+        <div class="slot-num">${i + 1}</div>
+        รูปที่ ${i + 1}
+        <span style="font-size:11px;color:var(--text3);font-weight:400">
+          — ตรงกับ reference รูปที่ ${i + 1} ที่ TA กำหนด
+        </span>
+      </div>
+      <div class="slot-body" id="slotBody-${s.imgId}">
+        <div class="upload-zone" onclick="document.getElementById('fi-${s.imgId}').click()">
+          <input type="file" id="fi-${s.imgId}" accept="image/*"
+            onchange="onFileChange(event, ${s.imgId})">
+          <div class="upload-icon">🖼</div>
+          <div class="upload-text"><strong>คลิกเพื่ออัปโหลด</strong> รูปที่ ${i + 1}<br>
+            <span style="font-size:11px">PNG / JPG</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('slots').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   FILE CHANGE
+══════════════════════════════════════════ */
+async function onFileChange(e, imgId){
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const base64 = await toBase64(file);
+  const slot   = slots.find(s => s.imgId === imgId);
+  slot.file    = file;
+  slot.base64  = base64;
+  slot.type    = file.type;
+
+  /* show preview */
+  const url  = URL.createObjectURL(file);
+  const idx  = slots.findIndex(s => s.imgId === imgId) + 1;
+  document.getElementById('slotBody-' + imgId).innerHTML = `
+    <div class="slot-preview">
+      <img src="${url}" alt="รูปที่ ${idx}">
+      <div class="slot-badge ok">✓ พร้อมส่ง</div>
+      <div class="slot-change" onclick="document.getElementById('fi2-${imgId}').click()">
+        เปลี่ยนรูป
+      </div>
+      <input type="file" id="fi2-${imgId}" accept="image/*" style="display:none"
+        onchange="onFileChange(event,${imgId})">
+    </div>`;
+
+  /* mark slot ready */
+  document.getElementById('slot-' + imgId).classList.add('ready');
+  document.querySelector(`#slot-${imgId} .slot-num`).textContent = '✓';
+}
+
+/* ══════════════════════════════════════════
+   SUBMIT
+══════════════════════════════════════════ */
+async function submitLab(){
+  if(!studentEmail){ toast('กรุณาใส่ Email ก่อน'); return; }
+  if(!selectedLab){  toast('กรุณาเลือก Lab ก่อน'); return; }
+
+  const missing = slots.filter(s => !s.base64);
+  if(missing.length){
+    toast(`กรุณาอัปโหลดรูปให้ครบทุกช่อง (ยังขาด ${missing.length} รูป)`);
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled    = true;
+  btn.textContent = 'กำลังส่ง...';
+
+  const screenshots = slots.map(s => ({
+    imgId:       s.imgId,
+    imageBase64: s.base64,
+    imageType:   s.type
+  }));
+
+  try {
+    const res  = await fetch(`${API_URL}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email:       studentEmail,
+        labID:       selectedLab.labID,
+        screenshots
+      })
+    });
+
+    const data   = await res.json();
+    const result = data.body ? JSON.parse(data.body) : data;
+
+    if(result.success){
+      btn.textContent = 'ส่งแล้ว — รอผล...';
+      pollResult(studentEmail, selectedLab.labID);
+    } else {
+      toast('เกิดข้อผิดพลาด: ' + (result.error || 'unknown'));
+      btn.disabled = false; btn.textContent = 'SUBMIT';
+    }
+
+  } catch(err){
+    toast('เชื่อมต่อ API ไม่ได้ — ' + err.message);
+    btn.disabled = false; btn.textContent = 'SUBMIT';
+  }
+}
+
+/* ══════════════════════════════════════════
+   POLL RESULT
+══════════════════════════════════════════ */
+function pollResult(email, labID){
+  document.getElementById('resultWrap').style.display = 'block';
+  document.getElementById('resultWrap').innerHTML = `
+    <div class="polling">
+      <div class="spinner"></div>
+      ระบบกำลังตรวจหลักฐาน — กรุณารอสักครู่...
+    </div>`;
+
+  document.getElementById('uploadCard').style.display = 'none';
+  document.getElementById('submitWrap').style.display = 'none';
+
+  let attempts = 0;
+  const MAX    = 30;  /* poll max 20 times = ~40 seconds */
+
+  const interval = setInterval(async () => {
+    attempts++;
+    try {
+      const res  = await fetch(`${API_URL}/result?email=${encodeURIComponent(email)}&labID=${encodeURIComponent(labID)}`);
+      const data = await res.json();
+      const raw  = data.body ? JSON.parse(data.body) : data;
+
+      if(raw.success && raw.submission?.status !== 'PENDING'){
+        clearInterval(interval);
+        showResult(raw.submission);
+      }
+
+      if(attempts >= MAX){
+        clearInterval(interval);
+        document.getElementById('resultWrap').innerHTML =
+          `<div class="state-msg">หมดเวลารอ — กรุณาตรวจสอบอีกครั้งในภายหลัง</div>`;
+      }
+    } catch(err){
+      /* ignore network hiccups, keep polling */
+    }
+  }, 3000);
+}
+
+/* ══════════════════════════════════════════
+   SHOW RESULT
+══════════════════════════════════════════ */
+function showResult(sub){
+  const passed  = sub.status === 'PASSED';
+  const icon    = passed ? '✅' : '❌';
+  const cls     = passed ? 'passed' : 'rejected';
+  const label   = passed ? 'ผ่าน' : 'ไม่ผ่าน';
+
+  /* breakdown per image */
+  let breakdown = '';
+  if(sub.scoreResult?.length){
+    sub.scoreResult.forEach((img, i) => {
+      const imgPassed = img.status === 'PASSED';
+      breakdown += `<div class="rb-img-head">รูปที่ ${i + 1} — ${imgPassed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'} (${img.score}%)</div>`;
+      img.ruleResults?.forEach(r => {
+        breakdown += `
+          <div class="rb-rule">
+            <span class="rb-icon">${r.passed ? '✓' : '✗'}</span>
+            <span class="rb-kw">${r.keyword}</span>
+            <span class="rb-score" style="color:${r.passed ? 'var(--green)' : 'var(--red)'}">${r.score}%</span>
+          </div>`;
+      });
+    });
+  }
+
+  document.getElementById('resultWrap').innerHTML = `
+    <div class="result-panel ${cls}">
+      <div class="result-icon">${icon}</div>
+      <div class="result-status">${label}</div>
+      <div class="result-score">Total Score: ${sub.totalScore ?? 0}%</div>
+      ${breakdown ? `<div class="result-breakdown">${breakdown}</div>` : ''}
+    </div>
+    <button onclick="resetAll()" style="
+      width:100%;padding:11px;border:1px dashed var(--border2);
+      border-radius:var(--r);background:transparent;color:var(--text2);
+      font-size:13px;font-weight:500;cursor:pointer;
+      font-family:'Outfit',sans-serif;transition:.15s;
+    " onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+       onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
+      ส่งงานใหม่อีกครั้ง
+    </button>`;
+}
+
+/* ══════════════════════════════════════════
+   RESET
+══════════════════════════════════════════ */
+function resetSelection(){
+  selectedLab = null; slots = [];
+  document.getElementById('uploadCard').style.display  = 'none';
+  document.getElementById('submitWrap').style.display  = 'none';
+  document.getElementById('resultWrap').style.display  = 'none';
+}
+
+function resetAll(){
+  selectedLab = null; slots = [];
+  document.getElementById('uploadCard').style.display  = 'none';
+  document.getElementById('submitWrap').style.display  = 'none';
+  document.getElementById('resultWrap').style.display  = 'none';
+  document.getElementById('submitBtn').disabled    = false;
+  document.getElementById('submitBtn').textContent = 'SUBMIT';
+  renderLabList();
+}
+</script>
+</body>
+</html>
