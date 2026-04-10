@@ -3,48 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>CLOWN – Available Lab (TA Dashboard)</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@500;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="TaDashboard_style.css">
+    <title>ValidMate - Dashboard</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Tailwind CSS (CDN for immediate preview) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'Sarabun', 'sans-serif'],
+            },
+            fontSize: {
+              'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+              'h1': ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h2': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }], /* adjusted for card titles */
+              'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+              'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+              'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+              'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
+            },
+            colors: {
+              brand: {
+                50: '#F0F4FA',
+                100: '#E0E9F4',
+                500: '#4F46E5', // Purple-ish primary
+                800: '#1E293B',
+                900: '#0F172A', // Dark nav background
+              },
+              layout: {
+                bg: '#F8FAFC',
+                surface: '#FFFFFF',
+                border: '#E2E8F0',
+              },
+              status: {
+                success: '#10B981',
+                successBg: '#ECFDF5',
+                error: '#EF4444',
+                warning: '#F59E0B',
+                warningBg: '#FFFBEB',
+              }
+            }
+          }
+        }
+      }
+    </script>
 </head>
-<body>
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
 
-     <!-- HEADER -->
-  <nav class="navbar">
-    <div class="nav-logo">
-      <img class="logo-img" src="clown2.png" alt="CLOWN logo"/>
-      <span class="logo-text">CLOWN</span>
-    </div>
-    <div class="nav-right">
-      <span class="nav-name" id="user-name">กำลังโหลด...</span>
-      <div class="avatar"></div>
-      <button class="logout-btn" title="Logout">
-        <span class="logout-icon"></span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-           viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-           <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
-        </svg>
-      </button>
-    </div>
-  </nav>
- 
-  <!-- MAIN -->
-  <main class="main-content">
- 
-    <!-- SEARCH -->
-    <div class="search-wrapper">
-      <input type="text" class="search-input" placeholder="courses search" id="search-input"/>
-      <button class="search-btn">
-        <span class="search-icon"></span>
-      </button>
+    <!-- Main Top Navbar (Dark) -->
+    <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 mr-6">
+            <i class="ph-fill ph-cloud-check text-xl text-brand-500"></i>
+            <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+        </div>
+
+        <!-- Main Nav Links -->
+        <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
+            <button class="flex items-center gap-2 px-4 bg-brand-800 rounded-lg h-10 my-auto text-p1 font-semibold">
+                <i class="ph ph-squares-four text-sm"></i> Dashboard
+            </button>
+            <button class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+                <i class="ph ph-users text-sm"></i> Students
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="flex items-center gap-3 cursor-pointer border-l border-brand-800 pl-6">
+            <div class="text-right">
+                <div class="text-p1 font-semibold leading-none">John Doe</div>
+                <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+                JD
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sub-Navbar (Breadcrumb) -->
+    <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+        <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold cursor-pointer">
+            <i class="ph-fill ph-squares-four text-sm"></i> Overview <i class="ph ph-caret-right text-xs text-gray-400"></i>
+        </div>
     </div>
 
-    <h1 class="section-title">All Lab</h1>
- 
-    <!-- CONTENT GRID -->
-    <div class="lab-grid" id="labGrid"></div>
-  </main>
- 
-  <script src="TaDashboard_script.js"></script>
+    <!-- Main Content Area -->
+    <main class="p-6 md:p-8 lg:p-10 overflow-y-auto w-full grid grid-cols-1 gap-8 auto-rows-min">
+        
+        <!-- Summary Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Classes Card -->
+            <div class="bg-layout-surface rounded-xl border border-layout-border p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+                        <i class="ph-fill ph-books"></i>
+                    </div>
+                    <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider">Active</span>
+                </div>
+                <div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-brand-800">3</span>
+                        <span class="text-h4 text-gray-600">Classes</span>
+                    </div>
+                    <div class="text-p1 text-gray-500 mt-1">Managing 320 students</div>
+                </div>
+            </div>
+
+            <!-- Total Labs Card -->
+            <div class="bg-layout-surface rounded-xl border border-layout-border p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl">
+                        <i class="ph-fill ph-file-code"></i>
+                    </div>
+                    <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider">In Progress</span>
+                </div>
+                <div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-brand-800">8</span>
+                        <span class="text-h4 text-gray-600">Total Labs</span>
+                    </div>
+                    <div class="text-p1 text-gray-500 mt-1">2 upcoming deadlines</div>
+                </div>
+            </div>
+
+            <!-- Pending Reviews Card -->
+            <div class="bg-layout-surface rounded-xl border-2 border-amber-400 p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-500 flex items-center justify-center text-xl">
+                        <i class="ph-fill ph-warning-circle"></i>
+                    </div>
+                    <span class="bg-amber-50 text-amber-600 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 tracking-wider">
+                        <div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Action Required
+                    </span>
+                </div>
+                <div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-brand-800">12</span>
+                        <span class="text-h4 text-amber-600">Pending</span>
+                    </div>
+                    <div class="text-p1 text-amber-600 font-semibold mt-1 cursor-pointer hover:underline">Ready for review &rarr;</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Search Bar Grid -->
+        <div class="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
+            <!-- Toggles -->
+            <div class="flex gap-3">
+                <button class="px-6 py-2 rounded-full bg-brand-900 text-white text-btn font-bold">All Pending</button>
+                <button class="px-6 py-2 rounded-full text-gray-600 hover:text-brand-800 text-btn font-semibold uppercase border border-gray-300">All Done</button>
+            </div>
+
+            <!-- Spacer -->
+            <div></div>
+
+            <!-- Search & Action -->
+            <div class="flex gap-3">
+                <div class="relative w-64">
+                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+                    <input type="text" id="searchInput" placeholder="Search class or lab..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-layout-border bg-layout-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-p1 shadow-sm">
+                </div>
+                <button class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors">
+                    <i class="ph-bold ph-plus-circle"></i> New Lab
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Header -->
+        <div class="grid grid-cols-[1fr_auto] items-center border-b border-gray-200 pb-2">
+            <h2 class="text-h4 text-gray-400 uppercase tracking-widest font-bold">ALL CLASSES</h2>
+            <button class="flex items-center gap-1.5 text-gray-300 hover:text-gray-500 text-p2 font-semibold">
+                <i class="ph ph-faders-horizontal text-xs"></i> Filter
+            </button>
+        </div>
+
+        <!-- Dynamic Class Grid -->
+        <div id="labGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Cards rendered by script -->
+        </div>
+
+    </main>
+
+    <script src="TaDashboard_script.js"></script>
 </body>
 </html>
