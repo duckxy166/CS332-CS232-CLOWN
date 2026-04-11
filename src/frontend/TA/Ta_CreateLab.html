@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TA Create Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="Ta_CreateLab_style.css">
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="topnav-brand" href="#">
+    <i class="ph ph-cloud-check"></i>
+    ValidMate
+  </a>
+  <div class="topnav-links">
+    <a class="nav-link active" href="Ta_Dashboard.html"><i class="ph ph-squares-four"></i> Dashboard</a>
+  </div>
+  <div class="topnav-user">
+    <div class="user-info">
+      <div class="user-name">John Doe</div>
+      <div class="user-role">Head TA</div>
+    </div>
+    <div class="avatar">JD</div>
+  </div>
+</nav>
+ 
+<!-- PAGE -->
+<div class="page-wrapper">
+ 
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="#"><i class="ph ph-squares-four"></i> Overview</a>
+    <i class="ph ph-caret-right sep"></i>
+    <span class="current"><i class="ph ph-file-code" style="margin-right:4px;"></i>Create New Lab</span>
+  </div>
+ 
+  <!-- ── SECTION 1: Basic Info ── -->
+  <div class="card">
+ 
+    <!-- Lab Name — full width -->
+    <div style="margin-bottom:20px;">
+      <label class="field-label">Lab Name</label>
+      <input type="text" placeholder="e.g., Lab 03: CPU Registers" />
+    </div>
+ 
+    <div class="form-top">
+ 
+      <!-- LEFT -->
+      <div class="left-col" style="display:flex;flex-direction:column;gap:18px;">
+ 
+        <!-- Class Target -->
+        <div>
+          <label class="field-label">Class Target</label>
+          <div class="search-wrap">
+            <i class="ph ph-magnifying-glass"></i>
+            <input type="text" placeholder="Search class (e.g. CS232)" />
+          </div>
+          <div class="tag-list">
+            <span class="tag selected" onclick="toggleTag(this)">CS301</span>
+            <span class="tag selected" onclick="toggleTag(this)">CS232</span>
+            <span class="tag" onclick="toggleTag(this)">CS261</span>
+          </div>
+        </div>
+ 
+        <!-- Section -->
+        <div>
+          <label class="field-label">Section (Multi-Select)</label>
+          <div class="search-wrap">
+            <i class="ph ph-magnifying-glass"></i>
+            <input type="text" placeholder="Search section (e.g. 1001)" />
+          </div>
+          <div class="tag-list">
+            <span class="tag selected" onclick="toggleTag(this)">1001</span>
+            <span class="tag selected" onclick="toggleTag(this)">1002</span>
+            <span class="tag" onclick="toggleTag(this)">1003</span>
+          </div>
+        </div>
+ 
+      </div>
+ 
+      <!-- RIGHT -->
+      <div class="right-col">
+ 
+        <!-- Due Date + Time -->
+        <div>
+          <div class="date-time-row">
+            <div>
+              <label class="field-label">Due Date</label>
+              <input type="date" value="2026-04-01" />
+            </div>
+            <div>
+              <label class="field-label">Due Time</label>
+              <input type="time" value="01:59" />
+            </div>
+          </div>
+        </div>
+ 
+        <!-- Description -->
+        <div style="flex:1;">
+          <label class="field-label">Description / Instructions</label>
+          <textarea style="height:138px;" placeholder="Provide clear instructions for the lab..."></textarea>
+        </div>
+ 
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ── SECTION 2: Reference Image ── -->
+  <div class="card">
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-slot="1">
+      <i class="ph ph-image"></i> Image 1
+      <span class="btn-close-tab"><i class="ph ph-x"></i></span>
+    </button>
+    <button class="tab-btn" data-slot="2">
+      <i class="ph ph-image"></i> Image 2
+      <span class="btn-close-tab"><i class="ph ph-x"></i></span>
+    </button>
+    <button class="tab-btn tab-add" id="addSlotBtn"><i class="ph ph-plus"></i> Add Slot</button>
+  </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:700;color:var(--gray-900);margin-bottom:4px;">Reference Visualizer</div>
+      <div style="font-size:12px;color:var(--gray-400);">Upload a perfect screenshot to establish rules and coordinate positions.</div>
+    </div>
+    <div id="uploadZoneWrap" style="position:relative;">
+      <div class="upload-zone" id="uploadZone">
+        <i class="ph ph-export"></i>
+        <span class="upload-label">Click or drag file here</span>
+        <span class="upload-sub">Supports .jpg, .png (Max 15 MB)</span>
+        <input type="file" id="fileInput" accept=".jpg,.png" style="display:none" />
+      </div>
+      <!-- Image preview (hidden until uploaded) -->
+      <div id="imgPreviewWrap" style="display:none;position:relative;border-radius:10px;overflow:hidden;">
+        <img id="imgPreview" src="" alt="preview" style="width:100%;max-height:320px;object-fit:cover;display:block;border-radius:10px;" />
+        <button id="removeImgBtn" title="Remove image" style="
+          position:absolute;top:10px;right:10px;
+          width:30px;height:30px;border-radius:50%;
+          background:rgba(15,23,42,.65);backdrop-filter:blur(4px);
+          border:none;cursor:pointer;color:#fff;
+          display:flex;align-items:center;justify-content:center;
+          font-size:16px;transition:background .15s;
+        "><i class="ph ph-x"></i></button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ── SECTION 3: Key Rules ── -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">
+        <i class="ph ph-list-checks"></i>
+        Key Rules
+        <span class="section-subtitle" id="keyRulesLabel">for Image 1</span>
+      </div>
+      <button class="btn-add-rule" id="addRuleBtn"><i class="ph ph-plus"></i> Add Rule</button>
+    </div>
+ 
+    <table class="rules-table">
+      <thead>
+        <tr>
+          <th>Target Keyword</th>
+          <th>Weight</th>
+          <th>Text Position</th>
+          <th>Tolerance</th>
+          <th>Mandatory</th>
+        </tr>
+      </thead>
+      <tbody id="rulesBody">
+        <tr>
+          <td class="keyword">successfully created</td>
+          <td class="weight-cell"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
+          <td class="pos-cell"><label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label></td>
+          <td class="tol-cell"><select class="tol-select"><option>Med (±15%)</option><option>Low (±5%)</option><option>High (±25%)</option></select></td>
+          <td class="mand-cell"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
+        </tr>
+        <tr>
+          <td class="keyword">integration-lab</td>
+          <td class="weight-cell"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
+          <td class="pos-cell"><label class="toggle"><input type="checkbox"/><span class="slider"></span></label></td>
+          <td class="tol-cell"><span class="na-text">N/A</span></td>
+          <td class="mand-cell"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
+        </tr>
+      </tbody>
+    </table>
+ 
+    <div class="weight-footer">
+      <div class="weight-row">
+        <span class="weight-label">Total Weight Allocation</span>
+        <span class="weight-value" id="weightVal">80 / 100%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:80%;background:#D97706;"></div></div>
+      <div class="weight-note">Weight must equal 100% to save rules</div>
+    </div>
+ 
+    <div class="pass-criteria-bar">
+      <div class="pc-label"><i class="ph ph-list-checks"></i> Pass Criteria</div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="minScore" checked />
+        <label for="minScore">Min. Score:</label>
+        <div class="score-input-wrap">
+          <input type="number" id="minScoreVal" value="75" min="0" max="100"/>
+          <span>%</span>
+        </div>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="mustPass" />
+        <label for="mustPass">Must pass all Mandatory Rules</label>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ── ACTION BAR ── -->
+  <div class="action-bar">
+    <button class="btn btn-ghost">Cancel</button>
+    <button class="btn btn-primary"><i class="ph ph-plus-circle"></i> Create Lab</button>
+  </div> 
+</div>
+
+    <script src="Ta_CreateLab_script.js"></script>
+</body>
+</html>
