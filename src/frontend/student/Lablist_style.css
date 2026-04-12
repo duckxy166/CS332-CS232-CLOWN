@@ -1,0 +1,147 @@
+:root {
+  --bg:            #f5efeb;
+  --navbar-bg:     #5D768C;
+  --navbar-text:   #ffffff;
+  --card-bg:       #ffffff;
+  --priority-card: #c7d9e8;
+  --badge-bg:      #a8c0d4;
+  --badge-text:    #2c4a60;
+  --text-primary:  #2c2c2c;
+  --text-meta:     #6b6b6b;
+  --text-urgent:   #cc2a2a;
+  --divider:       #d0ccc5;
+  --shadow:        0 2px 10px rgba(0, 0, 0, 0.08);
+  --radius-card:   14px;
+  --radius-badge:  20px;
+  --font-main:     'Nunito', sans-serif;
+  --font-th:       'Sarabun', sans-serif;
+}
+ 
+/* RESET & BASE */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+ 
+html, body { height: 100%; }
+ 
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+ 
+/* HEADER */
+.navbar {
+  background-color: var(--navbar-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  animation: fadeIn 0.4s ease both;
+  border-bottom-left-radius: 35px;
+  border-bottom-right-radius: 35px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+ 
+/* โลโก้รูปภาพ */
+.logo-img {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+.nav-logo:hover .logo-img {
+  animation: logoBounce 0.6s ease;
+}
+ 
+.logo-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--navbar-text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+ 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+ 
+.nav-name {
+  color: var(--navbar-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+ 
+/* Avatar ขยายเมื่อ hover */
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.avatar:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+ 
+/* ปุ่ม Logout เลื่อนขวาเมื่อ hover */
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--navbar-text);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+} 
+
+:root {
+    --brand-500: #4F46E5;
+    --brand-900: #0F172A;
+    --layout-bg: #F8FAFC;
+    --layout-border: #E2E8F0;
+}
+
+.avatar-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.avatar-hover:hover { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2); }
+
+.filter-tab {
+    @apply px-5 py-1.5 rounded-lg text-gray-500 text-xs font-bold transition-all;
+}
+
+.filter-tab.active {
+    @apply bg-brand-900 text-white;
+}
+
+.lab-card {
+    @apply bg-white p-5 rounded-2xl border border-layout-border flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md;
+}
+
+.status-tag {
+    @apply text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider;
+}

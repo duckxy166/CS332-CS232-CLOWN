@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidMate - Lab Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+     <link rel="stylesheet" href="Lablist_style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#F0F4FA', 500: '#4F46E5', 800: '#1E293B', 900: '#0F172A' },
+                        layout: { bg: '#F8FAFC', surface: '#FFFFFF', border: '#E2E8F0' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .avatar-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .avatar-hover:hover { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2); }
+        
+        /* สไตล์สำหรับสถานะ Active ของปุ่ม Filter */
+        .filter-btn.active {
+            background-color: #0F172A; /* brand-900 */
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-layout-bg min-h-screen">
+
+    <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16 sticky top-0 z-50">
+        <div class="flex items-center gap-2 mr-10 cursor-pointer" onclick="window.location.href='student_dashboard.html'">
+            <i class="ph ph-cloud-check text-2xl text-brand-500"></i>
+            <span class="text-lg font-bold tracking-wider uppercase">ValidMate</span>
+        </div>
+
+        <div class="flex gap-6 items-center h-full text-sm font-semibold text-gray-400">
+            <button class="hover:text-white transition-colors" onclick="window.location.href='student_dashboard.html'">
+                <i class="ph ph-squares-four mr-1"></i> Dashboard
+            </button>
+        </div>
+
+        <div class="flex items-center gap-4 border-l border-brand-800 pl-6">
+            <div class="text-right hidden sm:block">
+                <div class="text-sm font-semibold leading-none">Alex Student</div>
+                <div class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Undergraduate</div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-sm font-bold border border-brand-500 cursor-pointer avatar-hover">
+                AS
+            </div>
+            <button class="text-gray-400 hover:text-white hover:translate-x-1 transition-all p-2" title="Logout">
+                <i class="ph ph-sign-out text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="bg-white border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+        <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
+            <a href="student_dashboard.html" class="text-gray-500 hover:text-brand-500 flex items-center gap-1">
+                <i class="ph-fill ph-squares-four"></i> Overview 
+            </a>
+            <i class="ph ph-caret-right text-[10px] text-gray-300"></i> 
+            <span class="text-gray-400">CS 232</span>
+        </div>
+    </div>
+
+    <main class="max-w-5xl mx-auto p-6 space-y-6">
+        <header class="bg-white rounded-2xl p-8 flex justify-between items-center relative overflow-hidden border border-layout-border shadow-sm">
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-brand-500"></div>
+            <div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-bold">CS 232</span>
+                    <span class="text-gray-400 text-[10px] font-bold uppercase">Summer 2026</span>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800">Computer Architecture</h1>
+                <p class="text-gray-500 text-sm mt-1">6 Total Labs • Section 650001</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 min-w-[160px]">
+                <div class="flex justify-between text-[10px] font-bold text-gray-400 uppercase mb-2">
+                    <span>Progress</span>
+                    <span id="progress-text">4/6</span>
+                </div>
+                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div id="progress-fill" class="bg-brand-500 h-full transition-all duration-700" style="width: 66%"></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="relative w-full md:w-80">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="searchInput" placeholder="Search labs (e.g., 05)..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-layout-border focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all">
+            </div>
+            <div class="flex gap-1 bg-white p-1 rounded-xl border border-layout-border" id="filterContainer">
+                <button onclick="filterLabs('ALL')" class="filter-btn px-5 py-1.5 rounded-lg text-xs font-bold active">All Labs</button>
+                <button onclick="filterLabs('PENDING')" class="filter-btn px-5 py-1.5 rounded-lg text-gray-500 text-xs font-bold hover:bg-gray-50">Pending</button>
+                <button onclick="filterLabs('COMPLETED')" class="filter-btn px-5 py-1.5 rounded-lg text-gray-500 text-xs font-bold hover:bg-gray-50">Completed</button>
+            </div>
+        </div>
+
+        <div id="lab-list" class="space-y-4">
+            </div>
+    </main>
+
+    <script src="Lablist_script.js"></script>
+</body>
+</html>
