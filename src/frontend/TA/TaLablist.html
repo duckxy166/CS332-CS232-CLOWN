@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidMate - Lab List</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="TaLabList_style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#4F46E5', 800: '#1E293B', 900: '#0F172A' },
+                        layout: { bg: '#F8FAFC', surface: '#FFFFFF', border: '#E2E8F0' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-layout-bg font-sans text-[#1E293B]">
+
+    <nav class="bg-brand-900 text-white flex items-center justify-between px-6 h-16 border-b border-brand-800 sticky top-0 z-50">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="location.href='Ta_Dashboard.html'">
+                <i class="ph ph-cloud-check text-2xl text-brand-500"></i>
+                <span class="text-lg font-bold tracking-wider uppercase">ValidMate</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <button class="flex items-center gap-2 px-4 py-2 bg-brand-800/50 hover:bg-brand-800 rounded-lg text-sm font-semibold transition-all">
+                    <i class="ph ph-squares-four text-lg"></i> Dashboard
+                </button>
+                <button class="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white hover:bg-brand-800/30 rounded-lg text-sm font-semibold transition-all">
+                    <i class="ph ph-users text-lg"></i> Students
+                </button>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-bold leading-none">John Doe</p>
+                <p class="text-[10px] text-gray-400 uppercase font-bold mt-1">Head TA</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-brand-800 border border-brand-500 flex items-center justify-center font-bold text-brand-500">JD</div>
+        </div>
+    </nav>
+
+    <div class="bg-white border-b border-layout-border px-8 h-10 flex items-center shadow-sm">
+        <div class="flex items-center gap-3 text-[13px] font-medium text-slate-600">
+            <div class="flex items-center gap-1.5 cursor-pointer hover:text-indigo-600 transition-colors" onclick="location.href='Ta_Dashboard.html'">
+                <i class="ph-fill ph-squares-four text-slate-800 text-base"></i>
+                <span>Overview</span>
+            </div>
+            <i class="ph ph-caret-right text-[10px] text-slate-300"></i>
+            <div class="flex items-center gap-1.5 text-slate-800 font-bold">
+                <i class="ph-fill ph-stack text-slate-800 text-base"></i>
+                <span>Lab List</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-8">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <a href="Ta_Dashboard.html" class="text-xs font-bold text-gray-400 hover:text-brand-500 flex items-center gap-1 mb-4 no-underline uppercase">
+                    <i class="ph ph-arrow-left"></i> BACK TO DASHBOARD
+                </a>
+                <div class="flex items-center gap-4">
+                    <div class="bg-indigo-50 p-3 rounded-2xl text-brand-500">
+                        <i class="ph ph-folder-open text-3xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold tracking-tight">CS232</h1>
+                        <p class="text-gray-500 text-sm">Computer Architecture • Manage active labs</p>
+                    </div>
+                </div>
+            </div>
+            <button class="bg-brand-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
+                <i class="ph ph-plus-circle text-xl"></i> Create New Lab
+            </button>
+        </div>
+
+        <div class="flex items-center gap-4 mb-6">
+            <div class="flex-1 bg-white border border-layout-border rounded-xl flex items-center px-4">
+                <i class="ph ph-magnifying-glass text-gray-400"></i>
+                <input type="text" id="labSearch" placeholder="Search labs by name or section..." oninput="searchLabs()" class="w-full p-3 text-sm outline-none bg-transparent">
+            </div>
+            <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                Total Labs: <span id="count-num" class="text-brand-500 text-lg ml-1">0</span>
+            </p>
+        </div>
+
+        <div id="labList" class="flex flex-col gap-4">
+            </div>
+    </main>
+
+    <script src="TaLabList_script.js"></script>
+</body>
+</html>
