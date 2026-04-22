@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -30,7 +30,7 @@
       <span class="text-[14px] font-bold tracking-wide">ValidMate</span>
     </div>
     <div class="flex gap-2 items-center h-full">
-      <button class="flex items-center gap-2 px-4 bg-white/10 rounded-lg h-10 text-[14px] font-semibold" onclick="window.location.href='student_dashboard.html'">
+      <button class="flex items-center gap-2 px-4 bg-white/10 rounded-lg h-10 text-[14px] font-semibold">
         <i class="ph ph-squares-four text-sm"></i> Dashboard
       </button>
     </div>
@@ -74,26 +74,24 @@
           <div class="top-accent bg-amber-400"></div>
           <div class="loader-circle mb-8"></div>
           <h2 class="text-[28px] font-bold text-brand-900 mb-3">Submission Processing</h2>
-          <p class="text-slate-500 text-[15px] max-w-md leading-relaxed">
+          <p class="text-slate-500 text-[15px] max-w-md leading-relaxed ">
             We are currently analyzing your submission.<br>You can safely leave this page and check back later.
           </p>
-          <button class="btn-dark mt-10" onclick="window.location.href='student_Lablist.html'">
+          <button class="btn-dark mt-10">
             <i class="ph ph-list-bullets"></i> Back to Lab List
           </button>
         </div>
 
-        <div id="state-passed" class="status-view flex flex-col items-center">
+        <div id="state-passed" class="status-view hidden flex flex-col items-center justify-center">
           <div class="top-accent bg-emerald-500"></div>
-  
           <div class="icon-circle bg-emerald-50 text-emerald-500 mb-8 flex items-center justify-center">
             <i class="ph-fill ph-check-circle"></i>
           </div>
-  
           <h2 class="text-[28px] font-bold text-brand-900 mb-3">Submission Passed</h2>
           <p class="text-slate-500 text-[15px] max-w-md leading-relaxed">
             Your submission has been evaluated and successfully met all criteria. Great work!
           </p>
-          <button class="btn-dark mt-10" onclick="window.location.href='student_Lablist.html'">
+          <button class="btn-dark mt-10">
             <i class="ph ph-list-bullets"></i> Back to Lab List
           </button>
         </div>
@@ -108,10 +106,10 @@
             Your submission has been evaluated and did not meet the required criteria for this lab. Please review the instructions and try again.
           </p>
           <div class="flex gap-3 mt-10 w-full justify-center">
-            <button class="btn-dark" onclick="window.location.href='submissionResult.html'">
+            <button class="btn-dark">
               <i class="ph ph-arrows-counter-clockwise"></i> Re-submit Lab
             </button>
-            <button class="btn-outline" onclick="window.location.href='student_Lablist.html'">
+            <button class="btn-outline">
               Back to Lab List
             </button>
           </div>
