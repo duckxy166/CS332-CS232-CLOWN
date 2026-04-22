@@ -1,76 +1,27 @@
-// ==========================================
-// 1. Mock Data (ข้อมูลจำลอง)
-// ==========================================
-const mockDataSuccess = {
-    labId: "Lab 01: xxxxxxxxxxxxxxx",
-    isOverallSuccess: true,
-    steps: [
-        { task: "successfully created", status: "success" },
-        { task: "integration-lab", status: "success" },
-        { task: "us-east-1", status: "success" }
-    ]
-};
-
-// ==========================================
-// 2. ฟังก์ชันหลักสำหรับแสดงผล
-// ==========================================
-function renderResult(data) {
-    const headerContainer = document.getElementById('main-status-header');
-    const mainIcon = document.getElementById('main-status-icon');
-    const mainText = document.getElementById('main-status-text');
-    const labNameText = document.getElementById('lab-name');
-    const listContainer = document.getElementById('status-list-container');
-
-    if (!headerContainer || !listContainer) return;
-
-    // อัปเดตชื่อ Lab
-    labNameText.textContent = data.labId;
-
-    // เปลี่ยนสีและข้อความตามสถานะ
-    if (data.isOverallSuccess) {
-        headerContainer.classList.remove('is-failed');
-        mainIcon.textContent = "✓";
-        mainText.textContent = "ผ่านการตรวจสอบ";
-    } else {
-        headerContainer.classList.add('is-failed');
-        mainIcon.textContent = "✗";
-        mainText.textContent = "ไม่ผ่านการตรวจสอบ";
+ // ฟังก์ชันสำหรับสลับหน้าจอ
+    function showStatus(statusId) {
+      document.querySelectorAll('.status-card').forEach(card => {
+        card.classList.remove('active');
+      });
+      document.getElementById('status-' + statusId).classList.add('active');
     }
 
-    // วาดรายการย่อย
-    listContainer.innerHTML = ''; 
-    data.steps.forEach(step => {
-        const isSuccess = step.status === 'success';
-        const iconClass = isSuccess ? 'success' : 'failed';
-        const iconSymbol = isSuccess ? '✓' : '✗';
+    // ฟังก์ชันจำลองการรอ Backend (คุณสามารถนำไปประยุกต์ใช้กับ fetch API จริงได้)
+    function simulateProcess() {
+      showStatus('processing');
 
-        const itemHTML = `
-            <div class="status-item">
-                <span class="status-icon ${iconClass}">${iconSymbol}</span>
-                <span class="status-text">${step.task}</span>
-            </div>
-        `;
-        listContainer.insertAdjacentHTML('beforeend', itemHTML);
-    });
-}
+      // จำลองการรอ 3 วินาที
+      setTimeout(() => {
+        // สุ่มผลลัพธ์: 80% สำเร็จ, 20% ล้มเหลว
+        const isSuccess = Math.random() > 0.2;
+        
+        if (isSuccess) {
+          showStatus('success');
+        } else {
+          showStatus('error');
+        }
+      }, 3000);
+    }
 
-// ==========================================
-// 3. เริ่มทำงานเมื่อเปิดหน้าเว็บ
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    // หน่วงเวลา 0.5 วิ ให้เหมือนโหลดจริง แล้วค่อยแสดงข้อมูล
-    setTimeout(() => {
-        renderResult(mockDataSuccess); 
-    }, 500);
-});
-
-// ==========================================
-// 4. ฟังก์ชันปุ่มกด
-// ==========================================
-function goBack() {
-    window.location.href = "student_dashboard.html";
-}
-
-function viewEvidence() {
-    alert("กำลังเปิดไฟล์หลักฐาน");
-}
+    // เริ่มทำงานเมื่อเปิดหน้าจอ (สำหรับทดสอบ)
+    window.onload = simulateProcess;

@@ -1,52 +1,126 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submission Result - CLOWN</title>
-    <link rel="stylesheet" href="submissionResult_style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ValidMate – Result</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
+          colors: {
+            brand: { 500:'#4F46E5', 800:'#1E293B', 900:'#0F172A' },
+            layout: { bg:'#F8FAFC', surface:'#FFFFFF', border:'#E2E8F0' }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="submissionResult_style.css" />
 </head>
-<body>
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 min-h-screen" style="display:grid;grid-template-rows:64px 48px 1fr">
 
-    <nav class="navbar">
-        <div class="nav-logo">
-            <img class="logo-img" src="clown2.png" alt="CLOWN logo"/>
-            <span class="logo-text">CLOWN</span>
+  <nav class="bg-brand-900 text-white flex items-center px-6 border-b border-white/10 h-16" style="display:grid;grid-template-columns:auto 1fr auto">
+    <div class="flex items-center gap-2 mr-6">
+      <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+      <span class="text-[14px] font-bold tracking-wide">ValidMate</span>
+    </div>
+    <div class="flex gap-2 items-center h-full">
+      <button class="flex items-center gap-2 px-4 bg-white/10 rounded-lg h-10 text-[14px] font-semibold" onclick="window.location.href='student_dashboard.html'">
+        <i class="ph ph-squares-four text-sm"></i> Dashboard
+      </button>
+    </div>
+    <div class="flex items-center gap-3 border-l border-white/10 pl-6">
+      <div class="text-right">
+        <div class="text-[14px] font-semibold leading-none">Alex Student</div>
+        <div class="text-[12px] text-gray-400 leading-none mt-1">Undergraduate</div>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-[14px] font-bold border border-brand-500">AS</div>
+    </div>
+  </nav>
+
+  <div class="bg-layout-surface border-b border-layout-border px-6 flex items-center shadow-sm">
+    <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-semibold">
+      <i class="ph-fill ph-squares-four text-sm"></i> Overview
+      <i class="ph ph-caret-right text-xs text-gray-300"></i>
+      <span>CS 232</span>
+      <i class="ph ph-caret-right text-xs text-gray-300"></i>
+      <span>Lab 05 - CPU Pipelining</span>
+      <i class="ph ph-caret-right text-xs text-gray-300"></i>
+      <span class="text-brand-800">Result</span>
+    </div>
+  </div>
+
+  <main class="p-6 md:p-8 flex flex-col items-center">
+    <div class="w-full max-w-3xl">
+      
+      <div class="bg-white rounded-xl border border-layout-border shadow-sm p-5 mb-6 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center">
+          <i class="ph-fill ph-package text-slate-400 text-xl"></i>
         </div>
-        <div class="nav-right">
-            <span class="nav-name" id="user-name">กำลังโหลด...</span>
-            <div class="avatar"></div>
-            <button class="logout-btn" title="Logout">
-                <span class="logout-icon"></span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
-                </svg>
+        <div>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Evaluation Status</p>
+          <h1 class="text-[18px] font-bold text-brand-900">Lab 05 - CPU Pipelining</h1>
+        </div>
+      </div>
+
+      <div id="result-container" class="bg-white rounded-[24px] border border-layout-border shadow-sm overflow-hidden min-h-[400px] flex items-center justify-center p-12 text-center relative">
+        
+        <div id="state-processing" class="status-view flex flex-col items-center">
+          <div class="top-accent bg-amber-400"></div>
+          <div class="loader-circle mb-8"></div>
+          <h2 class="text-[28px] font-bold text-brand-900 mb-3">Submission Processing</h2>
+          <p class="text-slate-500 text-[15px] max-w-md leading-relaxed">
+            We are currently analyzing your submission.<br>You can safely leave this page and check back later.
+          </p>
+          <button class="btn-dark mt-10" onclick="window.location.href='student_Lablist.html'">
+            <i class="ph ph-list-bullets"></i> Back to Lab List
+          </button>
+        </div>
+
+        <div id="state-passed" class="status-view flex flex-col items-center">
+          <div class="top-accent bg-emerald-500"></div>
+  
+          <div class="icon-circle bg-emerald-50 text-emerald-500 mb-8 flex items-center justify-center">
+            <i class="ph-fill ph-check-circle"></i>
+          </div>
+  
+          <h2 class="text-[28px] font-bold text-brand-900 mb-3">Submission Passed</h2>
+          <p class="text-slate-500 text-[15px] max-w-md leading-relaxed">
+            Your submission has been evaluated and successfully met all criteria. Great work!
+          </p>
+          <button class="btn-dark mt-10" onclick="window.location.href='student_Lablist.html'">
+            <i class="ph ph-list-bullets"></i> Back to Lab List
+          </button>
+        </div>
+
+        <div id="state-rejected" class="status-view hidden flex flex-col items-center">
+          <div class="top-accent bg-rose-500"></div>
+          <div class="icon-circle bg-rose-50 text-rose-500 mb-8">
+            <i class="ph-fill ph-x-circle"></i>
+          </div>
+          <h2 class="text-[28px] font-bold text-brand-900 mb-3">Submission Rejected</h2>
+          <p class="text-slate-500 text-[15px] max-w-md leading-relaxed">
+            Your submission has been evaluated and did not meet the required criteria for this lab. Please review the instructions and try again.
+          </p>
+          <div class="flex gap-3 mt-10 w-full justify-center">
+            <button class="btn-dark" onclick="window.location.href='submissionResult.html'">
+              <i class="ph ph-arrows-counter-clockwise"></i> Re-submit Lab
             </button>
+            <button class="btn-outline" onclick="window.location.href='student_Lablist.html'">
+              Back to Lab List
+            </button>
+          </div>
         </div>
-    </nav>
 
-    <main class="content-area">
-        <div class="result-card">
-            <div class="card-header" id="main-status-header">
-                <div class="check-icon-wrapper">
-                    <div class="check-icon" id="main-status-icon">...</div>
-                </div>
-                <h2 id="main-status-text">กำลังตรวจสอบ...</h2>
-                <p id="lab-name">Lab: กำลังโหลดข้อมูล</p>
-            </div>
-            
-            <div class="card-body" id="status-list-container">
-                </div>
+      </div>
+    </div>
+  </main>
 
-            <div class="card-footer">
-                <button class="btn btn-secondary" onclick="goBack()">กลับสู่หน้าหลัก</button>
-                <button class="btn btn-outline" onclick="viewEvidence()">ดูหลักฐานที่ส่ง</button>
-            </div>
-        </div>
-    </main>
-
-    <script src="submissionResult_script.js"></script>
+  <script src="submissionResult_script.js"></script>
 </body>
 </html>
