@@ -1,79 +1,158 @@
-:root {
-    --primary: #5D768C;
-    --bg: #FDFBFA;
-    --card-bg: #FFFFFF;
+/* ═══════════════════════════════════════════
+   studentSubmission_style.css
+═══════════════════════════════════════════ */
+
+.fade-in {
+  animation: fadeUp 0.35s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-body {
-    margin: 0;
-    font-family: 'Sarabun', sans-serif;
-    background-color: var(--bg);
-    color: #333;
+/* Numbered badge */
+.num-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4F46E5;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
-/* Navbar */
-.navbar {
-    background-color: var(--primary);
-    padding: 10px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
+/* Picture tabs — outlined pill style matching Figma */
+.pic-tab {
+  font-size: 13px !important;
+  font-weight: 600;
+  color: #64748B;
+  background: #fff;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9999px;
+  padding: 5px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+  white-space: nowrap;
+  display: inline-block;
 }
-.nav-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.logo-img { height: 35px; }
-.logo-text { font-family: 'Nunito'; font-weight: 800; font-size: 1.2rem; }
-.nav-right { display: flex; align-items: center; gap: 15px; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: #ccc; border: 2px solid white; }
-.logout-btn { background: none; border: none; color: white; cursor: pointer; }
-
-/* Main Content */
-.container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
-.back-link { text-decoration: none; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
-
-.submission-card {
-    background: white;
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+.pic-tab:hover {
+  border-color: #4F46E5;
+  color: #4F46E5;
+}
+.pic-tab.active {
+  background: #EEF2FF;
+  border-color: #4F46E5;
+  color: #4F46E5;
+  font-weight: 700;
 }
 
-.lab-header h1 { margin: 0; font-family: 'Nunito'; font-weight: 800; font-size: 24px; }
-.lab-sub-detail { margin-top: 8px; color: #666; font-size: 14px; display: flex; gap: 20px; }
-.deadline-label { color: #D32F2F; font-weight: 600; }
-
-.header-line { border: none; border-top: 2px solid var(--primary); margin: 20px 0; }
-
-.status-row { margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
-.status-badge {
-    background: #FFF9E6; color: #856404; padding: 5px 15px; border-radius: 20px;
-    font-size: 12px; font-weight: 700; font-family: 'Nunito';
+/* Drop zone */
+.drop-zone {
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  min-height: 195px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  background: #FAFBFC;
+  transition: border-color 0.15s, background 0.15s;
 }
-.status-badge.success { background: #E8F5E9; color: #2E7D32; }
-
-/* Tabs */
-.tabs-list { display: flex; gap: 10px; margin-bottom: 15px; }
-.tab-item {
-    padding: 8px 20px; background: #EEE; border-radius: 20px; cursor: pointer;
-    font-size: 14px; border: none; font-family: 'Sarabun';
+.drop-zone:hover,
+.drop-zone.drop-over {
+  border-color: #4F46E5;
+  background: #EEF2FF;
 }
-.tab-item.active { background: #C1CDD7; color: #2C3E50; font-weight: 600; }
 
-/* Dropzone */
-.drop-area {
-    border: 2px dashed #CCC; border-radius: 10px; min-height: 250px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: #FAFAFA; cursor: pointer; position: relative;
+/* Dot indicators */
+.upload-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #E2E8F0;
+  transition: background 0.2s;
 }
-.cloud-icon { font-size: 40px; margin-bottom: 10px; }
-.main-msg { font-weight: 600; margin: 0; }
-.sub-msg { font-size: 12px; color: #888; margin: 5px 0 0 0; }
-.preview-img { position: absolute; width: 100%; height: 100%; object-fit: contain; background: white; display: none; }
+.upload-dot.filled    { background: #10B981; }
+.upload-dot.active-dot {
+  background: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
 
-/* Button */
-.btn-submit {
-    width: 100%; background: var(--primary); color: white; border: none;
-    padding: 15px; border-radius: 10px; font-weight: 600; margin-top: 30px; cursor: pointer;
-    font-size: 16px; transition: 0.2s;
+/* Submit success */
+@keyframes successPop {
+  0%  { transform: scale(1); }
+  40% { transform: scale(1.03); }
+  100%{ transform: scale(1); }
 }
-.btn-submit:hover { opacity: 0.9; }
+.submit-success {
+  background: #10B981 !important;
+  animation: successPop 0.3s ease;
+}
+
+/* Toast */
+#toast { animation: toastIn 0.25s ease; }
+@keyframes toastIn {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+
+/* ── Tablet (≤ 900px): single column, upload above instructions ── */
+@media (max-width: 900px) {
+  #mainGrid {
+    grid-template-columns: 1fr !important;
+  }
+  #mainGrid > div:last-child {
+    order: -1;
+  }
+}
+
+/* ── Mobile (≤ 640px) ── */
+@media (max-width: 640px) {
+  /* Reduce page padding */
+  main {
+    padding: 12px !important;
+  }
+
+  /* Lab header card padding */
+  .lab-header {
+    padding: 16px !important;
+  }
+
+  /* Stack title + due date vertically */
+  .lab-header-wrap {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  /* Due date full width */
+  .due-date-badge {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+  }
+
+  /* Hide role in nav */
+  .nav-role {
+    display: none !important;
+  }
+}
+
+/* ── Small mobile (≤ 400px) ── */
+@media (max-width: 400px) {
+  main {
+    padding: 8px !important;
+  }
+}

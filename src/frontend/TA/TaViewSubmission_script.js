@@ -1,249 +1,357 @@
-/* ══════════════════════════════════════════
-   CONFIG
-══════════════════════════════════════════ */
-const API_URL = 'https://s25zfr23j6.execute-api.us-east-1.amazonaws.com/dev';
+/* ══════════════════════════════════════════════
+   taViewSubmission_script.js
+   Mirrors the data-driven render pattern from
+   TaDashboard_script.js for consistency.
+══════════════════════════════════════════════ */
 
-/* ══════════════════════════════════════════
-   STATE
-══════════════════════════════════════════ */
-let allLabs       = [];
-let selectedLabID = null;
-let submissions   = [];
-let labInfo       = null;
-let expandedEmail = null;
+/* ── Lab Meta ── */
+const labData = {
+  title:    "Cloud Storage Setup",
+  section:  "650001",
+  deadline: "16 Mar 2026",
+  description: [
+    "Configure AWS Lambda to receive S3 events",
+    "Write Node.js code to extract bucketName and validate file extensions (.jpg, .png)",
+    "Ensure correct IAM role permissions are attached to the function",
+  ],
+  rules: [
+    { type: "Text",           requirement: "mandatory", keyword: "Successfully", weight: 40 },
+    { type: "Text + Position",requirement: "optional",  keyword: "Lambda",       weight: 40 },
+    { type: "Text",           requirement: "optional",  keyword: "index",        weight: 20 },
+  ],
+};
 
-/* ══════════════════════════════════════════
-   UTILS
-══════════════════════════════════════════ */
-function toast(msg){
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
-}
+/* ── Submissions Data ── */
+const submissions = [
+  {
+    email: "phonpawee.sae@dome.tu.ac.th",
+    status: "passed",
+    score: 100,
+    submittedAt: "26 Mar 2026 · 20:58",
+    checkedAt:   "26 Mar 2026 · 20:58",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: true },
+      ]},
+      { label: "Image 2", status: "passed", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: true },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  },
+  {
+    email: "saharat.udo@dome.tu.ac.th",
+    status: "rejected",
+    score: 60,
+    submittedAt: "26 Mar 2026 · 21:05",
+    checkedAt:   "26 Mar 2026 · 21:05",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: true },
+      ]},
+      { label: "Image 2", status: "rejected", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: false, note: "Missing" },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  },
+  {
+    email: "paeng.hom@dome.tu.ac.th",
+    status: "passed",
+    score: 100,
+    submittedAt: "26 Mar 2026 · 21:12",
+    checkedAt:   "26 Mar 2026 · 21:12",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: true },
+      ]},
+      { label: "Image 2", status: "passed", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: true },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  },
+  {
+    email: "nattawut.kri@dome.tu.ac.th",
+    status: "rejected",
+    score: 40,
+    submittedAt: "26 Mar 2026 · 21:30",
+    checkedAt:   "26 Mar 2026 · 21:31",
+    images: [
+      { label: "Image 1", status: "rejected", checks: [
+        { label: "Successfully", ok: false, note: "Missing" },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: false, note: "Not found" },
+      ]},
+      { label: "Image 2", status: "rejected", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: false, note: "Missing" },
+        { label: "Objects", ok: false, note: "Missing" },
+      ]},
+    ],
+  },
+  {
+    email: "supalak.wan@dome.tu.ac.th",
+    status: "passed",
+    score: 80,
+    submittedAt: "26 Mar 2026 · 21:44",
+    checkedAt:   "26 Mar 2026 · 21:44",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: false, note: "Missing" },
+      ]},
+      { label: "Image 2", status: "passed", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: true },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  }
+];
 
-function fmtDate(iso){
-  if(!iso) return '—';
-  return new Date(iso).toLocaleDateString('th-TH', {
-    day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
-}
-
-function badgeHTML(status){
+/* ────────────────────────────────────────
+   HELPERS
+──────────────────────────────────────── */
+function statusPill(status) {
   const map = {
-    PASSED:   { cls: 'badge-passed',   icon: '✓', label: 'PASSED' },
-    REJECTED: { cls: 'badge-rejected', icon: '✗', label: 'REJECTED' },
-    PENDING:  { cls: 'badge-pending',  icon: '⏳', label: 'PENDING' },
+    passed:   '<span class="pill-passed">Passed</span>',
+    rejected: '<span class="pill-rejected">Rejected</span>',
+    pending:  '<span class="pill-pending">Pending</span>',
   };
-  const b = map[status] || map.PENDING;
-  return `<span class="badge ${b.cls}">${b.icon} ${b.label}</span>`;
+  return map[status] ?? '';
 }
 
-/* ══════════════════════════════════════════
-   LOAD LABS
-══════════════════════════════════════════ */
-async function loadLabs(){
-  try {
-    const res  = await fetch(`${API_URL}/labs`);
-    const data = await res.json();
-    const raw  = data.body ? JSON.parse(data.body) : data;
-    allLabs = raw.labs || [];
-    renderLabList();
-  } catch(err){
-    document.getElementById('labListWrap').innerHTML =
-      `<div class="state-msg">โหลด Lab ไม่ได้ — ${err.message}</div>`;
-  }
+function rowAccent(status) {
+  const map = { passed: 'row-passed', rejected: 'row-rejected', pending: 'row-pending' };
+  return map[status] ?? '';
 }
 
-function renderLabList(){
-  if(!allLabs.length){
-    document.getElementById('labListWrap').innerHTML =
-      `<div class="state-msg">ยังไม่มี Lab</div>`;
-    return;
-  }
-  document.getElementById('labListWrap').innerHTML =
-    `<div class="lab-list">${allLabs.map(lab => `
-      <div class="lab-item ${selectedLabID === lab.labID ? 'selected' : ''}"
-           onclick="selectLab('${lab.labID}')">
-        <div class="lab-radio"><div class="lab-radio-dot"></div></div>
-        <div class="lab-item-info">
-          <div class="lab-item-name">${lab.labName}</div>
-          <div class="lab-item-meta">${lab.subjectId} · section ${(lab.sections||[]).join(', ')}</div>
-        </div>
-      </div>`).join('')}</div>`;
+function checkIcon(ok) {
+  return ok
+    ? `<i class="ph-bold ph-check text-status-success text-xs flex-shrink-0"></i>`
+    : `<i class="ph-bold ph-x text-status-error text-xs flex-shrink-0"></i>`;
 }
 
-/* ══════════════════════════════════════════
-   SELECT LAB → LOAD SUBMISSIONS
-══════════════════════════════════════════ */
-async function selectLab(labID){
-  selectedLabID = labID;
-  renderLabList();
-  document.getElementById('barLab').textContent = allLabs.find(l=>l.labID===labID)?.labName || labID;
+function imageCardHTML(img) {
+  const isPass = img.status === 'passed';
+  const cardClass = img.status === 'passed' ? 'vc-passed' : img.status === 'pending' ? 'vc-pending' : 'vc-rejected';
+  const checksHTML = img.checks.map(c => `
+    <li class="check-item ${c.ok ? 'text-status-success' : 'text-status-error'}">
+      ${checkIcon(c.ok)}
+      <span class="text-brand-800">${c.label}</span>
+      ${!c.ok && c.note ? `<span class="text-xs text-gray-400 italic ml-1">(${c.note})</span>` : ''}
+    </li>
+  `).join('');
 
-  /* show loading in table area */
-  document.getElementById('statsWrap').style.display = 'none';
-  document.getElementById('subCard').style.display   = 'block';
-  document.getElementById('dlWrap').style.display     = 'none';
-  document.getElementById('subBody').innerHTML =
-    `<tr><td colspan="6"><div class="state-msg"><div class="spinner"></div>กำลังโหลดรายการส่งงาน...</div></td></tr>`;
-
-  try {
-    const res  = await fetch(`${API_URL}/submissions?labID=${encodeURIComponent(labID)}`);
-    const data = await res.json();
-    const raw  = data.body ? JSON.parse(data.body) : data;
-
-    if(!raw.success){ toast('Error: ' + (raw.error||'unknown')); return; }
-
-    labInfo     = raw.lab;
-    submissions = raw.submissions || [];
-
-    renderStats(raw.stats);
-    renderTable();
-
-    /* show download button if any passed */
-    const hasPassed = submissions.some(s => s.status === 'PASSED');
-    document.getElementById('dlWrap').style.display = hasPassed ? 'flex' : 'none';
-
-  } catch(err){
-    document.getElementById('subBody').innerHTML =
-      `<tr><td colspan="6"><div class="state-msg">โหลดไม่ได้ — ${err.message}</div></td></tr>`;
-  }
-}
-
-/* ══════════════════════════════════════════
-   STATS
-══════════════════════════════════════════ */
-function renderStats(stats){
-  if(!stats) return;
-  document.getElementById('statsWrap').style.display = 'block';
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card stat-total">
-      <div class="stat-val">${stats.total}</div>
-      <div class="stat-lbl">Total</div>
+  return `
+    <div class="validation-card ${cardClass}">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-p1 font-semibold text-brand-800">${img.label}</span>
+        ${statusPill(img.status)}
+      </div>
+      <!-- Thumbnail placeholder (replaces screenshot image) -->
+      <div class="thumb-placeholder mb-3">
+        <i class="ph ph-image"></i>
+      </div>
+      <ul class="space-y-1.5">${checksHTML}</ul>
     </div>
-    <div class="stat-card stat-passed">
-      <div class="stat-val">${stats.passed}</div>
-      <div class="stat-lbl">Passed</div>
-    </div>
-    <div class="stat-card stat-rejected">
-      <div class="stat-val">${stats.rejected}</div>
-      <div class="stat-lbl">Rejected</div>
-    </div>
-    <div class="stat-card stat-pending">
-      <div class="stat-val">${stats.pending}</div>
-      <div class="stat-lbl">Pending</div>
-    </div>`;
+  `;
 }
 
-/* ══════════════════════════════════════════
-   TABLE
-══════════════════════════════════════════ */
-function renderTable(){
-  if(!submissions.length){
-    document.getElementById('subBody').innerHTML =
-      `<tr><td colspan="6"><div class="state-msg">ยังไม่มีคนส่งงาน</div></td></tr>`;
-    return;
-  }
+/* ────────────────────────────────────────
+   RENDER: Rules Table
+──────────────────────────────────────── */
+function renderRules() {
+  const tbody = document.getElementById('rulesTable');
+  if (!tbody) return;
 
-  /* sort: PENDING first, then by submittedAt desc */
-  const sorted = [...submissions].sort((a,b) => {
-    if(a.status === 'PENDING' && b.status !== 'PENDING') return -1;
-    if(b.status === 'PENDING' && a.status !== 'PENDING') return 1;
-    return new Date(b.submittedAt||0) - new Date(a.submittedAt||0);
-  });
+  tbody.innerHTML = labData.rules.map(r => {
+    const reqBadge = r.requirement === 'mandatory'
+      ? '<span class="badge-mandatory">Mandatory</span>'
+      : '<span class="badge-optional">Optional</span>';
 
-  document.getElementById('subBody').innerHTML = sorted.map((sub, i) => {
-    const isOpen = expandedEmail === sub.email;
+    const typeIcon = r.type.includes('Position')
+      ? '<i class="ph-fill ph-grid-four text-xs"></i>'
+      : '<i class="ph-fill ph-text-t text-xs"></i>';
+
     return `
-      <tr class="sub-row" onclick="toggleDetail('${sub.email}')">
-        <td class="mono">${i+1}</td>
-        <td style="font-weight:500">${sub.email}</td>
-        <td>${badgeHTML(sub.status)}</td>
-        <td class="mono">${sub.totalScore != null ? sub.totalScore + '%' : '—'}</td>
-        <td class="mono" style="font-size:11px">${fmtDate(sub.submittedAt)}</td>
-        <td class="mono" style="font-size:11px">${fmtDate(sub.checkedAt)}</td>
+      <tr class="hover:bg-layout-bg transition-colors">
+        <td><span class="rule-chip">${typeIcon} ${r.type}</span></td>
+        <td>${reqBadge}</td>
+        <td class="font-semibold">${r.keyword}</td>
+        <td class="text-right font-bold">${r.weight}%</td>
       </tr>
-      <tr class="detail-row ${isOpen ? 'open' : ''}" id="dr-${sub.email.replace(/[@.]/g,'_')}">
-        <td colspan="6" class="detail-cell">
-          ${detailHTML(sub)}
-        </td>
-      </tr>`;
+    `;
   }).join('');
 }
 
-function toggleDetail(email){
-  expandedEmail = expandedEmail === email ? null : email;
-  renderTable();
+/* ────────────────────────────────────────
+   RENDER: Stat Cards
+──────────────────────────────────────── */
+function renderStats(data) {
+  const total    = data.length;
+  const passed   = data.filter(s => s.status === 'passed').length;
+  const rejected = data.filter(s => s.status === 'rejected').length;
+  const pending  = data.filter(s => s.status === 'pending').length;
+
+  document.getElementById('statTotal').textContent    = total;
+  document.getElementById('statPassed').textContent   = passed;
+  document.getElementById('statRejected').textContent = rejected;
+  document.getElementById('statPending').textContent  = pending;
 }
 
-function detailHTML(sub){
-  /* screenshots */
-  let imgsHTML = '';
-  if(sub.screenshots?.length){
-    imgsHTML = `<div class="detail-imgs">${sub.screenshots.map((s,i) => `
-      <div class="detail-img-card">
-        ${s.url
-          ? `<img src="${s.url}" alt="img${s.imgId}" onclick="window.open('${s.url}','_blank')" title="คลิกเพื่อดูเต็ม">`
-          : `<div style="height:120px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px">ไม่สามารถโหลดรูปได้</div>`}
-        <div class="detail-img-label">รูปที่ ${i+1}</div>
-      </div>`).join('')}</div>`;
+/* ────────────────────────────────────────
+   RENDER: Submission Rows
+──────────────────────────────────────── */
+let expandedRows = new Set([0, 1]); // default: first two expanded
+
+function renderSubmissions(data) {
+  const body = document.getElementById('submissionsBody');
+  if (!body) return;
+
+  if (data.length === 0) {
+    body.innerHTML = `
+      <div class="py-12 flex flex-col items-center justify-center text-gray-400 border-t border-layout-border">
+        <i class="ph-fill ph-magnifying-glass text-4xl mb-2 text-gray-300"></i>
+        <p class="text-p1 font-semibold">No submissions found</p>
+      </div>`;
+    return;
   }
 
-  /* score breakdown */
-  let breakdownHTML = '';
-  if(sub.scoreResult?.length){
-    sub.scoreResult.forEach((img, i) => {
-      const imgPassed = img.status === 'PASSED';
-      breakdownHTML += `<div class="rb-img-head">รูปที่ ${i+1} — ${imgPassed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'} (${img.score}%)</div>`;
-      (img.ruleResults||[]).forEach(r => {
-        breakdownHTML += `
-          <div class="rb-rule">
-            <span class="rb-icon">${r.passed ? '✓' : '✗'}</span>
-            <span class="rb-kw">${r.keyword}</span>
-            <span class="rb-score" style="color:${r.passed ? 'var(--green)' : 'var(--red)'}">${r.score}%</span>
-          </div>`;
-      });
+  body.innerHTML = data.map((s, i) => {
+    const isOpen = expandedRows.has(i);
+    const breakdownHTML = s.images.map(img => imageCardHTML(img)).join('');
+
+    return `
+      <div class="border-b border-layout-border last:border-b-0" id="submission-row-${i}">
+
+        <!-- Main row -->
+        <div class="submission-row-grid px-4 py-3.5 cursor-pointer transition-colors ${rowAccent(s.status)}"
+             onclick="toggleRow(${i})">
+          <span class="text-p2 text-gray-400 font-semibold">${i + 1}</span>
+          <span class="text-p1 font-medium truncate">${s.email}</span>
+          <span class="text-center">${statusPill(s.status)}</span>
+          <span class="text-center font-bold text-p1 ${s.status === 'passed' ? 'text-status-success' : s.status === 'rejected' ? 'text-status-error' : 'text-status-warning'}">${s.score}%</span>
+          <span class="text-p2 text-gray-400">${s.submittedAt}</span>
+          <span class="text-p2 text-gray-400">${s.checkedAt}</span>
+          <span class="flex justify-center">
+            <i class="ph ph-caret-up chevron-icon text-gray-400 text-sm ${isOpen ? 'open' : ''}" id="chevron-${i}"></i>
+          </span>
+        </div>
+
+        <!-- Validation Breakdown -->
+        <div class="breakdown-panel ${isOpen ? 'open' : ''}" id="breakdown-${i}">
+          <div class="px-5 pb-5 pt-1">
+            <p class="text-p2 text-gray-400 font-bold uppercase tracking-widest mb-3">Validation Breakdown</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${breakdownHTML}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }).join('');
+}
+
+/* ────────────────────────────────────────
+   TOGGLE ROW
+──────────────────────────────────────── */
+function toggleRow(i) {
+  const panel   = document.getElementById(`breakdown-${i}`);
+  const chevron = document.getElementById(`chevron-${i}`);
+  if (!panel) return;
+
+  if (expandedRows.has(i)) {
+    expandedRows.delete(i);
+    panel.classList.remove('open');
+    chevron.classList.remove('open');
+  } else {
+    expandedRows.add(i);
+    panel.classList.add('open');
+    chevron.classList.add('open');
+  }
+}
+
+/* ────────────────────────────────────────
+   PAGINATION (client-side, simple)
+──────────────────────────────────────── */
+const PAGE_SIZE = 5;
+let currentPage = 1;
+let filteredData = [...submissions];
+
+function renderPagination() {
+  const total = filteredData.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const start = (currentPage - 1) * PAGE_SIZE + 1;
+  const end   = Math.min(currentPage * PAGE_SIZE, total);
+
+  document.getElementById('paginationLabel').textContent =
+    total === 0 ? 'No entries' : `Showing ${start} to ${end} of ${total} entries`;
+
+  const ctrl = document.getElementById('paginationControls');
+  ctrl.innerHTML = `
+    <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>
+    ${Array.from({ length: pages }, (_, p) => `
+      <button class="page-btn ${p + 1 === currentPage ? 'active' : ''}" onclick="changePage(${p + 1})">${p + 1}</button>
+    `).join('')}
+    <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === pages ? 'disabled' : ''}>Next</button>
+  `;
+}
+
+function changePage(p) {
+  const pages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+  if (p < 1 || p > pages) return;
+  currentPage = p;
+  const slice = filteredData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  renderSubmissions(slice);
+  renderPagination();
+}
+
+/* ────────────────────────────────────────
+   SEARCH
+──────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const searchEl = document.getElementById('submissionSearch');
+  if (searchEl) {
+    searchEl.addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      filteredData = submissions.filter(s => s.email.toLowerCase().includes(q));
+      currentPage  = 1;
+      expandedRows = new Set();
+      const slice  = filteredData.slice(0, PAGE_SIZE);
+      renderSubmissions(slice);
+      renderStats(filteredData);
+      renderPagination();
     });
   }
+});
 
-  return `<div class="detail-content">${imgsHTML}${breakdownHTML || '<div style="font-size:12px;color:var(--text3)">ยังไม่มีผลตรวจ</div>'}</div>`;
-}
-
-/* ══════════════════════════════════════════
-   DOWNLOAD ALL
-══════════════════════════════════════════ */
-async function downloadAll(){
-  const passed = submissions.filter(s => s.status === 'PASSED');
-  if(!passed.length){ toast('ไม่มีรายการที่ผ่าน'); return; }
-
-  /* open each presigned URL in a new tab — avoids S3 CORS restriction */
-  let count = 0;
-  for(const sub of passed){
-    for(const shot of (sub.screenshots || [])){
-      if(!shot.url) continue;
-      const emailPrefix = sub.email.split('@')[0];
-      const a = document.createElement('a');
-      a.href     = shot.url;
-      a.target   = '_blank';
-      a.download = `${emailPrefix}_img${shot.imgId}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      count++;
-      /* small delay between tabs to avoid browser blocking pop-ups */
-      await new Promise(r => setTimeout(r, 300));
-    }
-  }
-  toast(`✓ เปิด ${count} ลิงก์ดาวน์โหลดแล้ว — กรุณาอนุญาต pop-up หากถูกบล็อก`);
-
-  const btn = document.getElementById('dlBtn');
-  btn.disabled    = false;
-  btn.textContent = '📦 DOWNLOAD ALL PASSED';
-  document.getElementById('dlProgress').textContent = '';
-}
-
-/* ══════════════════════════════════════════
+/* ────────────────────────────────────────
    INIT
-══════════════════════════════════════════ */
-loadLabs();
+──────────────────────────────────────── */
+(function init() {
+  // Lab meta
+  document.getElementById('labTitle').textContent    = labData.title;
+  document.getElementById('labSection').textContent  = labData.section;
+  document.getElementById('labDeadline').textContent = labData.deadline;
+
+  renderRules();
+  renderStats(submissions);
+
+  filteredData = [...submissions];
+  const slice  = filteredData.slice(0, PAGE_SIZE);
+  renderSubmissions(slice);
+  renderPagination();
+})();
