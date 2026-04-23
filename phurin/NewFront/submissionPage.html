@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ValidMate – Lab 05 CPU Pipelining</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- OpenCV.js -->
+  <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()" onerror="onOpenCvError()"></script>
+  <script>
+    var cvReady = false;
+    function onOpenCvReady() {
+      if (typeof cv !== 'undefined') {
+        cv['onRuntimeInitialized'] = function () {
+          cvReady = true;
+          var el = document.getElementById('opencvStatus');
+          if (el) { el.textContent = 'Blur detection ready'; el.style.color = '#10B981'; }
+        };
+      }
+    }
+    function onOpenCvError() {
+      var el = document.getElementById('opencvStatus');
+      if (el) { el.textContent = 'Blur detection unavailable'; el.style.color = '#EF4444'; }
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
+          fontSize: {
+            'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+            'h1':  ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+            'h2':  ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+            'h3':  ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+            'h4':  ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+            'p1':  ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+            'p2':  ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+            'btn': ['14px', { lineHeight: '1',   fontWeight: '700' }],
+          },
+          colors: {
+            brand:  { 50:'#F0F4FA', 100:'#E0E9F4', 500:'#4F46E5', 600:'#4338CA', 800:'#1E293B', 900:'#0F172A' },
+            layout: { bg:'#F8FAFC', surface:'#FFFFFF', border:'#E2E8F0' },
+            status: { success:'#10B981', successBg:'#ECFDF5', error:'#EF4444', errorBg:'#FEF2F2', warning:'#F59E0B', warningBg:'#FFFBEB' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+/* ═══════════════════════════════════════════
+   studentSubmission_style.css
+═══════════════════════════════════════════ */
+
+.fade-in {
+  animation: fadeUp 0.35s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Numbered badge */
+.num-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4F46E5;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Picture tabs — outlined pill style matching Figma */
+.pic-tab {
+  font-size: 13px !important;
+  font-weight: 600;
+  color: #64748B;
+  background: #fff;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9999px;
+  padding: 5px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+  white-space: nowrap;
+  display: inline-block;
+}
+.pic-tab:hover {
+  border-color: #4F46E5;
+  color: #4F46E5;
+}
+.pic-tab.active {
+  background: #EEF2FF;
+  border-color: #4F46E5;
+  color: #4F46E5;
+  font-weight: 700;
+}
+
+/* Drop zone */
+.drop-zone {
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  min-height: 195px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  background: #FAFBFC;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drop-zone:hover,
+.drop-zone.drop-over {
+  border-color: #4F46E5;
+  background: #EEF2FF;
+}
+
+/* Dot indicators */
+.upload-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #E2E8F0;
+  transition: background 0.2s;
+}
+.upload-dot.filled    { background: #10B981; }
+.upload-dot.active-dot {
+  background: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+/* Submit success */
+@keyframes successPop {
+  0%  { transform: scale(1); }
+  40% { transform: scale(1.03); }
+  100%{ transform: scale(1); }
+}
+.submit-success {
+  background: #10B981 !important;
+  animation: successPop 0.3s ease;
+}
+
+/* Toast */
+#toast { animation: toastIn 0.25s ease; }
+@keyframes toastIn {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+
+/* Tablet: single column, upload above instructions */
+@media (max-width: 900px) {
+  #mainGrid {
+    grid-template-columns: 1fr !important;
+  }
+  #mainGrid > div:last-child {
+    order: -1;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  main {
+    padding: 12px !important;
+  }
+  .lab-header {
+    padding: 16px !important;
+  }
+  .lab-header-wrap {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .due-date-badge {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+  }
+  .nav-role {
+    display: none !important;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 400px) {
+  main {
+    padding: 8px !important;
+  }
+}
+  </style>
+</head>
+
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
+
+  <!-- Main Top Navbar (Dark) -->
+  <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='student_dashboard.html'">
+      <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+      <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+    </div>
+
+    <!-- Nav Links -->
+    <div class="grid grid-cols-[auto_1fr] gap-2 items-center h-full">
+      <button onclick="window.location.href='student_dashboard.html'"
+        class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+        <i class="ph ph-squares-four text-sm"></i> Dashboard
+      </button>
+    </div>
+
+    <!-- User Profile with Dropdown -->
+    <div class="relative h-full">
+      <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+        class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+        <div class="text-right">
+          <div class="text-p1 font-semibold leading-none">Alex Student</div>
+          <div class="text-p2 text-gray-400 leading-none mt-1">Undergraduate</div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+          AS
+        </div>
+        <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+      </button>
+      <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+        <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+          <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+            AS
+          </div>
+          <div>
+            <div class="text-p1 font-bold text-brand-900 leading-tight">Alex Student</div>
+            <div class="text-p2 text-gray-500 leading-tight mt-0.5">Undergraduate</div>
+          </div>
+        </div>
+        <button type="button" onclick="handleLogout()"
+          class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+          <i class="ph ph-sign-out text-lg"></i>
+          <span class="text-left">Sign Out</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    function toggleProfileMenu(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('profileMenu');
+      const caret = document.getElementById('profileCaret');
+      const isHidden = menu.classList.toggle('hidden');
+      if (caret) caret.classList.toggle('rotate-180', !isHidden);
+    }
+    function handleLogout() { window.location.href = 'index.html'; }
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('profileMenu');
+      const btn = document.getElementById('profileBtn');
+      if (!menu || !btn) return;
+      if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add('hidden');
+        const caret = document.getElementById('profileCaret');
+        if (caret) caret.classList.remove('rotate-180');
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const menu = document.getElementById('profileMenu');
+        if (menu) menu.classList.add('hidden');
+        const caret = document.getElementById('profileCaret');
+        if (caret) caret.classList.remove('rotate-180');
+      }
+    });
+  </script>
+
+  <!-- ── BREADCRUMB ── -->
+  <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+    <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
+      <button type="button" onclick="window.location.href='student_dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-squares-four text-sm"></i> Overview
+      </button>
+      <i class="ph ph-caret-right text-xs text-gray-400"></i>
+      <button type="button" onclick="window.location.href='student_Lablist.html?subjectId=CS%20232'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-stack text-sm"></i> CS 232
+      </button>
+      <i class="ph ph-caret-right text-xs text-gray-400"></i>
+      <span class="flex items-center gap-1 text-brand-800">
+        <i class="ph-fill ph-file-text text-sm text-brand-500"></i> Lab 05 - CPU Pipelining
+      </span>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <main class="overflow-y-auto p-6 md:p-8">
+    <div class="max-w-5xl mx-auto space-y-5">
+
+      <!-- Lab Header Card -->
+      <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm px-6 py-5 fade-in lab-header">
+        <div class="lab-header-wrap flex items-center justify-between gap-4 w-full">
+          <!-- Left: icon + title -->
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
+              <i class="ph-fill ph-package"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="bg-indigo-50 text-brand-500 text-p2 font-bold px-2.5 py-0.5 rounded-md tracking-wide">CS 232</span>
+                <span class="text-p2 text-gray-400 font-medium">Active Assignment</span>
+              </div>
+              <h1 class="text-h3 font-bold text-brand-900 leading-tight">Lab 05 - CPU Pipelining</h1>
+            </div>
+          </div>
+          <!-- Right: due date -->
+          <div class="due-date-badge flex items-center gap-3 border border-layout-border rounded-xl px-5 py-3 flex-shrink-0 whitespace-nowrap">
+            <i class="ph ph-calendar-blank text-gray-400 text-lg"></i>
+            <div>
+              <div class="text-p2 font-bold text-gray-400 uppercase tracking-widest mb-0.5">Due Date</div>
+              <div class="text-p1 font-bold text-brand-800">Tomorrow, 11:59 PM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-col layout -->
+      <div id="mainGrid" class="grid gap-5 items-start grid-cols-1 lg:grid-cols-[1fr_320px]">
+
+        <!-- LEFT: Instructions -->
+        <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden fade-in" style="animation-delay:.06s">
+          <div class="h-0.5 w-full bg-gradient-to-r from-brand-500 via-indigo-400 to-transparent"></div>
+          <div class="p-6">
+            <h2 class="flex items-center gap-2 text-p2 font-bold text-gray-400 uppercase tracking-widest mb-5">
+              <i class="ph-fill ph-book-open-text text-brand-500 text-sm"></i> Lab Instructions
+            </h2>
+            <div class="text-p1 text-gray-600 space-y-4 leading-relaxed">
+
+              <p>Please upload your screenshots demonstrating the successful configuration of your AWS EC2 instance.</p>
+
+              <div>
+                <p class="font-bold text-brand-900 mb-3">Requirements for this submission:</p>
+                <ol class="space-y-3">
+                  <li class="flex items-start gap-3">
+                    <span class="num-badge">1</span>
+                    <span>A screenshot of the AWS Management Console showing the running instance.</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="num-badge">2</span>
+                    <span>A screenshot of your terminal successfully SSH'd into the instance.</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="num-badge">3</span>
+                    <span>The instance must be named with your student ID (e.g., EC2-12345678).</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="num-badge">4</span>
+                    <span>Ensure the public IP address is clearly visible in the console screenshot.</span>
+                  </li>
+                </ol>
+              </div>
+
+              <p>Do not upload video files. If you encounter errors during the deployment, refer to Chapter 4 of the textbook or visit office hours before the deadline.</p>
+
+              <p><span class="font-bold text-brand-900">Note:</span> Since there are multiple screenshots required, please utilize the 'Picture 1', 'Picture 2', and 'Picture 3' tabs in the submission box.</p>
+
+              <div class="flex items-start gap-2.5 bg-status-errorBg border border-red-200 rounded-lg px-4 py-3">
+                <i class="ph-fill ph-warning-circle text-status-error flex-shrink-0 mt-0.5"></i>
+                <p class="text-status-error text-p1 font-semibold">Any submission not following these exact guidelines will receive an automatic deduction of 10 points.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Status + Upload -->
+        <div class="flex flex-col gap-4">
+
+          <!-- Current Status -->
+          <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden">
+            <div id="statusCard" class="flex items-center gap-3 p-4 border-l-4 border-status-warning">
+              <div id="statusIconWrap" class="w-9 h-9 rounded-lg bg-status-warningBg flex items-center justify-center flex-shrink-0">
+                <i id="statusIcon" class="ph-fill ph-hourglass-medium text-status-warning text-lg"></i>
+              </div>
+              <div>
+                <div class="text-p2 font-bold text-gray-400 uppercase tracking-widest">Current Status</div>
+                <div id="currentStatus" class="text-p1 font-bold text-brand-800 mt-0.5">Pending Upload</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Evidence Upload Area -->
+          <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm p-5">
+            <div class="flex items-center gap-2 mb-4">
+              <i class="ph-fill ph-files text-brand-500 text-sm"></i>
+              <span class="text-p2 font-bold text-gray-400 uppercase tracking-widest">Evidence Upload Area</span>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-5 mb-3.5 border-b border-layout-border pb-2">
+              <button id="tab-0" onclick="switchTab(0)" class="text-p1 font-bold text-brand-500 bg-transparent border-0 border-b-2 border-brand-500 pb-2 cursor-pointer">Picture 1</button>
+              <button id="tab-1" onclick="switchTab(1)" class="text-p1 font-medium text-gray-400 bg-transparent border-0 border-b-2 border-transparent pb-2 cursor-pointer">Picture 2</button>
+              <button id="tab-2" onclick="switchTab(2)" class="text-p1 font-medium text-gray-400 bg-transparent border-0 border-b-2 border-transparent pb-2 cursor-pointer">Picture 3</button>
+            </div>
+
+            <!-- Drop zone -->
+            <div id="dropZone"
+              ondragover="event.preventDefault();this.style.borderColor='#4F46E5';this.style.background='#EEF2FF'"
+              ondragleave="this.style.borderColor='#CBD5E1';this.style.background='#FAFBFC'"
+              ondrop="handleDrop(event)"
+              style="border:2px dashed #CBD5E1;border-radius:12px;min-height:185px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;background:#FAFBFC">
+
+              <!-- Placeholder -->
+              <div id="dropPlaceholder" onclick="document.getElementById('fileInput').click()" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;padding:20px">
+                <div style="width:44px;height:44px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center">
+                  <i class="ph ph-upload-simple" style="color:#94A3B8;font-size:20px"></i>
+                </div>
+                <div style="text-align:center">
+                  <p style="font-size:14px;font-weight:600;color:#1E293B;margin:0">Click or Drag File Here</p>
+                  <p style="font-size:12px;color:#94A3B8;margin:4px 0 0">Supported .jpg, .png (Max 15 MB)</p>
+                </div>
+              </div>
+
+              <!-- Preview (hidden by default) -->
+              <div id="dropPreview" style="display:none;flex-direction:column;align-items:center;gap:8px;padding:16px;width:100%">
+                <img id="previewImg" src="" alt="preview"
+                  onclick="openLightbox()"
+                  style="max-width:100%;max-height:140px;border-radius:10px;object-fit:cover;cursor:zoom-in;box-shadow:0 2px 8px rgba(0,0,0,.12)" />
+                <p id="fileName" style="font-size:13px;font-weight:600;color:#1E293B;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0">—</p>
+                <button onclick="clearFile(event)" style="font-size:12px;font-weight:600;color:#EF4444;background:none;border:none;cursor:pointer;text-decoration:underline">Remove</button>
+              </div>
+            </div>
+
+            <!-- Blur detection feedback -->
+            <div id="blurFeedback" style="display:none;margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;display:none;align-items:center;gap:8px"></div>
+            <p id="opencvStatus" style="font-size:11px;color:#94A3B8;margin-top:8px;text-align:center">Loading blur detection...</p>
+            <canvas id="canvasBlurCheck" style="display:none"></canvas>
+
+            <!-- Hidden file input — NOT display:none so .click() works -->
+            <input type="file" id="fileInput" accept=".jpg,.jpeg,.png"
+              onchange="handleFileSelect(event)"
+              style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0" />
+
+            <!-- Submit inside the card -->
+            <button id="submitBtn" onclick="handleSubmit()"
+              class="w-full mt-4 bg-brand-500 hover:bg-indigo-600 text-white px-5 py-3 rounded-lg text-btn flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer">
+              <i class="ph-bold ph-paper-plane-tilt text-sm"></i>
+              Submit Lab Evidence
+            </button>
+          </div>
+
+        </div>
+  </main>
+
+  <!-- Lightbox -->
+  <div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);align-items:center;justify-content:center">
+    <button onclick="closeLightbox()" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;line-height:1">
+      <i class="ph ph-x-circle"></i>
+    </button>
+    <img id="lightboxImg" src="" alt="full preview"
+      onclick="event.stopPropagation()"
+      style="max-width:90vw;max-height:90vh;border-radius:12px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.5)" />
+  </div>
+
+  <script>
+/* studentSubmission_script.js */
+
+const uploads = [null, null, null];
+let activeTab = 0;
+
+/* ── Tabs ── */
+function switchTab(idx) {
+  activeTab = idx;
+  [0,1,2].forEach(i => {
+    const b = document.getElementById('tab-'+i);
+    if (i === idx) {
+      b.style.color       = '#4F46E5';
+      b.style.fontWeight  = '700';
+      b.style.borderBottom = '2px solid #4F46E5';
+    } else {
+      b.style.color       = '#94A3B8';
+      b.style.fontWeight  = '500';
+      b.style.borderBottom = '2px solid transparent';
+    }
+  });
+  renderZone();
+}
+
+/* ── Render drop zone ── */
+function renderZone() {
+  const ph  = document.getElementById('dropPlaceholder');
+  const pv  = document.getElementById('dropPreview');
+  const fn  = document.getElementById('fileName');
+  const img = document.getElementById('previewImg');
+  if (uploads[activeTab]) {
+    ph.style.display = 'none';
+    pv.style.display = 'flex';
+    fn.textContent   = uploads[activeTab].file.name;
+    if (img) img.src = uploads[activeTab].url;
+  } else {
+    ph.style.display = 'flex';
+    pv.style.display = 'none';
+    if (img) img.src = '';
+  }
+}
+
+/* ── OpenCV Blur Detection ── */
+const BLUR_THRESHOLD = 200;
+
+function computeBlurScore(imageMat) {
+  var resized = new cv.Mat();
+  var targetWidth = 600;
+  if (imageMat.cols > targetWidth) {
+    var scale = targetWidth / imageMat.cols;
+    var targetHeight = Math.round(imageMat.rows * scale);
+    cv.resize(imageMat, resized, new cv.Size(targetWidth, targetHeight), 0, 0, cv.INTER_LINEAR);
+  } else {
+    imageMat.copyTo(resized);
+  }
+  var gray = new cv.Mat();
+  cv.cvtColor(resized, gray, cv.COLOR_RGBA2GRAY);
+  var gradX = new cv.Mat();
+  var gradY = new cv.Mat();
+  cv.Sobel(gray, gradX, cv.CV_64F, 1, 0, 3, 1, 0, cv.BORDER_DEFAULT);
+  cv.Sobel(gray, gradY, cv.CV_64F, 0, 1, 3, 1, 0, cv.BORDER_DEFAULT);
+  var meanX = new cv.Mat(), stdX = new cv.Mat();
+  var meanY = new cv.Mat(), stdY = new cv.Mat();
+  cv.meanStdDev(gradX, meanX, stdX);
+  cv.meanStdDev(gradY, meanY, stdY);
+  var varX = stdX.data64F[0] * stdX.data64F[0];
+  var varY = stdY.data64F[0] * stdY.data64F[0];
+  var score = Math.min(varX, varY) / 10;
+  resized.delete(); gray.delete();
+  gradX.delete(); gradY.delete();
+  meanX.delete(); stdX.delete(); meanY.delete(); stdY.delete();
+  return score;
+}
+
+async function checkImageBlur(file) {
+  if (!cvReady) {
+    toast('Blur detection is still loading, please wait...', 'error');
+    return false;
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.src = url;
+  await img.decode();
+  const canvas = document.getElementById('canvasBlurCheck');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  const imgMat = cv.imread(canvas);
+  const score = computeBlurScore(imgMat);
+  imgMat.delete();
+  URL.revokeObjectURL(url);
+  const isSharp = score >= BLUR_THRESHOLD;
+  showBlurFeedback(isSharp, score);
+  return isSharp;
+}
+
+function showBlurFeedback(isSharp, score) {
+  const fb = document.getElementById('blurFeedback');
+  fb.style.display = 'flex';
+  if (isSharp) {
+    fb.style.background = '#ECFDF5';
+    fb.style.color = '#10B981';
+    fb.style.border = '1px solid #A7F3D0';
+    fb.innerHTML = '<i class="ph ph-check-circle" style="font-size:16px"></i> Sharp image (Score: ' + score.toFixed(1) + ')';
+  } else {
+    fb.style.background = '#FEF2F2';
+    fb.style.color = '#EF4444';
+    fb.style.border = '1px solid #FECACA';
+    fb.innerHTML = '<i class="ph ph-x-circle" style="font-size:16px"></i> Blurry image rejected (Score: ' + score.toFixed(1) + ' / Need: ' + BLUR_THRESHOLD + ')';
+  }
+}
+
+function hideBlurFeedback() {
+  var fb = document.getElementById('blurFeedback');
+  if (fb) fb.style.display = 'none';
+}
+
+/* ── File input change ── */
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) save(file);
+  e.target.value = '';
+}
+
+/* ── Drag & drop ── */
+function handleDrop(e) {
+  e.preventDefault();
+  const dz = document.getElementById('dropZone');
+  dz.style.borderColor = '#CBD5E1';
+  dz.style.background  = '#FAFBFC';
+  const file = e.dataTransfer.files[0];
+  if (file) save(file);
+}
+
+/* ── Save file to slot (with blur check) ── */
+async function save(file) {
+  const ok = ['image/jpeg','image/png'].includes(file.type) && file.size <= 15*1024*1024;
+  if (!ok) { toast('Only .jpg/.png up to 15 MB', 'error'); return; }
+
+  const isSharp = await checkImageBlur(file);
+  if (!isSharp) {
+    toast('Image is too blurry — please upload a sharper screenshot', 'error');
+    return;
+  }
+
+  if (uploads[activeTab]?.url) URL.revokeObjectURL(uploads[activeTab].url);
+  uploads[activeTab] = { file, url: URL.createObjectURL(file) };
+  renderZone();
+  updateStatus();
+}
+
+/* ── Clear ── */
+function clearFile(e) {
+  e.stopPropagation();
+  if (uploads[activeTab]?.url) URL.revokeObjectURL(uploads[activeTab].url);
+  uploads[activeTab] = null;
+  renderZone();
+  updateStatus();
+  hideBlurFeedback();
+}
+
+/* ── Lightbox ── */
+function openLightbox() {
+  const slot = uploads[activeTab];
+  if (!slot) return;
+  const lb  = document.getElementById('lightbox');
+  const img = document.getElementById('lightboxImg');
+  img.src = slot.url;
+  lb.style.display = 'flex';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+/* ── Status card ── */
+function updateStatus() {
+  const n     = uploads.filter(Boolean).length;
+  const card  = document.getElementById('statusCard');
+  const wrap  = document.getElementById('statusIconWrap');
+  const icon  = document.getElementById('statusIcon');
+  const label = document.getElementById('currentStatus');
+  if (n === 0) {
+    card.style.borderLeftColor = '#F59E0B';
+    wrap.style.background      = '#FFFBEB';
+    icon.style.color           = '#F59E0B';
+    icon.className             = 'ph-fill ph-hourglass-medium';
+    label.textContent          = 'Pending Upload';
+  } else if (n < 3) {
+    card.style.borderLeftColor = '#4F46E5';
+    wrap.style.background      = '#EEF2FF';
+    icon.style.color           = '#4F46E5';
+    icon.className             = 'ph-fill ph-upload-simple';
+    label.textContent          = n + ' of 3 Uploaded';
+  } else {
+    card.style.borderLeftColor = '#10B981';
+    wrap.style.background      = '#ECFDF5';
+    icon.style.color           = '#10B981';
+    icon.className             = 'ph-fill ph-check-circle';
+    label.textContent          = 'Ready to Submit';
+  }
+}
+
+/* ── Submit ── */
+function handleSubmit() {
+  if (!uploads.filter(Boolean).length) {
+    toast('Upload at least one screenshot first.', 'error');
+    return;
+  }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled   = true;
+  btn.innerHTML  = '<i class="ph-fill ph-spinner-gap"></i> Submitting…';
+  setTimeout(() => {
+    btn.style.background = '#10B981';
+    btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Submitted!';
+    toast('Lab evidence submitted!', 'success');
+    setTimeout(() => {
+      window.location.href = 'submissionResult.html?state=processing';
+    }, 600);
+  }, 1500);
+}
+
+/* ── Toast ── */
+function toast(msg, type) {
+  document.getElementById('_toast')?.remove();
+  const el = document.createElement('div');
+  el.id = '_toast';
+  el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.15);'
+    + (type === 'error' ? 'background:#FEF2F2;color:#EF4444;border:1px solid #FECACA' : 'background:#0F172A;color:#fff');
+  el.innerHTML = '<i class="' + (type==='error'?'ph-fill ph-warning-circle':'ph-fill ph-check-circle') + '"></i>' + msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+/* ── Keyboard shortcuts ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+/* ── Init ── */
+switchTab(0);
+</script>
+</body>
+</html>

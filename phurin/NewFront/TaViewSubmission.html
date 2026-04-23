@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ValidMate – Lab Report</title>
+
+  <!-- Fonts (same as Dashboard) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet" />
+  <!-- Phosphor Icons (same as Dashboard) -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Tailwind CSS (same as Dashboard) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Sarabun', 'sans-serif'],
+          },
+          fontSize: {
+            'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+            'h1':        ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+            'h2':        ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+            'h3':        ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+            'h4':        ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+            'p1':        ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+            'p2':        ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+            'btn':       ['14px', { lineHeight: '1',   fontWeight: '700' }],
+          },
+          colors: {
+            brand: {
+              50:  '#F0F4FA',
+              100: '#E0E9F4',
+              500: '#4F46E5',
+              800: '#1E293B',
+              900: '#0F172A',
+            },
+            layout: {
+              bg:      '#F8FAFC',
+              surface: '#FFFFFF',
+              border:  '#E2E8F0',
+            },
+            status: {
+              success:   '#10B981',
+              successBg: '#ECFDF5',
+              error:     '#EF4444',
+              errorBg:   '#FEF2F2',
+              warning:   '#F59E0B',
+              warningBg: '#FFFBEB',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+/* ═══════════════════════════════════════════
+   taViewSubmission_style.css
+   Design tokens mirror Ta_Dashboard exactly.
+   Variables, fonts, and card radius are kept
+   identical for visual consistency.
+═══════════════════════════════════════════ */
+
+/* ── Page entrance animations ── */
+.fade-in {
+  animation: fadeUp 0.4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Table: Key Rules ── */
+.table-th {
+  padding: 0.65rem 1.25rem;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+td {
+  padding: 0.75rem 1.25rem;
+  font-size: 14px;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+/* Rule type chips */
+.rule-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Requirement badges */
+.badge-mandatory {
+  display: inline-block;
+  background: #FEF2F2;
+  color: #EF4444;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  padding: 0.18rem 0.55rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.badge-optional {
+  display: inline-block;
+  background: #ECFDF5;
+  color: #10B981;
+  border: 1px solid #A7F3D0;
+  border-radius: 6px;
+  padding: 0.18rem 0.55rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Submissions table ── */
+.submissions-header,
+.submission-row-grid {
+  display: grid;
+  grid-template-columns: 2rem 1fr 7rem 5.5rem 10.5rem 10.5rem 4.5rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Left accent stripe */
+/* Colored left stripe on row header only */
+.row-passed   { border-left: 4px solid #10B981; background: #FFFFFF; }
+.row-rejected { border-left: 4px solid #EF4444; background: #FFFFFF; }
+.row-pending  { border-left: 4px solid #F59E0B; background: #FFFFFF; }
+
+.row-passed:hover,
+.row-rejected:hover,
+.row-pending:hover { background: #F8FAFC; }
+
+/* Status pills */
+.pill-passed {
+  display: inline-block;
+  background: #ECFDF5;
+  color: #059669;
+  border-radius: 9999px;
+  padding: 0.15rem 0.65rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pill-rejected {
+  display: inline-block;
+  background: #FEF2F2;
+  color: #DC2626;
+  border-radius: 9999px;
+  padding: 0.15rem 0.65rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pill-pending {
+  display: inline-block;
+  background: #FFFBEB;
+  color: #D97706;
+  border-radius: 9999px;
+  padding: 0.15rem 0.65rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Validation breakdown cards */
+.validation-card {
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #E2E8F0;
+  background: #fff;
+  transition: box-shadow 0.15s;
+}
+.validation-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.validation-card.vc-passed  { background: #F0FDF9; border-color: #6EE7C7; }
+.validation-card.vc-rejected { background: #FFF5F5; border-color: #FCA5A5; }
+.validation-card.vc-pending  { background: #FFFBEB; border-color: #FCD34D; }
+
+/* Thumbnail placeholder (replaces screenshot images) */
+.thumb-placeholder {
+  width: 64px;
+  height: 48px;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #CBD5E1;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+/* Check / cross list items */
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 13px;
+}
+
+/* Breakdown slide-down animation */
+.breakdown-panel {
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+  max-height: 0;
+  opacity: 0;
+}
+.breakdown-panel.open {
+  max-height: 600px;
+  opacity: 1;
+}
+
+/* Chevron rotation */
+.chevron-icon {
+  transition: transform 0.2s ease;
+}
+.chevron-icon.open {
+  transform: rotate(180deg);
+}
+
+/* Pagination buttons */
+.page-btn {
+  padding: 0.28rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #64748B;
+}
+.page-btn:hover:not(:disabled) {
+  border-color: #4F46E5;
+  color: #4F46E5;
+}
+.page-btn.active {
+  background: #4F46E5;
+  border-color: #4F46E5;
+  color: #fff;
+}
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Row hover */
+/* row hover handled per-status above */
+</style>
+</head>
+
+<!-- Same grid layout as Dashboard: navbar (64px) + subnav (48px) + content -->
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 min-h-screen grid grid-rows-[64px_48px_1fr]">
+
+  <!-- ════════════════════════════════
+       TOP NAVBAR  (identical to Dashboard)
+  ════════════════════════════════ -->
+  <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
+      <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+      <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+    </div>
+
+    <!-- Nav Links -->
+    <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
+      <button onclick="window.location.href='Ta_Dashboard.html'"
+        class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+        <i class="ph ph-squares-four text-sm"></i> Dashboard
+      </button>
+      <button onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+        <i class="ph ph-users text-sm"></i> Students
+      </button>
+    </div>
+
+    <!-- User Profile with Dropdown -->
+    <div class="relative h-full">
+      <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+        class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+        <div class="text-right">
+          <div class="text-p1 font-semibold leading-none">John Doe</div>
+          <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+          JD
+        </div>
+        <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+      </button>
+      <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+        <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+          <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+            JD
+          </div>
+          <div>
+            <div class="text-p1 font-bold text-brand-900 leading-tight">John Doe</div>
+            <div class="text-p2 text-gray-500 leading-tight mt-0.5">Head TA</div>
+          </div>
+        </div>
+        <button type="button" onclick="handleLogout()"
+          class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+          <i class="ph ph-sign-out text-lg"></i>
+          <span class="text-left">Sign Out</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    function toggleProfileMenu(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('profileMenu');
+      const caret = document.getElementById('profileCaret');
+      const isHidden = menu.classList.toggle('hidden');
+      if (caret) caret.classList.toggle('rotate-180', !isHidden);
+    }
+    function handleLogout() { window.location.href = 'index.html'; }
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('profileMenu');
+      const btn = document.getElementById('profileBtn');
+      if (!menu || !btn) return;
+      if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add('hidden');
+        const caret = document.getElementById('profileCaret');
+        if (caret) caret.classList.remove('rotate-180');
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const menu = document.getElementById('profileMenu');
+        if (menu) menu.classList.add('hidden');
+        const caret = document.getElementById('profileCaret');
+        if (caret) caret.classList.remove('rotate-180');
+      }
+    });
+  </script>
+
+  <!-- ════════════════════════════════
+       SUB-NAVBAR  — Breadcrumb
+  ════════════════════════════════ -->
+  <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+    <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
+      <button onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-squares-four text-sm"></i> Overview
+      </button>
+      <i class="ph ph-caret-right text-xs text-gray-400"></i>
+      <button onclick="window.location.href='TaLablist.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-stack text-sm"></i> Lab List
+      </button>
+      <i class="ph ph-caret-right text-xs text-gray-400"></i>
+      <span class="flex items-center gap-1 text-brand-800">
+        <i class="ph-fill ph-file-text text-sm text-brand-500"></i> Lab report
+      </span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════ -->
+  <main class="p-6 md:p-8 lg:p-10 overflow-y-auto w-full">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 gap-6 auto-rows-min">
+
+      <!-- ── Lab Header ── -->
+      <div class="flex items-start justify-between gap-4 fade-in">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
+            <i class="ph-fill ph-flask"></i>
+          </div>
+          <div>
+            <h1 class="text-h3 font-bold text-brand-800" id="labTitle">Cloud Storage Setup</h1>
+            <div class="flex items-center gap-3 mt-1 flex-wrap">
+              <span class="flex items-center gap-1 text-p2 text-gray-500">
+                <i class="ph-fill ph-users text-xs"></i> Section <span id="labSection">650001</span>
+              </span>
+              <span id="deadlineBadge" class="flex items-center gap-1 text-p2 font-semibold text-status-error">
+                <i class="ph-fill ph-warning-circle text-xs"></i> Deadline: <span id="labDeadline">16 Mar 2026</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button onclick="handleEditLab()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-layout-border bg-layout-surface text-brand-800 text-btn hover:border-brand-500 hover:text-brand-500 transition-colors shadow-sm">
+            <i class="ph ph-pencil-simple text-sm"></i> Edit Lab
+          </button>
+          <button onclick="handleDeleteLab()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 bg-layout-surface text-status-error text-btn hover:bg-red-50 transition-colors shadow-sm">
+            <i class="ph ph-trash text-sm"></i> Delete
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Stat Cards ── -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 fade-in" style="animation-delay:.05s">
+
+        <div class="bg-layout-surface rounded-xl border border-layout-border p-5 shadow-sm">
+          <div class="text-p2 text-gray-400 font-bold uppercase tracking-wider mb-2">Total Submissions</div>
+          <div class="text-4xl font-bold text-brand-800" id="statTotal">0</div>
+        </div>
+
+        <div class="bg-layout-surface rounded-xl border-l-4 border-status-success border border-layout-border p-5 shadow-sm">
+          <div class="text-p2 font-bold uppercase tracking-wider mb-2 text-status-success">Passed</div>
+          <div class="text-4xl font-bold text-status-success" id="statPassed">0</div>
+        </div>
+
+        <div class="bg-layout-surface rounded-xl border-l-4 border-status-error border border-layout-border p-5 shadow-sm">
+          <div class="text-p2 font-bold uppercase tracking-wider mb-2 text-status-error">Rejected</div>
+          <div class="text-4xl font-bold text-status-error" id="statRejected">0</div>
+        </div>
+
+        <div class="bg-layout-surface rounded-xl border-l-4 border-status-warning border border-layout-border p-5 shadow-sm">
+          <div class="text-p2 font-bold uppercase tracking-wider mb-2 text-status-warning">Pending Review</div>
+          <div class="text-4xl font-bold text-status-warning" id="statPending">0</div>
+        </div>
+
+      </div>
+
+      <!-- ── Accent divider (matches Figma top bar) ── -->
+      <div class="h-0.5 w-full rounded-full bg-gradient-to-r from-brand-500 via-indigo-400 to-transparent fade-in" style="animation-delay:.1s"></div>
+
+      <!-- ── Lab Description ── -->
+      <section class="bg-layout-surface rounded-xl border border-layout-border shadow-sm p-6 fade-in" style="animation-delay:.12s">
+        <h2 class="flex items-center gap-2 text-p2 text-gray-400 font-bold uppercase tracking-widest mb-4">
+          <i class="ph-fill ph-align-left text-sm text-brand-500"></i> Lab Description
+        </h2>
+        <div class="text-p1 text-gray-600 space-y-1.5">
+          <p class="font-semibold text-brand-800">Topic: Creating an image upload notification system using AWS Lambda and SNS.</p>
+          <p class="text-gray-400 font-semibold text-p2 mt-2 mb-1">Task Details:</p>
+          <ul class="space-y-1 text-gray-600">
+            <li class="flex items-start gap-2"><i class="ph ph-minus text-xs mt-1 text-gray-400 flex-shrink-0"></i>Configure AWS Lambda to receive S3 events</li>
+            <li class="flex items-start gap-2"><i class="ph ph-minus text-xs mt-1 text-gray-400 flex-shrink-0"></i>Write Node.js code to extract bucketName and validate file extensions (.jpg, .png)</li>
+            <li class="flex items-start gap-2"><i class="ph ph-minus text-xs mt-1 text-gray-400 flex-shrink-0"></i>Ensure correct IAM role permissions are attached to the function</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ── Key Rules Reference ── -->
+      <section class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden fade-in" style="animation-delay:.15s">
+        <div class="px-6 py-4 border-b border-layout-border">
+          <h2 class="flex items-center gap-2 text-p2 text-gray-400 font-bold uppercase tracking-widest">
+            <i class="ph-fill ph-list-numbers text-sm text-brand-500"></i> Key Rules Reference
+          </h2>
+        </div>
+
+        <table class="w-full text-p1">
+          <thead class="bg-layout-bg border-b border-layout-border">
+            <tr>
+              <th class="table-th">Rule Type</th>
+              <th class="table-th">Requirement</th>
+              <th class="table-th">Keyword</th>
+              <th class="table-th text-right">Weight</th>
+            </tr>
+          </thead>
+          <tbody id="rulesTable" class="divide-y divide-layout-border">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+
+        <!-- Pass Criteria Banner -->
+        <div class="m-4 rounded-lg bg-indigo-50 border border-indigo-100 p-4 flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-brand-500 bg-opacity-10 flex items-center justify-center flex-shrink-0">
+            <i class="ph-fill ph-shield-check text-brand-500 text-base"></i>
+          </div>
+          <div class="text-p1">
+            <span class="font-bold text-brand-500 uppercase tracking-wide text-p2 block mb-0.5">Pass Criteria</span>
+            <span class="text-gray-600">Students must satisfy all mandatory rules and achieve a total weighted score of </span>
+            <span class="inline-block bg-white border border-brand-500 text-brand-500 font-bold px-2 py-0.5 rounded text-p2 mx-1">≥ 75%</span>
+            <span class="text-gray-600"> to pass this lab.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Student Submissions ── -->
+      <section class="fade-in" style="animation-delay:.18s">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="flex items-center gap-2 text-p2 text-gray-400 font-bold uppercase tracking-widest">
+            <i class="ph-fill ph-student text-sm text-brand-500"></i> Student Submissions
+          </h2>
+          <div class="flex items-center gap-3">
+            <!-- Search -->
+            <div class="relative">
+              <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+              <input id="submissionSearch" type="text" placeholder="Search Email..."
+                class="pl-9 pr-4 py-2 text-p1 border border-layout-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-opacity-30 focus:border-brand-500 bg-layout-surface w-72 shadow-sm" />
+            </div>
+
+            <!-- Filter (icon-only, dashboard style) -->
+            <div class="relative">
+              <button id="filterBtn" type="button" onclick="toggleFilterMenu(event)"
+                class="relative w-10 h-10 rounded-lg border border-layout-border bg-layout-surface text-gray-500 hover:text-brand-500 hover:border-brand-500 flex items-center justify-center shadow-sm transition-colors"
+                title="Filter & Sort">
+                <i class="ph ph-faders-horizontal text-lg"></i>
+                <span id="filterBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center">0</span>
+              </button>
+              <div id="filterMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-40">
+                <!-- Filter by Status -->
+                <div class="px-4 py-2 text-p2 font-bold text-gray-400 uppercase tracking-wider border-b border-layout-border">Status</div>
+                <button onclick="applyStatusFilter('all')"      class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="all">
+                  <span class="flex items-center gap-2"><i class="ph ph-list-bullets text-sm"></i> All</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500"></i>
+                </button>
+                <button onclick="applyStatusFilter('passed')"   class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="passed">
+                  <span class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-sm text-status-success"></i> Passed</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500 hidden"></i>
+                </button>
+                <button onclick="applyStatusFilter('rejected')" class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="rejected">
+                  <span class="flex items-center gap-2"><i class="ph-fill ph-x-circle text-sm text-status-error"></i> Rejected</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500 hidden"></i>
+                </button>
+                <button onclick="applyStatusFilter('pending')"  class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="pending">
+                  <span class="flex items-center gap-2"><i class="ph-fill ph-hourglass text-sm text-status-warning"></i> Pending</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500 hidden"></i>
+                </button>
+
+                <!-- Sort by -->
+                <div class="px-4 py-2 text-p2 font-bold text-gray-400 uppercase tracking-wider border-y border-layout-border">Sort by</div>
+                <button onclick="applySort('email')"       class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="email">
+                  <span class="flex items-center gap-2"><i class="ph ph-envelope text-sm"></i> Email</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+                <button onclick="applySort('score')"       class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="score">
+                  <span class="flex items-center gap-2"><i class="ph ph-chart-bar text-sm"></i> Score</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+                <button onclick="applySort('submittedAt')" class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="submittedAt">
+                  <span class="flex items-center gap-2"><i class="ph ph-clock text-sm"></i> Submitted At</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+                <button onclick="applySort('checkedAt')"   class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="checkedAt">
+                  <span class="flex items-center gap-2"><i class="ph ph-clock-countdown text-sm"></i> Checked At</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+
+                <div class="border-t border-layout-border">
+                  <button onclick="resetFilters()" class="w-full text-left px-4 py-2.5 text-p2 font-semibold text-gray-500 hover:bg-layout-bg flex items-center gap-2">
+                    <i class="ph ph-arrow-counter-clockwise text-sm"></i> Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Download All -->
+            <button onclick="handleDownloadAll()" class="bg-brand-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors">
+              <i class="ph-bold ph-download-simple text-sm"></i> Download All
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden">
+          <!-- Table header -->
+          <div class="submissions-header px-4 py-3 bg-layout-bg border-b border-layout-border text-p2 font-bold text-gray-400 uppercase tracking-wider">
+            <span>#</span>
+            <span>Student Email</span>
+            <span class="text-center">Status</span>
+            <span class="text-center">Score</span>
+            <span>Submitted At</span>
+            <span>Checked At</span>
+            <span class="text-center">Details</span>
+          </div>
+
+          <!-- Rows rendered by JS -->
+          <div id="submissionsBody"></div>
+
+          <!-- Pagination -->
+          <div class="flex items-center justify-between px-4 py-3 border-t border-layout-border bg-layout-bg">
+            <span class="text-p2 text-gray-400" id="paginationLabel">Showing 1 to 3 of 3 entries</span>
+            <div class="flex items-center gap-1" id="paginationControls"></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /max-w -->
+  </main>
+
+  <script>
+/* ══════════════════════════════════════════════
+   taViewSubmission_script.js
+   Mirrors the data-driven render pattern from
+   TaDashboard_script.js for consistency.
+══════════════════════════════════════════════ */
+
+/* ── Lab Meta Catalogue (mock keyed by lab id) ── */
+const LABS = {
+  // CS 232
+  201: { title: "Lab 01 - CPU Registers",    section: "650001", deadline: "10 Apr 2026" },
+  202: { title: "Lab 02 - Pipelining",       section: "650001", deadline: "17 Apr 2026" },
+  203: { title: "Lab 03 - Cache Memory",     section: "650002", deadline: "24 Apr 2026" },
+  // CS 251
+  301: { title: "Lab 01 - Linked List",      section: "660001", deadline: "12 Apr 2026" },
+  302: { title: "Lab 02 - Binary Tree",      section: "660001", deadline: "19 Apr 2026" },
+  // CS 271
+  401: { title: "Lab 01 - Process Scheduling", section: "670001", deadline: "05 Apr 2026" },
+  402: { title: "Lab 02 - Threads & Mutex",    section: "670002", deadline: "12 Apr 2026" },
+};
+
+/* Shared description + rules (same for all mock labs) */
+const DEFAULT_META = {
+  title:    "Cloud Storage Setup",
+  section:  "650001",
+  deadline: "16 Mar 2026",
+  description: [
+    "Configure AWS Lambda to receive S3 events",
+    "Write Node.js code to extract bucketName and validate file extensions (.jpg, .png)",
+    "Ensure correct IAM role permissions are attached to the function",
+  ],
+  rules: [
+    { type: "Text",           requirement: "mandatory", keyword: "Successfully", weight: 40 },
+    { type: "Text + Position",requirement: "optional",  keyword: "Lambda",       weight: 40 },
+    { type: "Text",           requirement: "optional",  keyword: "index",        weight: 20 },
+  ],
+};
+
+/* ── Resolve current lab from ?lab= param ── */
+function resolveLab() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('lab');
+  const picked = id && LABS[id] ? LABS[id] : null;
+  return { ...DEFAULT_META, ...(picked || {}) };
+}
+
+const labData = resolveLab();
+
+/* ── Submissions Data ── */
+const submissions = [
+  {
+    email: "phonpawee.sae@dome.tu.ac.th",
+    status: "passed",
+    score: 100,
+    submittedAt: "26 Mar 2026 · 20:58",
+    checkedAt:   "26 Mar 2026 · 20:58",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: true },
+      ]},
+      { label: "Image 2", status: "passed", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: true },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  },
+  {
+    email: "saharat.udo@dome.tu.ac.th",
+    status: "rejected",
+    score: 60,
+    submittedAt: "26 Mar 2026 · 21:05",
+    checkedAt:   "26 Mar 2026 · 21:05",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: true },
+      ]},
+      { label: "Image 2", status: "rejected", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: false, note: "Missing" },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  },
+  {
+    email: "paeng.hom@dome.tu.ac.th",
+    status: "passed",
+    score: 100,
+    submittedAt: "26 Mar 2026 · 21:12",
+    checkedAt:   "26 Mar 2026 · 21:12",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: true },
+      ]},
+      { label: "Image 2", status: "passed", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: true },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  },
+  {
+    email: "nattawut.kri@dome.tu.ac.th",
+    status: "rejected",
+    score: 40,
+    submittedAt: "26 Mar 2026 · 21:30",
+    checkedAt:   "26 Mar 2026 · 21:31",
+    images: [
+      { label: "Image 1", status: "rejected", checks: [
+        { label: "Successfully", ok: false, note: "Missing" },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: false, note: "Not found" },
+      ]},
+      { label: "Image 2", status: "rejected", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: false, note: "Missing" },
+        { label: "Objects", ok: false, note: "Missing" },
+      ]},
+    ],
+  },
+  {
+    email: "supalak.wan@dome.tu.ac.th",
+    status: "passed",
+    score: 80,
+    submittedAt: "26 Mar 2026 · 21:44",
+    checkedAt:   "26 Mar 2026 · 21:44",
+    images: [
+      { label: "Image 1", status: "passed", checks: [
+        { label: "Successfully", ok: true },
+        { label: "Lambda",       ok: true },
+        { label: "index",        ok: false, note: "Missing" },
+      ]},
+      { label: "Image 2", status: "passed", checks: [
+        { label: "Buckets", ok: true },
+        { label: "Upload",  ok: true },
+        { label: "Objects", ok: true },
+      ]},
+    ],
+  }
+];
+
+/* ────────────────────────────────────────
+   HELPERS
+──────────────────────────────────────── */
+function statusPill(status) {
+  const map = {
+    passed:   '<span class="pill-passed">Passed</span>',
+    rejected: '<span class="pill-rejected">Rejected</span>',
+    pending:  '<span class="pill-pending">Pending</span>',
+  };
+  return map[status] ?? '';
+}
+
+function rowAccent(status) {
+  const map = { passed: 'row-passed', rejected: 'row-rejected', pending: 'row-pending' };
+  return map[status] ?? '';
+}
+
+function checkIcon(ok) {
+  return ok
+    ? `<i class="ph-bold ph-check text-status-success text-xs flex-shrink-0"></i>`
+    : `<i class="ph-bold ph-x text-status-error text-xs flex-shrink-0"></i>`;
+}
+
+function imageCardHTML(img) {
+  const isPass = img.status === 'passed';
+  const cardClass = img.status === 'passed' ? 'vc-passed' : img.status === 'pending' ? 'vc-pending' : 'vc-rejected';
+  const checksHTML = img.checks.map(c => `
+    <li class="check-item ${c.ok ? 'text-status-success' : 'text-status-error'}">
+      ${checkIcon(c.ok)}
+      <span class="text-brand-800">${c.label}</span>
+      ${!c.ok && c.note ? `<span class="text-xs text-gray-400 italic ml-1">(${c.note})</span>` : ''}
+    </li>
+  `).join('');
+
+  return `
+    <div class="validation-card ${cardClass}">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-p1 font-semibold text-brand-800">${img.label}</span>
+        ${statusPill(img.status)}
+      </div>
+      <!-- Thumbnail placeholder (replaces screenshot image) -->
+      <div class="thumb-placeholder mb-3">
+        <i class="ph ph-image"></i>
+      </div>
+      <ul class="space-y-1.5">${checksHTML}</ul>
+    </div>
+  `;
+}
+
+/* ────────────────────────────────────────
+   RENDER: Rules Table
+──────────────────────────────────────── */
+function renderRules() {
+  const tbody = document.getElementById('rulesTable');
+  if (!tbody) return;
+
+  tbody.innerHTML = labData.rules.map(r => {
+    const reqBadge = r.requirement === 'mandatory'
+      ? '<span class="badge-mandatory">Mandatory</span>'
+      : '<span class="badge-optional">Optional</span>';
+
+    const typeIcon = r.type.includes('Position')
+      ? '<i class="ph-fill ph-grid-four text-xs"></i>'
+      : '<i class="ph-fill ph-text-t text-xs"></i>';
+
+    return `
+      <tr class="hover:bg-layout-bg transition-colors">
+        <td><span class="rule-chip">${typeIcon} ${r.type}</span></td>
+        <td>${reqBadge}</td>
+        <td class="font-semibold">${r.keyword}</td>
+        <td class="text-right font-bold">${r.weight}%</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/* ────────────────────────────────────────
+   RENDER: Stat Cards
+──────────────────────────────────────── */
+function renderStats(data) {
+  const total    = data.length;
+  const passed   = data.filter(s => s.status === 'passed').length;
+  const rejected = data.filter(s => s.status === 'rejected').length;
+  const pending  = data.filter(s => s.status === 'pending').length;
+
+  document.getElementById('statTotal').textContent    = total;
+  document.getElementById('statPassed').textContent   = passed;
+  document.getElementById('statRejected').textContent = rejected;
+  document.getElementById('statPending').textContent  = pending;
+}
+
+/* ────────────────────────────────────────
+   RENDER: Submission Rows
+──────────────────────────────────────── */
+let expandedRows = new Set([0, 1]); // default: first two expanded
+
+function renderSubmissions(data) {
+  const body = document.getElementById('submissionsBody');
+  if (!body) return;
+
+  if (data.length === 0) {
+    body.innerHTML = `
+      <div class="py-12 flex flex-col items-center justify-center text-gray-400 border-t border-layout-border">
+        <i class="ph-fill ph-magnifying-glass text-4xl mb-2 text-gray-300"></i>
+        <p class="text-p1 font-semibold">No submissions found</p>
+      </div>`;
+    return;
+  }
+
+  body.innerHTML = data.map((s, i) => {
+    const isOpen = expandedRows.has(i);
+    const breakdownHTML = s.images.map(img => imageCardHTML(img)).join('');
+
+    return `
+      <div class="border-b border-layout-border last:border-b-0" id="submission-row-${i}">
+
+        <!-- Main row -->
+        <div class="submission-row-grid px-4 py-3.5 cursor-pointer transition-colors ${rowAccent(s.status)}"
+             onclick="toggleRow(${i})">
+          <span class="text-p2 text-gray-400 font-semibold">${i + 1}</span>
+          <span class="text-p1 font-medium truncate">${s.email}</span>
+          <span class="text-center">${statusPill(s.status)}</span>
+          <span class="text-center font-bold text-p1 ${s.status === 'passed' ? 'text-status-success' : s.status === 'rejected' ? 'text-status-error' : 'text-status-warning'}">${s.score}%</span>
+          <span class="text-p2 text-gray-400">${s.submittedAt}</span>
+          <span class="text-p2 text-gray-400">${s.checkedAt}</span>
+          <span class="flex justify-center">
+            <i class="ph ph-caret-up chevron-icon text-gray-400 text-sm ${isOpen ? 'open' : ''}" id="chevron-${i}"></i>
+          </span>
+        </div>
+
+        <!-- Validation Breakdown -->
+        <div class="breakdown-panel ${isOpen ? 'open' : ''}" id="breakdown-${i}">
+          <div class="px-5 pb-5 pt-1">
+            <p class="text-p2 text-gray-400 font-bold uppercase tracking-widest mb-3">Validation Breakdown</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${breakdownHTML}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }).join('');
+}
+
+/* ────────────────────────────────────────
+   TOGGLE ROW
+──────────────────────────────────────── */
+function toggleRow(i) {
+  const panel   = document.getElementById(`breakdown-${i}`);
+  const chevron = document.getElementById(`chevron-${i}`);
+  if (!panel) return;
+
+  if (expandedRows.has(i)) {
+    expandedRows.delete(i);
+    panel.classList.remove('open');
+    chevron.classList.remove('open');
+  } else {
+    expandedRows.add(i);
+    panel.classList.add('open');
+    chevron.classList.add('open');
+  }
+}
+
+/* ────────────────────────────────────────
+   PAGINATION (client-side, simple)
+──────────────────────────────────────── */
+const PAGE_SIZE = 5;
+let currentPage = 1;
+let filteredData = [...submissions];
+
+function renderPagination() {
+  const total = filteredData.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const start = (currentPage - 1) * PAGE_SIZE + 1;
+  const end   = Math.min(currentPage * PAGE_SIZE, total);
+
+  document.getElementById('paginationLabel').textContent =
+    total === 0 ? 'No entries' : `Showing ${start} to ${end} of ${total} entries`;
+
+  const ctrl = document.getElementById('paginationControls');
+  ctrl.innerHTML = `
+    <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>
+    ${Array.from({ length: pages }, (_, p) => `
+      <button class="page-btn ${p + 1 === currentPage ? 'active' : ''}" onclick="changePage(${p + 1})">${p + 1}</button>
+    `).join('')}
+    <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === pages ? 'disabled' : ''}>Next</button>
+  `;
+}
+
+function changePage(p) {
+  const pages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+  if (p < 1 || p > pages) return;
+  currentPage = p;
+  const slice = filteredData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  renderSubmissions(slice);
+  renderPagination();
+}
+
+/* ────────────────────────────────────────
+   SEARCH + FILTER + SORT PIPELINE
+──────────────────────────────────────── */
+const filterState = {
+  query: '',
+  status: 'all',        // all | passed | rejected | pending
+  sortKey: null,        // email | score | submittedAt | checkedAt
+  sortDir: 'asc',       // asc | desc
+};
+
+function parseDateTime(s) {
+  // "26 Mar 2026 · 20:58" -> Date
+  const m = (s || '').replace('·', '').replace(/\s+/g, ' ').trim();
+  const d = new Date(m);
+  return isNaN(d) ? 0 : d.getTime();
+}
+
+function applyPipeline() {
+  let data = [...submissions];
+
+  // search by email
+  if (filterState.query) {
+    data = data.filter(s => s.email.toLowerCase().includes(filterState.query));
+  }
+  // status filter
+  if (filterState.status !== 'all') {
+    data = data.filter(s => s.status === filterState.status);
+  }
+  // sort
+  if (filterState.sortKey) {
+    const key = filterState.sortKey;
+    const dir = filterState.sortDir === 'asc' ? 1 : -1;
+    data.sort((a, b) => {
+      let va, vb;
+      if (key === 'submittedAt' || key === 'checkedAt') {
+        va = parseDateTime(a[key]); vb = parseDateTime(b[key]);
+      } else if (key === 'score') {
+        va = a.score; vb = b.score;
+      } else {
+        va = String(a[key] ?? '').toLowerCase();
+        vb = String(b[key] ?? '').toLowerCase();
+      }
+      if (va < vb) return -1 * dir;
+      if (va > vb) return  1 * dir;
+      return 0;
+    });
+  }
+
+  filteredData = data;
+  currentPage  = 1;
+  expandedRows = new Set();
+  renderSubmissions(filteredData.slice(0, PAGE_SIZE));
+  renderStats(filteredData);
+  renderPagination();
+  updateFilterBadge();
+}
+
+function updateFilterBadge() {
+  const badge = document.getElementById('filterBadge');
+  if (!badge) return;
+  let count = 0;
+  if (filterState.status !== 'all') count++;
+  if (filterState.sortKey)           count++;
+  if (count > 0) {
+    badge.textContent = String(count);
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+/* ── Filter dropdown toggle ── */
+function toggleFilterMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('filterMenu');
+  if (menu) menu.classList.toggle('hidden');
+}
+
+/* ── Apply status filter (single-select) ── */
+function applyStatusFilter(status) {
+  filterState.status = status;
+  // update UI checkmarks
+  document.querySelectorAll('.status-item').forEach(btn => {
+    const check = btn.querySelector('.status-check');
+    if (!check) return;
+    if (btn.dataset.status === status) check.classList.remove('hidden');
+    else                               check.classList.add('hidden');
+  });
+  applyPipeline();
+}
+
+/* ── Apply sort: click same key toggles direction ── */
+function applySort(key) {
+  if (filterState.sortKey === key) {
+    filterState.sortDir = filterState.sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    filterState.sortKey = key;
+    filterState.sortDir = 'asc';
+  }
+  // update UI: show active key + arrow direction
+  document.querySelectorAll('.sort-item').forEach(btn => {
+    const dirIcon = btn.querySelector('.sort-dir');
+    if (!dirIcon) return;
+    const isActive = btn.dataset.key === filterState.sortKey;
+    btn.classList.toggle('text-brand-500', isActive);
+    btn.classList.toggle('text-brand-800', !isActive);
+    dirIcon.classList.toggle('text-brand-500', isActive);
+    dirIcon.classList.toggle('text-gray-400', !isActive);
+    dirIcon.classList.remove('ph-arrow-up', 'ph-arrow-down');
+    dirIcon.classList.add(isActive && filterState.sortDir === 'desc' ? 'ph-arrow-down' : 'ph-arrow-up');
+  });
+  applyPipeline();
+}
+
+/* ── Reset all filters/sort ── */
+function resetFilters() {
+  filterState.query = '';
+  filterState.status = 'all';
+  filterState.sortKey = null;
+  filterState.sortDir = 'asc';
+  const searchEl = document.getElementById('submissionSearch');
+  if (searchEl) searchEl.value = '';
+  // reset status UI
+  document.querySelectorAll('.status-item').forEach(btn => {
+    const check = btn.querySelector('.status-check');
+    if (!check) return;
+    if (btn.dataset.status === 'all') check.classList.remove('hidden');
+    else                              check.classList.add('hidden');
+  });
+  // reset sort UI
+  document.querySelectorAll('.sort-item').forEach(btn => {
+    const dirIcon = btn.querySelector('.sort-dir');
+    if (!dirIcon) return;
+    btn.classList.remove('text-brand-500');
+    btn.classList.add('text-brand-800');
+    dirIcon.classList.remove('text-brand-500', 'ph-arrow-down');
+    dirIcon.classList.add('text-gray-400', 'ph-arrow-up');
+  });
+  applyPipeline();
+}
+
+function buildLabListHref() {
+  const params = new URLSearchParams(window.location.search);
+  const course = params.get('course');
+  return course
+    ? `TaLablist.html?course=${encodeURIComponent(course)}`
+    : 'TaLablist.html';
+}
+
+function buildCreateLabHref() {
+  const params = new URLSearchParams(window.location.search);
+  const nextParams = new URLSearchParams();
+  const course = params.get('course');
+  const lab = params.get('lab');
+  if (course) nextParams.set('course', course);
+  if (lab) nextParams.set('lab', lab);
+  nextParams.set('mode', 'edit');
+  const query = nextParams.toString();
+  return `Ta_CreateLab.html${query ? `?${query}` : ''}`;
+}
+
+function handleEditLab() {
+  window.location.href = buildCreateLabHref();
+}
+
+function handleDeleteLab() {
+  if (!confirm(`Delete ${labData.title}?`)) return;
+  window.location.href = buildLabListHref();
+}
+
+function handleDownloadAll() {
+  const rows = [
+    ['Email', 'Status', 'Score', 'Submitted At', 'Checked At'],
+    ...filteredData.map(item => [item.email, item.status, item.score, item.submittedAt, item.checkedAt])
+  ];
+
+  const csv = rows
+    .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${labData.title.replace(/[^a-z0-9]+/gi, '_').toLowerCase()}_submissions.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const searchEl = document.getElementById('submissionSearch');
+  if (searchEl) {
+    searchEl.addEventListener('input', e => {
+      filterState.query = e.target.value.trim().toLowerCase();
+      applyPipeline();
+    });
+  }
+
+  // close filter menu when clicking outside
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('filterMenu');
+    const btn  = document.getElementById('filterBtn');
+    if (!menu || !btn) return;
+    if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const menu = document.getElementById('filterMenu');
+      if (menu) menu.classList.add('hidden');
+    }
+  });
+});
+
+/* ────────────────────────────────────────
+   INIT
+──────────────────────────────────────── */
+(function init() {
+  // Lab meta
+  document.getElementById('labTitle').textContent    = labData.title;
+  document.getElementById('labSection').textContent  = labData.section;
+  document.getElementById('labDeadline').textContent = labData.deadline;
+
+  document.title = `ValidMate – ${labData.title}`;
+
+  // Pass ?course= to the Lab List breadcrumb so it returns to the right course
+  const courseParam = new URLSearchParams(window.location.search).get('course');
+  if (courseParam) {
+    document.querySelectorAll('button[onclick*="TaLablist.html"]').forEach(btn => {
+      btn.setAttribute('onclick', `window.location.href='${buildLabListHref()}'`);
+    });
+  }
+
+  renderRules();
+  renderStats(submissions);
+
+  filteredData = [...submissions];
+  const slice  = filteredData.slice(0, PAGE_SIZE);
+  renderSubmissions(slice);
+  renderPagination();
+})();
+</script>
+</body>
+</html>

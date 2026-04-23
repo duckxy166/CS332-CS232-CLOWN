@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ระบบส่งงานแล็บ</title>
+    <style>
+        /* ── ตกแต่งหน้า Login ── */
+        body { font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #f0f4f8; margin: 0; }
+        .container { text-align: center; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .login-btn { padding: 10px 20px; font-size: 18px; color: white; background-color: #ff9900; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 20px; }
+        .login-btn:hover { background-color: #e68a00; }
+        #loadingMessage { color: #0066cc; font-weight: bold; display: none; margin-top: 20px;}
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContent">
+        <h2>ยินดีต้อนรับสู่ระบบส่งงาน 🎓</h2>
+        <p>กรุณาเข้าสู่ระบบด้วยรหัสนักศึกษาหรือบัญชีผู้ช่วยสอน</p>
+        
+        <a href="https://us-east-1qotxnmta1.auth.us-east-1.amazoncognito.com/login?client_id=1bftnq9opvc1n89m78eurjv7bb&response_type=token&scope=email+openid&redirect_uri=https://incredible-sprinkles-0d48b2.netlify.app/index.html" class="login-btn">
+            เข้าสู่ระบบ (Login)
+        </a>
+
+        <div id="loadingMessage">กำลังตรวจสอบสิทธิ์และพาคุณเข้าสู่ระบบ... ⏳</div>
+    </div>
+
+    
+<script>
+    // 1. ฟังก์ชันถอดรหัส Token
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // 2. ฟังก์ชันแยกหน้า
+        function routeUser(token) {
+            const userData = parseJwt(token);
+            if (userData) {
+                // ซ่อนปุ่ม Login และโชว์ข้อความกำลังโหลด
+                document.querySelector('.login-btn').style.display = 'none';
+                document.getElementById('loadingMessage').style.display = 'block';
+
+                const userRole = userData['custom:role'] || userData['role'];
+                
+                // หน่วงเวลา 1 วิให้ระบบโหลดเสร็จแล้วค่อยเปลี่ยนหน้า
+                setTimeout(() => {
+                    if (userRole && userRole.toLowerCase() === 'ta') {
+                        window.location.replace("Ta_Dashboard.html");
+                    } else {
+                        window.location.replace("student_dashboard.html");
+                    }
+                }, 1000);
+            } else {
+                alert("ข้อมูลเข้าสู่ระบบไม่สมบูรณ์ กรุณาลองใหม่อีกครั้ง");
+            }
+        }
+
+        // ==========================================
+        // 🌟 3. จุดเริ่มต้นการทำงานเมื่อโหลดหน้าเว็บ
+        // ==========================================
+        
+        // เช็คว่ามี Token ห้อยมากับ URL ไหม (กรณีเพิ่งล็อกอินเสร็จและเด้งกลับมา)
+        const hash = window.location.hash.substring(1);
+        const urlParams = new URLSearchParams(hash);
+        const tokenFromUrl = urlParams.get('id_token');
+
+        if (tokenFromUrl) {
+            // ดัก Token ได้ -> เซฟลงเครื่อง -> ล้าง URL ให้สะอาด -> แยกหน้า
+            localStorage.setItem('cognito_id_token', tokenFromUrl);
+            window.history.replaceState(null, null, window.location.pathname);
+            routeUser(tokenFromUrl);
+        } else {
+            // ถ้าไม่มี Token ใน URL ให้ไปค้นในเครื่องดูว่าเคยล็อกอินค้างไว้ไหม
+            const savedToken = localStorage.getItem('cognito_id_token');
+            if (savedToken) {
+                // ถ้าเคยล็อกอินไว้แล้ว ก็ไม่ต้องรอให้กดปุ่ม เตะเข้าหน้าหลักเลย
+                routeUser(savedToken);
+            }
+            // แต่ถ้าในเครื่องก็ไม่มี Token โค้ดก็จะจบแค่นี้ และปล่อยให้ผู้ใช้เห็น "ปุ่ม Login" ตามปกติครับ
+        }
+</script>
+</body>
+</html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidMate - Lablist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+     <style>
+:root {
+  --bg:            #f5efeb;
+  --navbar-bg:     #5D768C;
+  --navbar-text:   #ffffff;
+  --card-bg:       #ffffff;
+  --priority-card: #c7d9e8;
+  --badge-bg:      #a8c0d4;
+  --badge-text:    #2c4a60;
+  --text-primary:  #2c2c2c;
+  --text-meta:     #6b6b6b;
+  --text-urgent:   #cc2a2a;
+  --divider:       #d0ccc5;
+  --shadow:        0 2px 10px rgba(0, 0, 0, 0.08);
+  --radius-card:   14px;
+  --radius-badge:  20px;
+  --font-main:     'Nunito', sans-serif;
+  --font-th:       'Sarabun', sans-serif;
+}
+ 
+/* RESET & BASE */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+ 
+html, body { height: 100%; }
+ 
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+ 
+/* HEADER */
+.navbar {
+  background-color: var(--navbar-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  animation: fadeIn 0.4s ease both;
+  border-bottom-left-radius: 35px;
+  border-bottom-right-radius: 35px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+ 
+/* โลโก้รูปภาพ */
+.logo-img {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+.nav-logo:hover .logo-img {
+  animation: logoBounce 0.6s ease;
+}
+ 
+.logo-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--navbar-text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+ 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+ 
+.nav-name {
+  color: var(--navbar-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+ 
+/* Avatar ขยายเมื่อ hover */
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.avatar:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+ 
+/* ปุ่ม Logout เลื่อนขวาเมื่อ hover */
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--navbar-text);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+} 
+
+:root {
+    --brand-500: #4F46E5;
+    --brand-900: #0F172A;
+    --layout-bg: #F8FAFC;
+    --layout-border: #E2E8F0;
+}
+
+.avatar-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.avatar-hover:hover { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2); }
+
+.filter-tab {
+    @apply px-5 py-1.5 rounded-lg text-gray-500 text-xs font-bold transition-all;
+}
+
+.filter-tab.active {
+    @apply bg-brand-900 text-white;
+}
+
+.lab-card {
+    @apply bg-white p-5 rounded-2xl border border-layout-border flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md;
+}
+
+.status-tag {
+    @apply text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-wider;
+}
+</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
+                    fontSize: {
+                        'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+                        'h1': ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+                        'h2': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+                        'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+                        'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+                        'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+                        'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+                        'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
+                    },
+                    colors: {
+                        brand: { 50: '#F0F4FA', 100: '#E0E9F4', 500: '#4F46E5', 800: '#1E293B', 900: '#0F172A' },
+                        layout: { bg: '#F8FAFC', surface: '#FFFFFF', border: '#E2E8F0' },
+                        status: { success: '#10B981', successBg: '#ECFDF5', error: '#EF4444', errorBg: '#FEF2F2', warning: '#F59E0B', warningBg: '#FFFBEB' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .avatar-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .avatar-hover:hover { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2); }
+
+        /* สไตล์สำหรับสถานะ Active ของปุ่ม Filter */
+        .filter-btn.active {
+            background-color: #0F172A; /* brand-900 */
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
+
+    <!-- Main Top Navbar (Dark) -->
+    <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='student_dashboard.html'">
+            <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+            <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+        </div>
+
+        <!-- Nav Links -->
+        <div class="grid grid-cols-[auto_1fr] gap-2 items-center h-full">
+            <button onclick="window.location.href='student_dashboard.html'"
+                class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+                <i class="ph ph-squares-four text-sm"></i> Dashboard
+            </button>
+        </div>
+
+        <!-- User Profile with Dropdown -->
+        <div class="relative h-full">
+            <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+                class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+                <div class="text-right">
+                    <div class="text-p1 font-semibold leading-none">Alex Student</div>
+                    <div class="text-p2 text-gray-400 leading-none mt-1">Undergraduate</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+                    AS
+                </div>
+                <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+            </button>
+            <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+                <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+                    <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+                        AS
+                    </div>
+                    <div>
+                        <div class="text-p1 font-bold text-brand-900 leading-tight">Alex Student</div>
+                        <div class="text-p2 text-gray-500 leading-tight mt-0.5">Undergraduate</div>
+                    </div>
+                </div>
+                <button type="button" onclick="handleLogout()"
+                    class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+                    <i class="ph ph-sign-out text-lg"></i>
+                    <span class="text-left">Sign Out</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function toggleProfileMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('profileMenu');
+            const caret = document.getElementById('profileCaret');
+            const isHidden = menu.classList.toggle('hidden');
+            if (caret) caret.classList.toggle('rotate-180', !isHidden);
+        }
+        function handleLogout() { window.location.href = 'index.html'; }
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const btn = document.getElementById('profileBtn');
+            if (!menu || !btn) return;
+            if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const menu = document.getElementById('profileMenu');
+                if (menu) menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+    </script>
+
+    <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+        <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
+            <button type="button" onclick="window.location.href='student_dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+                <i class="ph-fill ph-squares-four text-sm"></i> Overview
+            </button>
+            <i class="ph ph-caret-right text-xs text-gray-400"></i>
+            <span id="breadcrumbCourse" class="flex items-center gap-1 text-brand-800">
+                <i class="ph-fill ph-stack text-sm text-brand-500"></i> CS 232
+            </span>
+        </div>
+    </div>
+
+    <main class="p-6 md:p-8 lg:p-10 overflow-y-auto w-full">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 gap-6 auto-rows-min">
+        <!-- Course Header Card -->
+        <div class="bg-layout-surface rounded-xl border border-layout-border border-l-4 border-l-brand-500 shadow-sm p-6 md:p-8">
+            <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-center">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span id="courseCode" class="inline-block bg-indigo-50 text-brand-500 text-p2 font-bold px-3 py-1 rounded-md">CS 232</span>
+                        <span id="courseSemester" class="text-p1 text-gray-400">Summer 2026</span>
+                    </div>
+                    <h1 id="courseName" class="text-h3 font-bold text-brand-900 leading-tight mb-2">Computer Architecture</h1>
+                    <p class="text-p1 text-gray-500"><span id="labCount">6</span> Total Labs • Section <span id="courseSection">650001</span></p>
+                </div>
+                <div class="bg-layout-bg rounded-xl p-5 min-w-[220px]">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-p2 font-bold text-gray-400 uppercase tracking-widest">Lab Progress</span>
+                        <span id="progressText" class="text-2xl font-bold text-brand-900">0/0</span>
+                    </div>
+                    <div class="w-full bg-layout-border h-2 rounded-full overflow-hidden">
+                        <div id="progressFill" class="bg-brand-500 h-full transition-all duration-700" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center">
+            <div class="relative">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" placeholder="Search labs..." class="w-full pl-9 pr-4 py-2.5 text-p1 border border-layout-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-opacity-30 focus:border-brand-500 bg-layout-surface shadow-sm">
+            </div>
+            <div class="flex gap-2 w-full md:w-auto justify-between md:justify-start" id="filterContainer">
+                <button onclick="filterLabs('ALL')" class="filter-btn px-6 py-2.5 rounded-lg text-btn font-bold bg-layout-surface border border-layout-border active">All Labs</button>
+                <button onclick="filterLabs('PENDING')" class="filter-btn px-6 py-2.5 rounded-lg text-btn font-bold bg-layout-surface border border-layout-border text-gray-700 hover:bg-layout-bg">Pending</button>
+                <button onclick="filterLabs('COMPLETED')" class="filter-btn px-6 py-2.5 rounded-lg text-btn font-bold bg-layout-surface border border-layout-border text-gray-700 hover:bg-layout-bg">Completed</button>
+            </div>
+        </div>
+
+        <div id="lab-list" class="grid grid-cols-1 gap-4"></div>
+    </div>
+    </main>
+
+    <script>
+// ข้อมูลจำลอง - ในอนาคตก้อนนี้จะถูกดึงมาจาก Database ผ่าน Backend API
+let labs = [
+    { id: 5, title: "Lab 05 - CPU Pipelining", desc: "Upload AWS EC2 instance screenshots", status: "NOT_SUBMITTED", score: null, meta: "DUE TOMORROW, 11:59 PM", metaIcon: "ph-calendar-blank" },
+    { id: 4, title: "Lab 04 - Cache Memory Design", desc: "S3 bucket configuration and deployment", status: "PENDING", score: null, meta: "Submitted Oct 12, 2:30 PM", metaIcon: "ph-clock" },
+    { id: 3, title: "Lab 03 - ALU Logic Verification", desc: "Lambda function trigger validation", status: "REJECTED", score: null, meta: "Failed 1 Mandatory Rule", metaIcon: null },
+    { id: 2, title: "Lab 02 - Instruction Set Architecture", desc: "IAM Role policy creation", status: "PASSED", score: 100, meta: "Graded Oct 05, 10:15 AM", metaIcon: "ph-check-circle" },
+    { id: 1, title: "Lab 01 - Intro to Verilog", desc: "Basic cloud environment setup", status: "PASSED", score: 100, meta: "Graded Sep 28, 09:00 AM", metaIcon: "ph-check-circle" }
+];
+
+let currentFilter = 'ALL';
+let searchTerm = '';
+
+const COURSE_META = {
+    'CS 232': { name: 'Computer Architecture', section: '650001' },
+    'CS 251': { name: 'Data Structures', section: '660001' },
+    'CS 271': { name: 'Operating Systems', section: '670001' },
+};
+
+function getCurrentSubjectId() {
+    return new URLSearchParams(window.location.search).get('subjectId') || 'CS 232';
+}
+
+function updateCourseHeader() {
+    const subjectId = getCurrentSubjectId();
+    const meta = COURSE_META[subjectId] || { name: subjectId, section: '650001' };
+    const completedCount = labs.filter(lab => lab.status === 'PASSED' || lab.status === 'REJECTED').length;
+    const totalCount = 6;
+    const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    const courseCode = document.getElementById('courseCode');
+    const breadcrumbCourse = document.getElementById('breadcrumbCourse');
+    const courseName = document.getElementById('courseName');
+    const courseSection = document.getElementById('courseSection');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const labCount = document.getElementById('labCount');
+
+    if (courseCode) courseCode.textContent = subjectId;
+    if (breadcrumbCourse) breadcrumbCourse.textContent = subjectId;
+    if (courseName) courseName.textContent = meta.name;
+    if (courseSection) courseSection.textContent = meta.section;
+    if (progressText) progressText.textContent = `${completedCount}/${totalCount}`;
+    if (progressFill) progressFill.style.width = `${progressPct}%`;
+    if (labCount) labCount.textContent = String(totalCount);
+}
+
+/**
+ * ฟังก์ชันหลักในการวาดรายการ Lab บนหน้าจอ
+ */
+function renderLabs() {
+    const container = document.getElementById('lab-list');
+
+    if (!container) return;
+
+    // กรองข้อมูลตาม Filter และ Search
+    const filteredLabs = labs.filter(lab => {
+        const matchesSearch = lab.title.toLowerCase().includes(searchTerm.toLowerCase());
+        let matchesFilter = true;
+        if (currentFilter === 'PENDING') {
+            matchesFilter = (lab.status === 'PENDING');
+        } else if (currentFilter === 'COMPLETED') {
+            matchesFilter = (lab.status === 'PASSED' || lab.status === 'REJECTED');
+        }
+        return matchesSearch && matchesFilter;
+    });
+
+    if (filteredLabs.length === 0) {
+        container.innerHTML = `
+            <div class="rounded-xl border border-layout-border bg-layout-surface px-6 py-12 text-center text-gray-400 shadow-sm">
+                <i class="ph-fill ph-magnifying-glass text-4xl mb-2 text-gray-300"></i>
+                <p class="text-p1 font-semibold">No labs found</p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = filteredLabs.map(lab => {
+        const isRejected = lab.status === 'REJECTED';
+        const metaColor = isRejected ? 'text-status-error font-bold' : 'text-gray-400';
+        const metaIcon = lab.metaIcon ? `<i class="ph ${lab.metaIcon} text-sm"></i>` : '';
+        return `
+        <div class="bg-layout-surface p-5 rounded-xl border ${isRejected ? 'border-status-error border-l-4' : 'border-layout-border'} shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md">
+            <div class="flex items-center gap-4 w-full">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl
+                    ${lab.status === 'PASSED' ? 'bg-status-successBg text-status-success' :
+                      lab.status === 'REJECTED' ? 'bg-status-errorBg text-status-error' :
+                      lab.status === 'PENDING' ? 'bg-status-warningBg text-status-warning' : 'bg-layout-bg text-gray-400'}">
+                    <i class="ph-fill ph-file-text"></i>
+                </div>
+                <div>
+                    <h3 class="text-h4 font-bold text-brand-800">${lab.title}</h3>
+                    <p class="text-p2 text-gray-400">${lab.desc}</p>
+                    ${lab.meta ? `<p class="text-p2 ${metaColor} mt-1 flex items-center gap-1 uppercase tracking-wide">${metaIcon} ${lab.meta}</p>` : ''}
+                </div>
+            </div>
+            <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                ${renderStatusUI(lab)}
+            </div>
+        </div>
+    `;}).join('');
+}
+
+/**
+ * จัดการแสดงผลปุ่มและสถานะตามเงื่อนไข (แก้ไขเป็น Pending ตามรูปภาพ)
+ */
+function renderStatusUI(lab) {
+    switch (lab.status) {
+        case 'PASSED':
+            return `
+                <div class="mr-2 whitespace-nowrap">
+                    <span class="text-p1 text-gray-500">Score: </span>
+                    <span class="text-status-success font-bold text-p1">${lab.score}</span>
+                </div>
+                <span class="text-p2 font-bold text-status-success bg-status-successBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Passed</span>
+                <button type="button" onclick="window.location.href='submissionResult.html?state=passed'" class="px-6 py-2 border border-layout-border rounded-lg text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors whitespace-nowrap">View Results</button>
+            `;
+        case 'REJECTED':
+            return `
+                <span class="flex items-center gap-1 text-p2 font-bold text-status-error bg-status-errorBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">
+                    <i class="ph-fill ph-x-circle text-sm"></i> Rejected
+                </span>
+                <button type="button" onclick="window.location.href='submissionResult.html?state=rejected'" class="px-6 py-2 border border-red-200 rounded-lg text-btn text-status-error hover:bg-red-50 transition-colors whitespace-nowrap">View Feedback</button>
+            `;
+        case 'PENDING':
+            return `
+                <span class="text-p2 font-bold text-status-warning bg-status-warningBg px-3 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
+                    <i class="ph ph-hourglass text-sm"></i> Pending
+                </span>
+                <button type="button" disabled class="px-6 py-2 bg-layout-bg rounded-lg text-btn text-gray-400 cursor-not-allowed whitespace-nowrap">Processing...</button>
+            `;
+        default:
+            return `
+                <span class="text-p2 font-bold text-gray-400 bg-layout-bg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Not Submitted</span>
+                <button type="button" onclick="window.location.href='submissionPage.html?lab=${lab.id}'" class="px-8 py-2.5 bg-brand-500 text-white rounded-lg text-btn hover:bg-indigo-600 transition-all shadow-sm whitespace-nowrap">Submit Lab</button>
+            `;
+    }
+}
+
+/**
+ * ระบบ Filter
+ */
+function filterLabs(type) {
+    currentFilter = type;
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => {
+        const isTarget = (type === 'ALL' && btn.innerText.includes('All')) || 
+                         btn.innerText.toUpperCase().includes(type);
+        
+        if (isTarget) {
+            btn.classList.add('active', 'bg-brand-900', 'text-white');
+            btn.classList.remove('text-gray-500', 'hover:bg-gray-50');
+        } else {
+            btn.classList.remove('active', 'bg-brand-900', 'text-white');
+            btn.classList.add('text-gray-500', 'hover:bg-gray-50');
+        }
+    });
+    renderLabs();
+}
+
+/**
+ * ระบบจำลองการตรวจ Lab (Simulation)
+ * ค้นหาตัวที่เป็น PENDING และเปลี่ยนสถานะหลังจาก 5 วินาที
+ */
+function simulateBackendCheck() {
+    setInterval(() => {
+        let hasChange = false;
+        labs = labs.map(lab => {
+            if (lab.status === 'PENDING') {
+                hasChange = true;
+                const isPassed = Math.random() > 0.2; // โอกาสผ่าน 80%
+                return {
+                    ...lab,
+                    status: isPassed ? 'PASSED' : 'REJECTED',
+                    score: isPassed ? Math.floor(Math.random() * (100 - 80 + 1)) + 80 : null
+                };
+            }
+            return lab;
+        });
+
+        if (hasChange) {
+            renderLabs();
+        }
+    }, 5000); 
+}
+
+// Event Listeners
+document.getElementById('searchInput')?.addEventListener('input', (e) => {
+    searchTerm = e.target.value;
+    renderLabs();
+});
+
+// เริ่มต้นโปรแกรม
+updateCourseHeader();
+renderLabs();
+simulateBackendCheck();
+</script>
+</body>
+</html>

@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidMate - Create Lab</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'Sarabun', 'sans-serif'],
+            },
+            fontSize: {
+              'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+              'h1': ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h2': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+              'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+              'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+              'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+              'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
+            },
+            colors: {
+              brand: {
+                50: '#F0F4FA',
+                100: '#E0E9F4',
+                500: '#4F46E5',
+                800: '#1E293B',
+                900: '#0F172A',
+              },
+              layout: {
+                bg: '#F8FAFC',
+                surface: '#FFFFFF',
+                border: '#E2E8F0',
+              },
+              status: {
+                success:   '#10B981',
+                successBg: '#ECFDF5',
+                error:     '#EF4444',
+                errorBg:   '#FEF2F2',
+                warning:   '#F59E0B',
+                warningBg: '#FFFBEB',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+/* ═══════════════════════════════════════════════════════════════
+   Ta_CreateLab — Custom component styles
+   Tailwind handles layout, spacing, colors, typography.
+   Only complex components that Tailwind can't express cleanly
+   are declared here: tag chips, tabs, upload zone, toggles,
+   rules table, tolerance select.
+   Colors reference the Design System tokens:
+     --brand: #4F46E5   --surface: #FFFFFF   --border: #E2E8F0
+     --bg   : #F8FAFC   --success: #10B981   --warning: #F59E0B
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --brand:       #4F46E5;
+  --brand-hover: #4338CA;
+  --brand-soft:  #EEF2FF;
+  --surface:     #FFFFFF;
+  --border:      #E2E8F0;
+  --bg:          #F8FAFC;
+  --gray-100:    #F1F5F9;
+  --gray-300:    #CBD5E1;
+  --gray-400:    #94A3B8;
+  --gray-500:    #64748B;
+  --gray-700:    #334155;
+  --gray-900:    #0F172A;
+  --success:     #10B981;
+  --warning:     #F59E0B;
+}
+
+/* ── TAG CHIPS ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  color: var(--gray-500);
+  background: transparent;
+  border: 1.5px solid var(--gray-300);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.tag:hover { border-color: var(--brand); color: var(--brand); }
+.tag.selected {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+/* ── IMAGE SLOT TABS ── */
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-500);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  flex-shrink: 0;        /* prevent shrinking when many tabs */
+  white-space: nowrap;   /* keep label on one line */
+  transition: color .15s, border-color .15s;
+}
+.tab-btn:hover { color: var(--brand); }
+.tab-btn.active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+  font-weight: 600;
+}
+.tab-btn i.ph-image { flex-shrink: 0; font-size: 15px; }
+.tab-add { color: var(--brand); font-weight: 600; }
+.btn-close-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--gray-400);
+  transition: background-color .2s, color .2s;
+}
+.btn-close-tab:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.upload-zone:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.upload-zone .upload-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+.upload-zone .upload-sub {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+/* ── RULES TABLE ── */
+.rules-table th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  padding: 10px 0;
+  border-bottom: 1.5px solid var(--gray-100);
+}
+.rules-table td {
+  padding: 12px 0;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 13px;
+}
+.rules-table td.keyword {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--gray-900);
+  width: 220px;
+}
+.rules-table td.weight-cell { width: 110px; }
+.rules-table td.pos-cell,
+.rules-table td.tol-cell,
+.rules-table td.mand-cell { width: 120px; }
+
+.weight-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.weight-input-wrap input {
+  width: 56px;
+  text-align: center;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--gray-900);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.weight-input-wrap input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(79,70,229,.10);
+}
+.weight-input-wrap span { color: var(--gray-400); font-size: 13px; }
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  inset: 0;
+  background: var(--gray-300);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color .2s;
+}
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .2s;
+}
+.toggle input:checked + .slider { background: var(--success); }
+.toggle input:checked + .slider::before { transform: translateX(16px); }
+.toggle.mandatory input:checked + .slider { background: var(--brand); }
+
+/* Tolerance select */
+.tol-select {
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  color: var(--gray-700);
+  background: var(--surface);
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.tol-select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(79,70,229,.10);
+}
+.na-text { color: var(--gray-300); font-size: 13px; }
+
+</style>
+</head>
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr_auto]">
+
+<!-- ════════════════════════════════
+     TOP NAVBAR  (identical to Dashboard / Lab List)
+════════════════════════════════ -->
+<nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+  <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
+    <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+    <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+  </div>
+
+  <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
+    <button onclick="window.location.href='Ta_Dashboard.html'"
+      class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+      <i class="ph ph-squares-four text-sm"></i> Dashboard
+    </button>
+    <button onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+      <i class="ph ph-users text-sm"></i> Students
+    </button>
+  </div>
+
+  <div class="relative h-full">
+    <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+      class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+      <div class="text-right">
+        <div class="text-p1 font-semibold leading-none">John Doe</div>
+        <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+        JD
+      </div>
+      <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+    </button>
+    <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+      <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+        <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">JD</div>
+        <div>
+          <div class="text-p1 font-bold text-brand-900 leading-tight">John Doe</div>
+          <div class="text-p2 text-gray-500 leading-tight mt-0.5">Head TA</div>
+        </div>
+      </div>
+      <button type="button" onclick="handleLogout()"
+        class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+        <i class="ph ph-sign-out text-lg"></i>
+        <span class="text-left">Sign Out</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<script>
+  function toggleProfileMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('profileMenu');
+    const caret = document.getElementById('profileCaret');
+    const isHidden = menu.classList.toggle('hidden');
+    if (caret) caret.classList.toggle('rotate-180', !isHidden);
+  }
+  function handleLogout() { window.location.href = 'index.html'; }
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('profileMenu');
+    const btn = document.getElementById('profileBtn');
+    if (!menu || !btn) return;
+    if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+      const caret = document.getElementById('profileCaret');
+      if (caret) caret.classList.remove('rotate-180');
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const menu = document.getElementById('profileMenu');
+      if (menu) menu.classList.add('hidden');
+      const caret = document.getElementById('profileCaret');
+      if (caret) caret.classList.remove('rotate-180');
+    }
+  });
+</script>
+
+<!-- ════════════════════════════════
+     SUB-NAVBAR — Breadcrumb
+════════════════════════════════ -->
+<div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+  <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
+    <button onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+      <i class="ph-fill ph-squares-four text-sm"></i> Overview
+    </button>
+    <i class="ph ph-caret-right text-xs text-gray-400"></i>
+    <button onclick="window.location.href='TaLablist.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+      <i class="ph-fill ph-stack text-sm"></i> Lab List
+    </button>
+    <i class="ph ph-caret-right text-xs text-gray-400"></i>
+    <span class="flex items-center gap-1 text-brand-800">
+      <i class="ph-fill ph-file-code text-sm text-brand-500"></i> Create New Lab
+    </span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════ -->
+<main class="p-6 md:p-8 lg:p-10 overflow-y-auto w-full">
+  <div class="max-w-5xl mx-auto grid grid-cols-1 gap-6 auto-rows-min">
+
+    <!-- ── Page Header (matches Lab List / View Submission) ── -->
+    <div class="grid grid-cols-[1fr_auto] items-end gap-4">
+      <div>
+        <a href="TaLablist.html" class="flex items-center gap-1 text-p2 font-bold text-gray-400 hover:text-brand-500 no-underline uppercase mb-4 transition-colors">
+          <i class="ph ph-arrow-left text-sm"></i> Back to Lab List
+        </a>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
+            <i class="ph ph-file-plus"></i>
+          </div>
+          <div>
+            <h1 class="text-h3 font-bold text-brand-800">Create New Lab</h1>
+            <p class="text-p1 text-gray-500">Define lab details, reference image &amp; validation rules</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 1: Basic Info ── -->
+    <section class="bg-layout-surface rounded-2xl border border-layout-border border-t-[3px] border-t-brand-500 shadow-sm p-8 grid grid-cols-1 gap-5">
+
+      <!-- Lab Name -->
+      <div>
+        <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Lab Name</label>
+        <input type="text" placeholder="e.g., Lab 03: CPU Registers"
+          class="w-full px-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 text-brand-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition" />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+
+        <!-- LEFT -->
+        <div class="grid grid-cols-1 gap-4">
+          <!-- Class Target -->
+          <div>
+            <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Class Target</label>
+            <div class="relative">
+              <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
+              <input type="text" placeholder="Search class (e.g. CS232)"
+                class="w-full pl-9 pr-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+            </div>
+            <div class="tag-list flex flex-wrap gap-2 mt-2.5">
+              <span class="tag selected" onclick="toggleTag(this)">CS301</span>
+              <span class="tag selected" onclick="toggleTag(this)">CS232</span>
+              <span class="tag" onclick="toggleTag(this)">CS261</span>
+            </div>
+          </div>
+
+          <!-- Section -->
+          <div>
+            <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Section (Multi-Select)</label>
+            <div class="relative">
+              <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
+              <input type="text" placeholder="Search section (e.g. 1001)"
+                class="w-full pl-9 pr-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+            </div>
+            <div class="tag-list flex flex-wrap gap-2 mt-2.5">
+              <span class="tag selected" onclick="toggleTag(this)">1001</span>
+              <span class="tag selected" onclick="toggleTag(this)">1002</span>
+              <span class="tag" onclick="toggleTag(this)">1003</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="grid grid-cols-1 gap-4 content-start">
+          <!-- Due Date + Time -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Due Date</label>
+              <input type="date" value="2026-04-01"
+                class="w-full px-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Due Time</label>
+              <input type="time" value="01:59"
+                class="w-full px-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Description / Instructions</label>
+            <textarea rows="5" placeholder="Provide clear instructions for the lab..."
+              class="w-full px-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-y min-h-[120px]"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: Reference Image ── -->
+    <section class="bg-layout-surface rounded-2xl border border-layout-border border-t-[3px] border-t-brand-500 shadow-sm p-8">
+      <!-- Tabs -->
+      <div class="tab-bar flex flex-nowrap gap-1 border-b-2 border-layout-border mb-5 overflow-x-auto" id="tabBar">
+        <button class="tab-btn active" data-slot="1">
+          <i class="ph ph-image"></i> Image 1
+          <span class="btn-close-tab"><i class="ph ph-x"></i></span>
+        </button>
+        <button class="tab-btn" data-slot="2">
+          <i class="ph ph-image"></i> Image 2
+          <span class="btn-close-tab"><i class="ph ph-x"></i></span>
+        </button>
+        <button class="tab-btn tab-add" id="addSlotBtn"><i class="ph ph-plus"></i> Add Slot</button>
+      </div>
+
+      <div class="mb-3">
+        <div class="text-h4 text-brand-900">Reference Visualizer</div>
+        <div class="text-p2 text-gray-500 mt-0.5">Upload a perfect screenshot to establish rules and coordinate positions.</div>
+      </div>
+
+      <div id="uploadZoneWrap" class="relative">
+        <div class="upload-zone" id="uploadZone">
+          <div class="w-14 h-14 rounded-full bg-layout-surface border border-layout-border shadow-sm flex items-center justify-center">
+            <i class="ph ph-upload-simple text-brand-500 text-xl"></i>
+          </div>
+          <span class="upload-label">Click or drag file here</span>
+          <span class="upload-sub">Supports .jpg, .png (Max 15 MB)</span>
+          <input type="file" id="fileInput" accept=".jpg,.png" class="hidden" />
+        </div>
+        <div id="imgPreviewWrap" class="hidden relative rounded-[10px] overflow-hidden bg-layout-bg border border-layout-border">
+          <img id="imgPreview" src="" alt="preview"
+            class="w-full max-h-[70vh] object-contain block rounded-[10px] cursor-zoom-in"
+            onclick="openImgLightbox()" />
+          <button id="zoomImgBtn" title="View full size" type="button" onclick="openImgLightbox()"
+            class="absolute top-2.5 right-14 w-8 h-8 rounded-full bg-brand-900/60 backdrop-blur text-white flex items-center justify-center hover:bg-brand-900/80 transition">
+            <i class="ph ph-arrows-out"></i>
+          </button>
+          <button id="removeImgBtn" title="Remove image"
+            class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-brand-900/60 backdrop-blur text-white flex items-center justify-center hover:bg-brand-900/80 transition">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: Key Rules ── -->
+    <section class="bg-layout-surface rounded-2xl border border-layout-border border-t-[3px] border-t-brand-500 shadow-sm p-8">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <i class="ph ph-list-checks text-brand-500 text-lg"></i>
+          <span class="text-h4 text-brand-900">Key Rules</span>
+          <span id="keyRulesLabel" class="text-p2 font-semibold text-brand-500 bg-brand-50 border border-brand-100 rounded-full px-2.5 py-0.5 ml-1">for Image 1</span>
+        </div>
+        <button id="addRuleBtn"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md border border-layout-border bg-layout-surface text-p2 font-semibold text-gray-700 hover:border-brand-500 hover:text-brand-500 transition">
+          <i class="ph ph-plus"></i> Add Rule
+        </button>
+      </div>
+
+      <!-- Rules Table -->
+      <table class="rules-table w-full border-collapse">
+        <thead>
+          <tr>
+            <th>Target Keyword</th>
+            <th>Weight</th>
+            <th>Text Position</th>
+            <th>Tolerance</th>
+            <th>Mandatory</th>
+          </tr>
+        </thead>
+        <tbody id="rulesBody">
+          <tr>
+            <td class="keyword">successfully created</td>
+            <td class="weight-cell"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
+            <td class="pos-cell"><label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label></td>
+            <td class="tol-cell"><select class="tol-select"><option>Med (±15%)</option><option>Low (±5%)</option><option>High (±25%)</option></select></td>
+            <td class="mand-cell"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
+          </tr>
+          <tr>
+            <td class="keyword">integration-lab</td>
+            <td class="weight-cell"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
+            <td class="pos-cell"><label class="toggle"><input type="checkbox"/><span class="slider"></span></label></td>
+            <td class="tol-cell"><span class="na-text">N/A</span></td>
+            <td class="mand-cell"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Total Weight -->
+      <div class="mt-5 pt-4 border-t border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-p1 font-semibold text-gray-700">Total Weight Allocation</span>
+          <span id="weightVal" class="text-p1 font-bold text-status-warning">80 / 100%</span>
+        </div>
+        <div class="h-1.5 bg-layout-border rounded-full overflow-hidden">
+          <div id="progressFill" class="h-full bg-status-warning rounded-full transition-[width] duration-300" style="width:80%;"></div>
+        </div>
+        <div class="text-p2 text-gray-400 text-right mt-1">Weight must equal 100% to save rules</div>
+      </div>
+
+      <!-- Pass Criteria -->
+      <div class="mt-4 flex flex-wrap items-center gap-5 px-4 py-3.5 bg-layout-bg border border-layout-border rounded-lg">
+        <div class="flex items-center gap-1.5 text-p2 font-bold uppercase tracking-wider text-gray-600">
+          <i class="ph ph-list-checks text-brand-500 text-base"></i> Pass Criteria
+        </div>
+        <div class="flex items-center gap-2 text-p1 text-gray-700">
+          <input type="checkbox" id="minScore" checked class="w-4 h-4 accent-brand-500 cursor-pointer" />
+          <label for="minScore">Min. Score:</label>
+          <div class="flex items-center gap-1.5">
+            <input type="number" id="minScoreVal" value="75" min="0" max="100"
+              class="w-14 text-center px-2 py-1 rounded-md border border-layout-border text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+            <span class="text-p1 text-gray-500">%</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-p1 text-gray-700">
+          <input type="checkbox" id="mustPass" class="w-4 h-4 accent-brand-500 cursor-pointer" />
+          <label for="mustPass">Must pass all Mandatory Rules</label>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ════════════════════════════════
+     ACTION BAR — Sticky Footer, full-width
+════════════════════════════════ -->
+<footer class="bg-layout-surface border-t border-layout-border px-6 md:px-8 py-4 grid grid-cols-[1fr_auto_auto] items-center gap-3">
+  <button onclick="window.location.href='Ta_Dashboard.html'"
+    class="justify-self-start px-5 py-2.5 rounded-lg text-btn text-gray-600 hover:bg-layout-bg transition">
+    Cancel
+  </button>
+  <span></span>
+  <button id="createLabBtn" onclick="handleCreateLab()"
+    class="bg-brand-500 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors cursor-pointer">
+    <i class="ph-bold ph-check-circle text-sm"></i> Create Lab
+  </button>
+</footer>
+
+<!-- ════════════════════════════════
+     IMAGE LIGHTBOX — full-size viewer
+════════════════════════════════ -->
+<div id="imgLightbox" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm items-center justify-center p-6"
+  onclick="closeImgLightbox(event)">
+  <button type="button" onclick="closeImgLightbox(event, true)"
+    class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+    <i class="ph ph-x text-xl"></i>
+  </button>
+  <img id="imgLightboxPic" src="" alt="full preview"
+    class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+</div>
+
+<script>
+  function openImgLightbox() {
+    const src = document.getElementById('imgPreview')?.src;
+    if (!src) return;
+    const lb = document.getElementById('imgLightbox');
+    document.getElementById('imgLightboxPic').src = src;
+    lb.classList.remove('hidden');
+    lb.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeImgLightbox(e, force) {
+    // only close when clicking the backdrop (not the image itself) — unless forced via close button
+    if (!force && e && e.target.id !== 'imgLightbox') return;
+    const lb = document.getElementById('imgLightbox');
+    lb.classList.add('hidden');
+    lb.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeImgLightbox(null, true);
+  });
+</script>
+
+<script>
+//  API CONFIG  — เปลี่ยน BASE_URL ให้ตรงกับ API Gateway 
+const API_BASE = 'https://YOUR_API_GATEWAY_URL';
+ 
+//  SLOT STATE
+const slotStates = {};
+let activeSlot = 1;
+let slotCount   = 2;
+ 
+function defaultState() {
+  return { rules: [], minScore: 75, mustPass: false, image: null };
+}
+ 
+function captureState(idx) {
+  const rules = [];
+  document.querySelectorAll('#rulesBody tr').forEach(tr => {
+    const kwInput  = tr.querySelector('.keyword input');
+    const kwText   = tr.querySelector('.keyword');
+    const keyword  = kwInput ? kwInput.value : (kwText ? kwText.textContent.trim() : '');
+    const weight   = Number(tr.querySelector('.weight-cell input[type="number"]')?.value || 0);
+    const textPos  = tr.querySelector('.pos-cell input[type="checkbox"]')?.checked || false;
+    const tolSel   = tr.querySelector('.tol-cell select');
+    const tolerance = tolSel ? tolSel.value : 'N/A';
+    const mandatory = tr.querySelector('.mand-cell input[type="checkbox"]')?.checked || false;
+    rules.push({ keyword, weight, textPos, tolerance, mandatory });
+  });
+  slotStates[idx] = {
+    rules,
+    minScore : Number(document.getElementById('minScoreVal')?.value || 75),
+    mustPass : document.getElementById('mustPass')?.checked || false,
+    image    : slotStates[idx]?.image || null
+  };
+}
+ 
+function renderState(idx) {
+  const state = slotStates[idx] || defaultState();
+  const tbody = document.getElementById('rulesBody');
+  tbody.innerHTML = '';
+  state.rules.forEach(rule => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = buildRowHTML(rule);
+    tbody.appendChild(tr);
+    bindRow(tr);
+  });
+  document.getElementById('minScoreVal').value  = state.minScore;
+  document.getElementById('mustPass').checked   = state.mustPass;
+  document.getElementById('keyRulesLabel').textContent = `for Image ${idx}`;
+  updateWeight();
+  renderImage(state.image);
+}
+ 
+function renderImage(src) {
+  const uploadZone  = document.getElementById('uploadZone');
+  const previewWrap = document.getElementById('imgPreviewWrap');
+  const previewImg  = document.getElementById('imgPreview');
+  if (src) {
+    previewImg.src              = src;
+    uploadZone.style.display    = 'none';
+    previewWrap.style.display   = 'block';
+  } else {
+    uploadZone.style.display    = '';
+    previewWrap.style.display   = 'none';
+    previewImg.src              = '';
+  }
+}
+ 
+function buildRowHTML(rule) {
+  const tolHTML = rule.textPos
+    ? `<select class="tol-select">
+         <option${rule.tolerance === 'Med (±15%)' ? ' selected' : ''}>Med (±15%)</option>
+         <option${rule.tolerance === 'Low (±5%)'  ? ' selected' : ''}>Low (±5%)</option>
+         <option${rule.tolerance === 'High (±25%)'? ' selected' : ''}>High (±25%)</option>
+       </select>`
+    : `<span class="na-text">N/A</span>`;
+  return `
+    <td class="keyword">
+      <input type="text" value="${rule.keyword}"
+        placeholder="Enter keyword..."
+        style="width:100%;border:none;background:transparent;outline:none;
+               font-family:monospace;font-size:12.5px;color:#0f172a;"/>
+    </td>
+    <td class="weight-cell">
+      <div class="weight-input-wrap">
+        <input type="number" value="${rule.weight}" min="0" max="100"/>
+        <span>%</span>
+      </div>
+    </td>
+    <td class="pos-cell">
+      <label class="toggle">
+        <input type="checkbox"${rule.textPos ? ' checked' : ''}/>
+        <span class="slider"></span>
+      </label>
+    </td>
+    <td class="tol-cell">${tolHTML}</td>
+    <td class="mand-cell">
+      <label class="toggle mandatory">
+        <input type="checkbox"${rule.mandatory ? ' checked' : ''}/>
+        <span class="slider"></span>
+      </label>
+    </td>
+  `;
+}
+ 
+function bindRow(tr) {
+  tr.querySelectorAll('input[type="number"]').forEach(i =>
+    i.addEventListener('input', updateWeight)
+  );
+  tr.querySelector('.pos-cell input[type="checkbox"]').addEventListener('change', function () {
+    const tolCell = tr.querySelector('.tol-cell');
+    tolCell.innerHTML = this.checked
+      ? `<select class="tol-select">
+           <option>Med (±15%)</option>
+           <option>Low (±5%)</option>
+           <option>High (±25%)</option>
+         </select>`
+      : `<span class="na-text">N/A</span>`;
+  });
+}
+ 
+function updateWeight() {
+  let total = 0;
+  document.querySelectorAll('#rulesBody input[type="number"]').forEach(i =>
+    total += Number(i.value) || 0
+  );
+  const pct   = Math.min(total, 100);
+  const color = total === 100 ? '#059669' : '#D97706';
+  document.getElementById('weightVal').textContent       = `${total} / 100%`;
+  document.getElementById('weightVal').style.color       = color;
+  document.getElementById('progressFill').style.width    = `${pct}%`;
+  document.getElementById('progressFill').style.background = color;
+}
+ 
+function switchTab(idx) {
+  captureState(activeSlot);
+  activeSlot = idx;
+  document.querySelectorAll('.tab-btn:not(.tab-add)').forEach(b =>
+    b.classList.toggle('active', Number(b.dataset.slot) === idx)
+  );
+  renderState(idx);
+}
+ 
+// ── Re-index tabs after delete ──
+function reindexTabs() {
+  const tabs = document.querySelectorAll('.tab-btn:not(.tab-add)');
+  const newSlotStates = {};
+ 
+  tabs.forEach((tab, index) => {
+    const oldId = tab.dataset.slot;
+    const newId = index + 1;
+ 
+    tab.innerHTML = `
+      <i class="ph ph-image"></i> Image ${newId}
+      <span class="btn-close-tab"><i class="ph ph-x"></i></span>
+    `;
+    tab.dataset.slot = newId;
+ 
+    newSlotStates[newId] = slotStates[oldId] || defaultState();
+    if (activeSlot == oldId) activeSlot = newId;
+  });
+ 
+  Object.keys(slotStates).forEach(k => delete slotStates[k]);
+  Object.assign(slotStates, newSlotStates);
+  document.getElementById('keyRulesLabel').textContent = `for Image ${activeSlot}`;
+}
+ 
+//  INIT  — อ่าน slot 1 จาก static HTML แล้วแปลงเป็น state
+(function () {
+  const rules = [];
+  document.querySelectorAll('#rulesBody tr').forEach(tr => {
+    const kw  = tr.querySelector('.keyword')?.textContent.trim() || '';
+    const w   = Number(tr.querySelector('.weight-cell input')?.value || 0);
+    const tp  = tr.querySelector('.pos-cell input')?.checked || false;
+    const tol = tr.querySelector('.tol-cell select')?.value || 'N/A';
+    const man = tr.querySelector('.mand-cell input')?.checked || false;
+    rules.push({ keyword: kw, weight: w, textPos: tp, tolerance: tol, mandatory: man });
+  });
+  slotStates[1] = { rules, minScore: 75, mustPass: false, image: null };
+  slotStates[2] = defaultState();
+  document.querySelectorAll('#rulesBody tr').forEach(tr => bindRow(tr));
+  updateWeight();
+})();
+ 
+//  TAB EVENTS
+document.getElementById('tabBar').addEventListener('click', e => {
+  // ── ลบ slot ──
+  const closeBtn = e.target.closest('.btn-close-tab');
+  if (closeBtn) {
+    e.stopPropagation();
+    const allTabs = document.querySelectorAll('.tab-btn:not(.tab-add)');
+    if (allTabs.length <= 1) {
+      showToast('ต้องมีอย่างน้อย 1 Image', 'error');
+      return;
+    }
+    const tabToRemove   = closeBtn.closest('.tab-btn');
+    const removedSlotId = Number(tabToRemove.dataset.slot);
+    const wasActive     = removedSlotId === activeSlot;
+
+    // pick fallback neighbor BEFORE removing (prev sibling if exists, else next)
+    let fallbackTab = tabToRemove.previousElementSibling;
+    if (!fallbackTab || fallbackTab.classList.contains('tab-add')) {
+      fallbackTab = tabToRemove.nextElementSibling;
+    }
+    if (fallbackTab && fallbackTab.classList.contains('tab-add')) fallbackTab = null;
+
+    // drop the removed slot's state BEFORE reindex so it doesn't get carried over
+    delete slotStates[removedSlotId];
+    tabToRemove.remove();
+
+    if (wasActive && fallbackTab) {
+      // set activeSlot to fallback's OLD id so reindex maps it correctly
+      activeSlot = Number(fallbackTab.dataset.slot);
+    }
+
+    reindexTabs();
+
+    // ensure exactly one tab has .active class matching activeSlot
+    document.querySelectorAll('.tab-btn:not(.tab-add)').forEach(b =>
+      b.classList.toggle('active', Number(b.dataset.slot) === activeSlot)
+    );
+    renderState(activeSlot);
+    return;
+  }
+ 
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+ 
+  // ── เพิ่ม slot ──
+  if (btn.id === 'addSlotBtn') {
+    captureState(activeSlot);
+    const currentCount = document.querySelectorAll('.tab-btn:not(.tab-add)').length;
+    const newId = currentCount + 1;
+    const newBtn = document.createElement('button');
+    newBtn.className    = 'tab-btn';
+    newBtn.dataset.slot = newId;
+    newBtn.innerHTML    = `
+      <i class="ph ph-image"></i> Image ${newId}
+      <span class="btn-close-tab"><i class="ph ph-x"></i></span>
+    `;
+    document.getElementById('addSlotBtn').before(newBtn);
+    slotStates[newId] = defaultState();
+    reindexTabs();
+    switchTab(newId);
+    return;
+  }
+ 
+});
+
+//  IMAGE UPLOAD / REMOVE
+document.getElementById('fileInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    slotStates[activeSlot].image = e.target.result;
+    renderImage(e.target.result);
+  };
+  reader.readAsDataURL(file);
+  this.value = '';
+});
+
+document.getElementById('uploadZone').addEventListener('click', () =>
+  document.getElementById('fileInput').click()
+);
+const rmBtn = document.getElementById('removeImgBtn');
+rmBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  slotStates[activeSlot].image = null;
+  renderImage(null);
+});
+rmBtn.addEventListener('mouseenter', () => rmBtn.style.background = 'rgba(225,29,72,.85)');
+rmBtn.addEventListener('mouseleave', () => rmBtn.style.background = 'rgba(15,23,42,.65)');
+
+//  ADD RULE
+document.getElementById('addRuleBtn').addEventListener('click', () => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = buildRowHTML({ keyword: '', weight: 0, textPos: false, tolerance: 'N/A', mandatory: false });
+  document.getElementById('rulesBody').appendChild(tr);
+  bindRow(tr);
+  updateWeight();
+});
+ 
+
+//  TAG TOGGLE
+function toggleTag(el) {
+  el.classList.toggle('selected');
+}
+ 
+
+//  TOAST
+function showToast(msg, type = 'success') {
+  let toast = document.getElementById('vm-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'vm-toast';
+    toast.style.cssText = `
+      position:fixed;bottom:28px;right:28px;
+      padding:14px 20px;border-radius:10px;
+      font-family:'Inter',sans-serif;
+      font-size:13.5px;font-weight:600;color:#fff;
+      box-shadow:0 4px 20px rgba(0,0,0,.18);
+      display:none;align-items:center;gap:10px;
+      z-index:9999;transition:opacity .3s;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.style.background = type === 'success' ? '#059669' : '#E11D48';
+  toast.innerHTML = `
+    <i class="ph ${type === 'success' ? 'ph-check-circle' : 'ph-x-circle'}"
+       style="font-size:18px;"></i>
+    <span>${msg}</span>
+  `;
+  toast.style.display = 'flex';
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.style.display = 'none'; }, 300);
+  }, 3500);
+}
+ 
+
+//  VALIDATE
+function validateForm() {
+  const labNameInput = document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]');
+  if (!labNameInput?.value.trim())
+    return 'กรุณากรอก Lab Name';
+ 
+  const selectedClasses = document.querySelectorAll('.tag-list .tag.selected');
+  if (selectedClasses.length === 0)
+    return 'กรุณาเลือก Class อย่างน้อย 1 วิชา';
+ 
+  const dueDateInput = document.querySelector('input[type="date"]');
+  if (!dueDateInput?.value)
+    return 'กรุณาเลือก Due Date';
+ 
+  return null;
+}
+ 
+
+//  CREATE LAB  →  POST /lab-config
+async function handleCreateLab() {
+  const validationError = validateForm();
+  if (validationError) {
+    showToast(validationError, 'error');
+    return;
+  }
+ 
+  // บันทึก slot ปัจจุบันก่อน
+  captureState(activeSlot);
+ 
+  // ── ดึงค่าจาก form ──
+  const labName    = document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]').value.trim();
+  const dueDate    = document.querySelector('input[type="date"]').value;
+  const dueTime    = document.querySelector('input[type="time"]').value || '00:00';
+  const description = document.querySelector('textarea').value.trim();
+  const deadline   = `${dueDate}T${dueTime}:00.000Z`;
+ 
+  // ── Classes & Sections ──
+  const tagLists = document.querySelectorAll('.tag-list');
+  const selectedClasses  = [...(tagLists[0]?.querySelectorAll('.tag.selected') || [])]
+    .map(t => t.textContent.trim());
+  const selectedSections = [...(tagLists[1]?.querySelectorAll('.tag.selected') || [])]
+    .map(t => t.textContent.trim());
+ 
+  // ── Rules ต่อ slot ──
+  const rules = Object.entries(slotStates).map(([slot, state]) => ({
+    imageSlot : Number(slot),
+    keywords  : state.rules.map(r => ({
+      keyword   : r.keyword,
+      weight    : r.weight,
+      textPos   : r.textPos,
+      tolerance : r.tolerance,
+      mandatory : r.mandatory
+    }))
+  }));
+ 
+  // ── Images (เฉพาะ slot ที่มีรูป) ──
+  const images = Object.entries(slotStates)
+    .filter(([, state]) => state.image)
+    .map(([slot, state]) => ({ slot: Number(slot), data: state.image }));
+ 
+  // ── Thresholds ──
+  const thresholds = {
+    minScore          : Number(document.getElementById('minScoreVal')?.value || 75),
+    mustPassMandatory : document.getElementById('mustPass')?.checked || false
+  };
+ 
+  // ── Payload ──
+  const payload = {
+    labName,
+    subjectId   : selectedClasses[0] || '',
+    sections    : selectedSections,
+    description,
+    deadline,
+    images,
+    rules,
+    thresholds,
+    createdBy   : 'TA'
+  };
+ 
+  // ── Loading state ──
+  const btn = document.getElementById('createLabBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating...';
+ 
+  try {
+    const res  = await fetch(`${API_BASE}/lab-config`, {
+      method  : 'POST',
+      headers : { 'Content-Type': 'application/json' },
+      body    : JSON.stringify(payload)
+    });
+ 
+    const data = await res.json();
+ 
+    if (data.success) {
+      showToast(`✓ สร้าง Lab "${labName}" สำเร็จ! (ID: ${data.labID})`, 'success');
+      // uncomment เพื่อ redirect หลังสำเร็จ:
+      // setTimeout(() => window.location.href = 'Ta_Dashboard.html', 1800);
+    } else {
+      showToast(`Error: ${data.error || 'Unknown error'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Network error: ${err.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-plus-circle"></i> Create Lab';
+  }
+}
+ 
+// ── Spin keyframe ──
+const _style = document.createElement('style');
+_style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+document.head.appendChild(_style);
+</script>
+</body>
+</html>
