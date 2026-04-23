@@ -1,33 +1,34 @@
  /* ── Data ── */
+/* ── Synced with TaLablist mock: every lab has total=5, submitted=5 ── */
 const courses = [
   {
     code: "CS 232",
     name: "Computer Architecture",
-    progress: 82,
-    totalLabs: 12,
-    sections: 4,
-    pendingReviews: 5,
-    status: "Action req",
-    color: "indigo-500", // Tailwind color for the top bar
+    progress: 100,           // 15/15 submitted
+    totalLabs: 3,
+    sections: 2,             // 650001, 650002
+    pendingReviews: 0,
+    status: "0 Pending",
+    color: "indigo-500",
     lightColor: "indigo-50"
   },
   {
     code: "CS 251",
     name: "Data Structures",
-    progress: 45,
-    totalLabs: 8,
-    sections: 2,
-    pendingReviews: 7,
-    status: "Action req",
+    progress: 100,           // 10/10 submitted
+    totalLabs: 2,
+    sections: 1,             // 660001
+    pendingReviews: 0,
+    status: "0 Pending",
     color: "blue-500",
     lightColor: "blue-50"
   },
   {
     code: "CS 271",
     name: "Operating Systems",
-    progress: 100,
-    totalLabs: 4,
-    sections: 3,
+    progress: 100,           // 10/10 submitted
+    totalLabs: 2,
+    sections: 2,             // 670001, 670002
     pendingReviews: 0,
     status: "0 Pending",
     color: "emerald-500",
@@ -35,15 +36,123 @@ const courses = [
   }
 ];
 
+/* ── Sort state ── */
+let viewFilter = 'done';
+let sortState = { key: null, dir: 'asc' }; // key: 'code' | 'totalLabs' | 'progress'
+const sortLabels = { code: 'Course', totalLabs: 'Total Labs', progress: 'Progress' };
+
+function updateDashboardFilterButtons() {
+  const pendingBtn = document.getElementById('pendingFilterBtn');
+  const doneBtn = document.getElementById('doneFilterBtn');
+  if (!pendingBtn || !doneBtn) return;
+
+  const setActive = (btn, active) => {
+    btn.classList.toggle('bg-brand-900', active);
+    btn.classList.toggle('text-white', active);
+    btn.classList.toggle('font-bold', active);
+    btn.classList.toggle('text-gray-600', !active);
+    btn.classList.toggle('hover:text-brand-800', !active);
+    btn.classList.toggle('font-semibold', !active);
+    btn.classList.toggle('border', !active);
+    btn.classList.toggle('border-gray-300', !active);
+  };
+
+  setActive(pendingBtn, viewFilter === 'pending');
+  setActive(doneBtn, viewFilter === 'done');
+}
+
+function setDashboardFilter(filter) {
+  viewFilter = filter;
+  updateDashboardFilterButtons();
+  renderGrid(document.getElementById('searchInput').value);
+}
+
+function applySort(key) {
+  if (sortState.key === key) {
+    sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortState = { key, dir: 'asc' };
+  }
+  updateFilterLabel();
+  renderGrid(document.getElementById('searchInput').value);
+  closeFilterMenu();
+}
+
+function resetSort() {
+  sortState = { key: null, dir: 'asc' };
+  updateFilterLabel();
+  renderGrid(document.getElementById('searchInput').value);
+  closeFilterMenu();
+}
+
+function updateFilterLabel() {
+  const label = document.getElementById('filterLabel');
+  if (!label) return;
+  if (!sortState.key) {
+    label.textContent = 'Filter';
+  } else {
+    const arrow = sortState.dir === 'asc' ? '↑' : '↓';
+    label.textContent = `${sortLabels[sortState.key]} ${arrow}`;
+  }
+  // Update the arrow icon in the dropdown items
+  document.querySelectorAll('.sort-item').forEach(btn => {
+    const icon = btn.querySelector('.sort-dir');
+    const isActive = btn.dataset.key === sortState.key;
+    if (!icon) return;
+    icon.classList.toggle('text-brand-500', isActive);
+    icon.classList.toggle('text-gray-400', !isActive);
+    icon.classList.remove('ph-arrow-up', 'ph-arrow-down');
+    icon.classList.add(isActive && sortState.dir === 'desc' ? 'ph-arrow-down' : 'ph-arrow-up');
+  });
+}
+
+function toggleFilterMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('filterMenu');
+  const caret = document.getElementById('filterCaret');
+  const isHidden = menu.classList.toggle('hidden');
+  if (caret) caret.classList.toggle('rotate-180', !isHidden);
+}
+
+function closeFilterMenu() {
+  const menu = document.getElementById('filterMenu');
+  const caret = document.getElementById('filterCaret');
+  if (menu) menu.classList.add('hidden');
+  if (caret) caret.classList.remove('rotate-180');
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('filterMenu');
+  const btn = document.getElementById('filterBtn');
+  if (!menu || !btn) return;
+  if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+    closeFilterMenu();
+  }
+});
+
 /* ── Render ── */
 function renderGrid(filter = "") {
   const grid = document.getElementById("labGrid");
   const q = filter.toLowerCase();
 
-  const filtered = courses.filter(c =>
+  let filtered = courses.filter(c =>
     c.code.toLowerCase().includes(q) ||
     c.name.toLowerCase().includes(q)
   );
+
+  filtered = filtered.filter(c =>
+    viewFilter === 'pending' ? c.pendingReviews > 0 : c.pendingReviews === 0
+  );
+
+  if (sortState.key) {
+    const { key, dir } = sortState;
+    filtered = [...filtered].sort((a, b) => {
+      const va = a[key];
+      const vb = b[key];
+      const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  }
 
   if (filtered.length === 0) {
     grid.innerHTML = `
@@ -58,7 +167,7 @@ function renderGrid(filter = "") {
     const isComplete = c.progress === 100;
     const progressTextColor = isComplete ? 'text-emerald-500' : 'text-brand-800';
     return `
-    <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+    <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer" onclick="openCourse('${c.code}')">
       
       <!-- Top Color Bar -->
       <div class="h-1.5 w-full bg-${c.color}"></div>
@@ -67,7 +176,7 @@ function renderGrid(filter = "") {
         <!-- Header -->
         <div class="flex justify-between items-start mb-3">
             <span class="bg-${c.lightColor} text-${c.color} text-xs font-bold px-2.5 py-1 rounded border border-${c.color} border-opacity-20">${c.code}</span>
-            <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 hover:bg-gray-200 transition-colors">
+            <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-brand-500 hover:text-white transition-colors" onclick="event.stopPropagation(); openCourse('${c.code}')">
                 <i class="ph ph-arrow-right text-sm"></i>
             </button>
         </div>
@@ -128,7 +237,7 @@ function renderGrid(filter = "") {
         <div class="border-t border-gray-100 -mx-5"></div>
         
         <!-- Add New Lab Button -->
-        <button class="w-full pt-3 flex items-center justify-center gap-2 text-gray-500 hover:text-brand-800 font-semibold transition-colors text-p1" onclick="addLab(${i})">
+        <button class="w-full pt-3 flex items-center justify-center gap-2 text-gray-500 hover:text-brand-800 font-semibold transition-colors text-p1" onclick="event.stopPropagation(); addLab(${i})">
             <i class="ph ph-plus-circle text-lg"></i> Add New Lab
         </button>
       </div>
@@ -137,11 +246,14 @@ function renderGrid(filter = "") {
   }).join("");
 }
 
-/* ── Add Lab (demo) ── */
+/* ── Open Course (navigate to lab list page) ── */
+function openCourse(code) {
+  window.location.href = `TaLablist.html?course=${encodeURIComponent(code)}`;
+}
+
+/* ── Add Lab (navigate to create lab page) ── */
 function addLab(idx) {
-  courses[idx].totalLabs += 1;
-  courses[idx].progress = Math.max(0, courses[idx].progress - 10); // arbitrary demo logic
-  renderGrid(document.getElementById("searchInput").value);
+  window.location.href = 'Ta_CreateLab.html';
 }
 
 /* ── Search ── */
@@ -150,4 +262,5 @@ document.getElementById("searchInput").addEventListener("input", e => {
 });
 
 /* ── Init ── */
+updateDashboardFilterButtons();
 renderGrid();

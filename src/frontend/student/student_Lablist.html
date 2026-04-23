@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,9 +13,20 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
+                    fontSize: {
+                        'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+                        'h1': ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+                        'h2': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+                        'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+                        'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+                        'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+                        'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+                        'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
+                    },
                     colors: {
-                        brand: { 50: '#F0F4FA', 500: '#4F46E5', 800: '#1E293B', 900: '#0F172A' },
-                        layout: { bg: '#F8FAFC', surface: '#FFFFFF', border: '#E2E8F0' }
+                        brand: { 50: '#F0F4FA', 100: '#E0E9F4', 500: '#4F46E5', 800: '#1E293B', 900: '#0F172A' },
+                        layout: { bg: '#F8FAFC', surface: '#FFFFFF', border: '#E2E8F0' },
+                        status: { success: '#10B981', successBg: '#ECFDF5', error: '#EF4444', errorBg: '#FEF2F2', warning: '#F59E0B', warningBg: '#FFFBEB' }
                     }
                 }
             }
@@ -24,7 +35,7 @@
     <style>
         .avatar-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .avatar-hover:hover { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2); }
-        
+
         /* สไตล์สำหรับสถานะ Active ของปุ่ม Filter */
         .filter-btn.active {
             background-color: #0F172A; /* brand-900 */
@@ -32,78 +43,136 @@
         }
     </style>
 </head>
-<body class="bg-layout-bg min-h-screen">
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
 
-    <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16 sticky top-0 z-50">
-        <div class="flex items-center gap-2 mr-10 cursor-pointer" onclick="window.location.href='student_dashboard.html'">
-            <i class="ph ph-cloud-check text-2xl text-brand-500"></i>
-            <span class="text-lg font-bold tracking-wider uppercase">ValidMate</span>
+    <!-- Main Top Navbar (Dark) -->
+    <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='student_dashboard.html'">
+            <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+            <span class="text-p1 font-bold tracking-wide">ValidMate</span>
         </div>
 
-        <div class="flex gap-6 items-center h-full text-sm font-semibold text-gray-400">
-            <button class="hover:text-white transition-colors" onclick="window.location.href='student_dashboard.html'">
-                <i class="ph ph-squares-four mr-1"></i> Dashboard
+        <!-- Nav Links -->
+        <div class="grid grid-cols-[auto_1fr] gap-2 items-center h-full">
+            <button onclick="window.location.href='student_dashboard.html'"
+                class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+                <i class="ph ph-squares-four text-sm"></i> Dashboard
             </button>
         </div>
 
-        <div class="flex items-center gap-4 border-l border-brand-800 pl-6">
-            <div class="text-right hidden sm:block">
-                <div class="text-sm font-semibold leading-none">Alex Student</div>
-                <div class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Undergraduate</div>
+        <!-- User Profile with Dropdown -->
+        <div class="relative h-full">
+            <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+                class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+                <div class="text-right">
+                    <div class="text-p1 font-semibold leading-none">Alex Student</div>
+                    <div class="text-p2 text-gray-400 leading-none mt-1">Undergraduate</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+                    AS
+                </div>
+                <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+            </button>
+            <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+                <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+                    <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+                        AS
+                    </div>
+                    <div>
+                        <div class="text-p1 font-bold text-brand-900 leading-tight">Alex Student</div>
+                        <div class="text-p2 text-gray-500 leading-tight mt-0.5">Undergraduate</div>
+                    </div>
+                </div>
+                <button type="button" onclick="handleLogout()"
+                    class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+                    <i class="ph ph-sign-out text-lg"></i>
+                    <span class="text-left">Sign Out</span>
+                </button>
             </div>
-            <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-sm font-bold border border-brand-500 cursor-pointer avatar-hover">
-                AS
-            </div>
-            
         </div>
     </nav>
 
-    <div class="bg-white border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
-        <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
-            <a href="student_dashboard.html" class="text-gray-500 hover:text-brand-500 flex items-center gap-1">
-                <i class="ph-fill ph-squares-four"></i> Overview 
-            </a>
-            <i class="ph ph-caret-right text-[10px] text-gray-300"></i> 
-            <span class="text-gray-400">CS 232</span>
+    <script>
+        function toggleProfileMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('profileMenu');
+            const caret = document.getElementById('profileCaret');
+            const isHidden = menu.classList.toggle('hidden');
+            if (caret) caret.classList.toggle('rotate-180', !isHidden);
+        }
+        function handleLogout() { window.location.href = '../index.html'; }
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const btn = document.getElementById('profileBtn');
+            if (!menu || !btn) return;
+            if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const menu = document.getElementById('profileMenu');
+                if (menu) menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+    </script>
+
+    <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+        <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
+            <button type="button" onclick="window.location.href='student_dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+                <i class="ph-fill ph-squares-four text-sm"></i> Overview
+            </button>
+            <i class="ph ph-caret-right text-xs text-gray-400"></i>
+            <span id="breadcrumbCourse" class="flex items-center gap-1 text-brand-800">
+                <i class="ph-fill ph-stack text-sm text-brand-500"></i> CS 232
+            </span>
         </div>
     </div>
 
-    <main class="max-w-5xl mx-auto p-6 space-y-6">
-        <header class="bg-white rounded-2xl p-8 flex justify-between items-center relative overflow-hidden border border-layout-border shadow-sm">
-            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-brand-500"></div>
-            <div>
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-bold">CS 232</span>
-                    <span class="text-gray-400 text-[10px] font-bold uppercase">Summer 2026</span>
+    <main class="p-6 md:p-8 lg:p-10 overflow-y-auto w-full">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 gap-6 auto-rows-min">
+        <!-- Course Header Card -->
+        <div class="bg-layout-surface rounded-xl border border-layout-border border-l-4 border-l-brand-500 shadow-sm p-6 md:p-8">
+            <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-center">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span id="courseCode" class="inline-block bg-indigo-50 text-brand-500 text-p2 font-bold px-3 py-1 rounded-md">CS 232</span>
+                        <span id="courseSemester" class="text-p1 text-gray-400">Summer 2026</span>
+                    </div>
+                    <h1 id="courseName" class="text-h3 font-bold text-brand-900 leading-tight mb-2">Computer Architecture</h1>
+                    <p class="text-p1 text-gray-500"><span id="labCount">6</span> Total Labs • Section <span id="courseSection">650001</span></p>
                 </div>
-                <h1 class="text-3xl font-bold text-slate-800">Computer Architecture</h1>
-                <p class="text-gray-500 text-sm mt-1">6 Total Labs • Section 650001</p>
-            </div>
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 min-w-[160px]">
-                <div class="flex justify-between text-[10px] font-bold text-gray-400 uppercase mb-2">
-                    <span>Progress</span>
-                    <span id="progress-text">4/6</span>
+                <div class="bg-layout-bg rounded-xl p-5 min-w-[220px]">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-p2 font-bold text-gray-400 uppercase tracking-widest">Lab Progress</span>
+                        <span id="progressText" class="text-2xl font-bold text-brand-900">0/0</span>
+                    </div>
+                    <div class="w-full bg-layout-border h-2 rounded-full overflow-hidden">
+                        <div id="progressFill" class="bg-brand-500 h-full transition-all duration-700" style="width:0%"></div>
+                    </div>
                 </div>
-                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div id="progress-fill" class="bg-brand-500 h-full transition-all duration-700" style="width: 66%"></div>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="relative w-full md:w-80">
-                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="searchInput" placeholder="Search labs (e.g., 05)..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-layout-border focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all">
-            </div>
-            <div class="flex gap-1 bg-white p-1 rounded-xl border border-layout-border" id="filterContainer">
-                <button onclick="filterLabs('ALL')" class="filter-btn px-5 py-1.5 rounded-lg text-xs font-bold active">All Labs</button>
-                <button onclick="filterLabs('PENDING')" class="filter-btn px-5 py-1.5 rounded-lg text-gray-500 text-xs font-bold hover:bg-gray-50">Pending</button>
-                <button onclick="filterLabs('COMPLETED')" class="filter-btn px-5 py-1.5 rounded-lg text-gray-500 text-xs font-bold hover:bg-gray-50">Completed</button>
             </div>
         </div>
 
-        <div id="lab-list" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center">
+            <div class="relative">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" placeholder="Search labs..." class="w-full pl-9 pr-4 py-2.5 text-p1 border border-layout-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-opacity-30 focus:border-brand-500 bg-layout-surface shadow-sm">
             </div>
+            <div class="flex gap-2 w-full md:w-auto justify-between md:justify-start" id="filterContainer">
+                <button onclick="filterLabs('ALL')" class="filter-btn px-6 py-2.5 rounded-lg text-btn font-bold bg-layout-surface border border-layout-border active">All Labs</button>
+                <button onclick="filterLabs('PENDING')" class="filter-btn px-6 py-2.5 rounded-lg text-btn font-bold bg-layout-surface border border-layout-border text-gray-700 hover:bg-layout-bg">Pending</button>
+                <button onclick="filterLabs('COMPLETED')" class="filter-btn px-6 py-2.5 rounded-lg text-btn font-bold bg-layout-surface border border-layout-border text-gray-700 hover:bg-layout-bg">Completed</button>
+            </div>
+        </div>
+
+        <div id="lab-list" class="grid grid-cols-1 gap-4"></div>
+    </div>
     </main>
 
     <script src="Lablist_script.js"></script>

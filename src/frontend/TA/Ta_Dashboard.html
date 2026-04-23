@@ -58,32 +58,85 @@
     <!-- Main Top Navbar (Dark) -->
     <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
         <!-- Logo -->
-        <div class="flex items-center gap-2 mr-6">
+        <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
             <i class="ph ph-cloud-check text-xl text-brand-500"></i>
             <span class="text-p1 font-bold tracking-wide">ValidMate</span>
         </div>
 
         <!-- Main Nav Links -->
         <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
-            <button class="flex items-center gap-2 px-4 bg-brand-800 rounded-lg h-10 my-auto text-p1 font-semibold">
+            <button type="button" onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-2 px-4 bg-brand-900 text-white rounded-lg h-10 my-auto text-p1 font-bold">
                 <i class="ph ph-squares-four text-sm"></i> Dashboard
             </button>
-            <button class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+            <button type="button" onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
                 <i class="ph ph-users text-sm"></i> Students
             </button>
         </div>
 
-        <!-- User Profile -->
-        <div class="flex items-center gap-3 cursor-pointer border-l border-brand-800 pl-6">
-            <div class="text-right">
-                <div class="text-p1 font-semibold leading-none">John Doe</div>
-                <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
-            </div>
-            <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
-                JD
+        <!-- User Profile with Dropdown -->
+        <div class="relative h-full">
+            <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+                class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+                <div class="text-right">
+                    <div class="text-p1 font-semibold leading-none">John Doe</div>
+                    <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+                    JD
+                </div>
+                <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+            </button>
+            <!-- Dropdown Menu -->
+            <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+                <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+                    <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+                        JD
+                    </div>
+                    <div>
+                        <div class="text-p1 font-bold text-brand-900 leading-tight">John Doe</div>
+                        <div class="text-p2 text-gray-500 leading-tight mt-0.5">Head TA</div>
+                    </div>
+                </div>
+                <button type="button" onclick="handleLogout()"
+                    class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+                    <i class="ph ph-sign-out text-lg"></i>
+                    <span class="text-left">Sign Out</span>
+                </button>
             </div>
         </div>
     </nav>
+
+    <!-- Profile dropdown controller -->
+    <script>
+        function toggleProfileMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('profileMenu');
+            const caret = document.getElementById('profileCaret');
+            const isHidden = menu.classList.toggle('hidden');
+            if (caret) caret.classList.toggle('rotate-180', !isHidden);
+        }
+        function handleLogout() {
+            window.location.href = '../index.html';
+        }
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const btn = document.getElementById('profileBtn');
+            if (!menu || !btn) return;
+            if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const menu = document.getElementById('profileMenu');
+                if (menu) menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+    </script>
 
     <!-- Sub-Navbar (Breadcrumb) -->
     <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
@@ -124,7 +177,7 @@
                 </div>
                 <div>
                     <div class="flex items-baseline gap-2">
-                        <span class="text-4xl font-bold text-brand-800">8</span>
+                        <span class="text-4xl font-bold text-brand-800">7</span>
                         <span class="text-h4 text-gray-600">Total Labs</span>
                     </div>
                     <div class="text-p1 text-gray-500 mt-1">2 upcoming deadlines</div>
@@ -143,7 +196,7 @@
                 </div>
                 <div>
                     <div class="flex items-baseline gap-2">
-                        <span class="text-4xl font-bold text-brand-800">12</span>
+                        <span class="text-4xl font-bold text-brand-800">0</span>
                         <span class="text-h4 text-amber-600">Pending</span>
                     </div>
                     <div class="text-p1 text-amber-600 font-semibold mt-1 cursor-pointer hover:underline">Ready for review &rarr;</div>
@@ -155,8 +208,8 @@
         <div class="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
             <!-- Toggles -->
             <div class="flex gap-3">
-                <button class="px-6 py-2 rounded-full bg-brand-900 text-white text-btn font-bold">All Pending</button>
-                <button class="px-6 py-2 rounded-full text-gray-600 hover:text-brand-800 text-btn font-semibold uppercase border border-gray-300">All Done</button>
+                <button id="pendingFilterBtn" type="button" onclick="setDashboardFilter('pending')" class="px-6 py-2 rounded-full bg-brand-900 text-white text-btn font-bold uppercase">All Pending</button>
+                <button id="doneFilterBtn" type="button" onclick="setDashboardFilter('done')" class="px-6 py-2 rounded-full text-gray-600 hover:text-brand-800 text-btn font-semibold uppercase border border-gray-300">All Done</button>
             </div>
 
             <!-- Spacer -->
@@ -168,7 +221,7 @@
                     <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
                     <input type="text" id="searchInput" placeholder="Search class or lab..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-layout-border bg-layout-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-p1 shadow-sm">
                 </div>
-                <button class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors">
+                <button onclick="window.location.href='Ta_CreateLab.html'" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors cursor-pointer">
                     <i class="ph-bold ph-plus-circle"></i> New Lab
                 </button>
             </div>
@@ -177,9 +230,33 @@
         <!-- Section Header -->
         <div class="grid grid-cols-[1fr_auto] items-center border-b border-gray-200 pb-2">
             <h2 class="text-h4 text-gray-400 uppercase tracking-widest font-bold">ALL CLASSES</h2>
-            <button class="flex items-center gap-1.5 text-gray-300 hover:text-gray-500 text-p2 font-semibold">
-                <i class="ph ph-faders-horizontal text-xs"></i> Filter
-            </button>
+            <div class="relative">
+                <button id="filterBtn" type="button" onclick="toggleFilterMenu(event)"
+                    class="flex items-center gap-1.5 text-gray-500 hover:text-brand-500 text-p2 font-semibold transition-colors">
+                    <i class="ph ph-faders-horizontal text-xs"></i> <span id="filterLabel">Filter</span>
+                    <i class="ph ph-caret-down text-xs" id="filterCaret"></i>
+                </button>
+                <div id="filterMenu" class="hidden absolute right-0 top-full mt-2 w-56 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-40">
+                    <div class="px-4 py-2 text-p2 font-bold text-gray-400 uppercase tracking-wider border-b border-layout-border">Sort by</div>
+                    <button onclick="applySort('code')"        class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="code">
+                        <span class="flex items-center gap-2"><i class="ph ph-book-open text-sm"></i> Course</span>
+                        <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                    </button>
+                    <button onclick="applySort('totalLabs')"   class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="totalLabs">
+                        <span class="flex items-center gap-2"><i class="ph ph-folder text-sm"></i> Total Labs</span>
+                        <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                    </button>
+                    <button onclick="applySort('progress')"    class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="progress">
+                        <span class="flex items-center gap-2"><i class="ph ph-chart-line-up text-sm"></i> Progress</span>
+                        <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                    </button>
+                    <div class="border-t border-layout-border">
+                        <button onclick="resetSort()" class="w-full text-left px-4 py-2.5 text-p2 font-semibold text-gray-500 hover:bg-layout-bg flex items-center gap-2">
+                            <i class="ph ph-arrow-counter-clockwise text-sm"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Dynamic Class Grid -->

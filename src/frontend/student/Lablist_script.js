@@ -1,20 +1,55 @@
 // ข้อมูลจำลอง - ในอนาคตก้อนนี้จะถูกดึงมาจาก Database ผ่าน Backend API
 let labs = [
-    { id: 5, title: "Lab 05 - CPU Pipelining", desc: "Upload AWS EC2 instance screenshots", status: "NOT_SUBMITTED", score: null },
-    { id: 4, title: "Lab 04 - Cache Memory Design", desc: "S3 bucket configuration", status: "PENDING", score: null },
-    { id: 3, title: "Lab 03 - ALU Logic Verification", desc: "Lambda function trigger validation", status: "REJECTED", score: null },
-    { id: 2, title: "Lab 02 - Instruction Set Architecture", desc: "IAM Role policy creation", status: "PASSED", score: 100 },
-    { id: 1, title: "Lab 01 - Intro to Verilog", desc: "Basic cloud environment setup", status: "PASSED", score: 95 }
+    { id: 5, title: "Lab 05 - CPU Pipelining", desc: "Upload AWS EC2 instance screenshots", status: "NOT_SUBMITTED", score: null, meta: "DUE TOMORROW, 11:59 PM", metaIcon: "ph-calendar-blank" },
+    { id: 4, title: "Lab 04 - Cache Memory Design", desc: "S3 bucket configuration and deployment", status: "PENDING", score: null, meta: "Submitted Oct 12, 2:30 PM", metaIcon: "ph-clock" },
+    { id: 3, title: "Lab 03 - ALU Logic Verification", desc: "Lambda function trigger validation", status: "REJECTED", score: null, meta: "Failed 1 Mandatory Rule", metaIcon: null },
+    { id: 2, title: "Lab 02 - Instruction Set Architecture", desc: "IAM Role policy creation", status: "PASSED", score: 100, meta: "Graded Oct 05, 10:15 AM", metaIcon: "ph-check-circle" },
+    { id: 1, title: "Lab 01 - Intro to Verilog", desc: "Basic cloud environment setup", status: "PASSED", score: 100, meta: "Graded Sep 28, 09:00 AM", metaIcon: "ph-check-circle" }
 ];
 
 let currentFilter = 'ALL';
 let searchTerm = '';
+
+const COURSE_META = {
+    'CS 232': { name: 'Computer Architecture', section: '650001' },
+    'CS 251': { name: 'Data Structures', section: '660001' },
+    'CS 271': { name: 'Operating Systems', section: '670001' },
+};
+
+function getCurrentSubjectId() {
+    return new URLSearchParams(window.location.search).get('subjectId') || 'CS 232';
+}
+
+function updateCourseHeader() {
+    const subjectId = getCurrentSubjectId();
+    const meta = COURSE_META[subjectId] || { name: subjectId, section: '650001' };
+    const completedCount = labs.filter(lab => lab.status === 'PASSED' || lab.status === 'REJECTED').length;
+    const totalCount = 6;
+    const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    const courseCode = document.getElementById('courseCode');
+    const breadcrumbCourse = document.getElementById('breadcrumbCourse');
+    const courseName = document.getElementById('courseName');
+    const courseSection = document.getElementById('courseSection');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const labCount = document.getElementById('labCount');
+
+    if (courseCode) courseCode.textContent = subjectId;
+    if (breadcrumbCourse) breadcrumbCourse.textContent = subjectId;
+    if (courseName) courseName.textContent = meta.name;
+    if (courseSection) courseSection.textContent = meta.section;
+    if (progressText) progressText.textContent = `${completedCount}/${totalCount}`;
+    if (progressFill) progressFill.style.width = `${progressPct}%`;
+    if (labCount) labCount.textContent = String(totalCount);
+}
 
 /**
  * ฟังก์ชันหลักในการวาดรายการ Lab บนหน้าจอ
  */
 function renderLabs() {
     const container = document.getElementById('lab-list');
+
     if (!container) return;
 
     // กรองข้อมูลตาม Filter และ Search
@@ -24,35 +59,44 @@ function renderLabs() {
         if (currentFilter === 'PENDING') {
             matchesFilter = (lab.status === 'PENDING');
         } else if (currentFilter === 'COMPLETED') {
-            matchesFilter = (lab.status === 'PASSED');
+            matchesFilter = (lab.status === 'PASSED' || lab.status === 'REJECTED');
         }
         return matchesSearch && matchesFilter;
     });
 
     if (filteredLabs.length === 0) {
-        container.innerHTML = `<div class="text-center py-10 text-gray-400 font-medium">ไม่พบข้อมูลแล็บที่ค้นหา</div>`;
+        container.innerHTML = `
+            <div class="rounded-xl border border-layout-border bg-layout-surface px-6 py-12 text-center text-gray-400 shadow-sm">
+                <i class="ph-fill ph-magnifying-glass text-4xl mb-2 text-gray-300"></i>
+                <p class="text-p1 font-semibold">No labs found</p>
+            </div>`;
         return;
     }
 
-    container.innerHTML = filteredLabs.map(lab => `
-        <div class="bg-white p-5 rounded-2xl border ${lab.status === 'REJECTED' ? 'border-red-100 border-l-4 border-l-red-500' : 'border-layout-border'} flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md">
+    container.innerHTML = filteredLabs.map(lab => {
+        const isRejected = lab.status === 'REJECTED';
+        const metaColor = isRejected ? 'text-status-error font-bold' : 'text-gray-400';
+        const metaIcon = lab.metaIcon ? `<i class="ph ${lab.metaIcon} text-sm"></i>` : '';
+        return `
+        <div class="bg-layout-surface p-5 rounded-xl border ${isRejected ? 'border-status-error border-l-4' : 'border-layout-border'} shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md">
             <div class="flex items-center gap-4 w-full">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl 
-                    ${lab.status === 'PASSED' ? 'bg-emerald-50 text-emerald-500' : 
-                      lab.status === 'REJECTED' ? 'bg-red-50 text-red-500' : 
-                      lab.status === 'PENDING' ? 'bg-orange-50 text-orange-500' : 'bg-slate-50 text-slate-400'}">
-                    <i class="ph ph-file-text"></i>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl
+                    ${lab.status === 'PASSED' ? 'bg-status-successBg text-status-success' :
+                      lab.status === 'REJECTED' ? 'bg-status-errorBg text-status-error' :
+                      lab.status === 'PENDING' ? 'bg-status-warningBg text-status-warning' : 'bg-layout-bg text-gray-400'}">
+                    <i class="ph-fill ph-file-text"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-800">${lab.title}</h3>
-                    <p class="text-xs text-gray-400">${lab.desc}</p>
+                    <h3 class="text-h4 font-bold text-brand-800">${lab.title}</h3>
+                    <p class="text-p2 text-gray-400">${lab.desc}</p>
+                    ${lab.meta ? `<p class="text-p2 ${metaColor} mt-1 flex items-center gap-1 uppercase tracking-wide">${metaIcon} ${lab.meta}</p>` : ''}
                 </div>
             </div>
             <div class="flex items-center gap-4 w-full md:w-auto justify-end">
                 ${renderStatusUI(lab)}
             </div>
         </div>
-    `).join('');
+    `;}).join('');
 }
 
 /**
@@ -62,29 +106,31 @@ function renderStatusUI(lab) {
     switch (lab.status) {
         case 'PASSED':
             return `
-                <div class="text-right mr-2">
-                    <p class="text-[9px] text-gray-400 font-bold uppercase">Score</p>
-                    <p class="text-emerald-600 font-bold leading-none">${lab.score}</p>
+                <div class="mr-2 whitespace-nowrap">
+                    <span class="text-p1 text-gray-500">Score: </span>
+                    <span class="text-status-success font-bold text-p1">${lab.score}</span>
                 </div>
-                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Passed</span>
-                <button onclick="window.location.href='submissionResult.html'" class="px-6 py-2 border border-layout-border rounded-xl text-xs font-bold text-slate-600 hover:bg-gray-50 transition-colors whitespace-nowrap">View Results</button>
+                <span class="text-p2 font-bold text-status-success bg-status-successBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Passed</span>
+                <button type="button" onclick="window.location.href='submissionResult.html?state=passed'" class="px-6 py-2 border border-layout-border rounded-lg text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors whitespace-nowrap">View Results</button>
             `;
         case 'REJECTED':
             return `
-                <span class="text-[10px] font-bold text-red-600 bg-red-50 px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Rejected</span>
-                <button class="px-6 py-2 border border-red-200 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 transition-colors whitespace-nowrap">View Feedback</button>
+                <span class="flex items-center gap-1 text-p2 font-bold text-status-error bg-status-errorBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">
+                    <i class="ph-fill ph-x-circle text-sm"></i> Rejected
+                </span>
+                <button type="button" onclick="window.location.href='submissionResult.html?state=rejected'" class="px-6 py-2 border border-red-200 rounded-lg text-btn text-status-error hover:bg-red-50 transition-colors whitespace-nowrap">View Feedback</button>
             `;
         case 'PENDING':
             return `
-                <span class="text-[10px] font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
-                    <i class="ph ph-circle-notch animate-spin"></i> Pending
+                <span class="text-p2 font-bold text-status-warning bg-status-warningBg px-3 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
+                    <i class="ph ph-hourglass text-sm"></i> Pending
                 </span>
-                <button class="px-6 py-2 bg-gray-100 rounded-xl text-xs font-bold text-gray-400 cursor-not-allowed whitespace-nowrap">Processing...</button>
+                <button type="button" disabled class="px-6 py-2 bg-layout-bg rounded-lg text-btn text-gray-400 cursor-not-allowed whitespace-nowrap">Processing...</button>
             `;
         default:
             return `
-                <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Not Submitted</span>
-                <button onclick="window.location.href='submissionPage.html'" class="px-8 py-2.5 bg-brand-500 text-white rounded-xl text-xs font-bold hover:bg-indigo-600 transition-all shadow-sm whitespace-nowrap">Submit Lab</button>
+                <span class="text-p2 font-bold text-gray-400 bg-layout-bg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Not Submitted</span>
+                <button type="button" onclick="window.location.href='submissionPage.html?lab=${lab.id}'" class="px-8 py-2.5 bg-brand-500 text-white rounded-lg text-btn hover:bg-indigo-600 transition-all shadow-sm whitespace-nowrap">Submit Lab</button>
             `;
     }
 }
@@ -143,5 +189,6 @@ document.getElementById('searchInput')?.addEventListener('input', (e) => {
 });
 
 // เริ่มต้นโปรแกรม
+updateCourseHeader();
 renderLabs();
 simulateBackendCheck();

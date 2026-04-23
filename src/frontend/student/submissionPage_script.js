@@ -23,17 +23,95 @@ function switchTab(idx) {
 
 /* ── Render drop zone ── */
 function renderZone() {
-  const ph = document.getElementById('dropPlaceholder');
-  const pv = document.getElementById('dropPreview');
-  const fn = document.getElementById('fileName');
+  const ph  = document.getElementById('dropPlaceholder');
+  const pv  = document.getElementById('dropPreview');
+  const fn  = document.getElementById('fileName');
+  const img = document.getElementById('previewImg');
   if (uploads[activeTab]) {
     ph.style.display = 'none';
     pv.style.display = 'flex';
-    fn.textContent   = uploads[activeTab].name;
+    fn.textContent   = uploads[activeTab].file.name;
+    if (img) img.src = uploads[activeTab].url;
   } else {
     ph.style.display = 'flex';
     pv.style.display = 'none';
+    if (img) img.src = '';
   }
+}
+
+/* ── OpenCV Blur Detection ── */
+const BLUR_THRESHOLD = 200;
+
+function computeBlurScore(imageMat) {
+  var resized = new cv.Mat();
+  var targetWidth = 600;
+  if (imageMat.cols > targetWidth) {
+    var scale = targetWidth / imageMat.cols;
+    var targetHeight = Math.round(imageMat.rows * scale);
+    cv.resize(imageMat, resized, new cv.Size(targetWidth, targetHeight), 0, 0, cv.INTER_LINEAR);
+  } else {
+    imageMat.copyTo(resized);
+  }
+  var gray = new cv.Mat();
+  cv.cvtColor(resized, gray, cv.COLOR_RGBA2GRAY);
+  var gradX = new cv.Mat();
+  var gradY = new cv.Mat();
+  cv.Sobel(gray, gradX, cv.CV_64F, 1, 0, 3, 1, 0, cv.BORDER_DEFAULT);
+  cv.Sobel(gray, gradY, cv.CV_64F, 0, 1, 3, 1, 0, cv.BORDER_DEFAULT);
+  var meanX = new cv.Mat(), stdX = new cv.Mat();
+  var meanY = new cv.Mat(), stdY = new cv.Mat();
+  cv.meanStdDev(gradX, meanX, stdX);
+  cv.meanStdDev(gradY, meanY, stdY);
+  var varX = stdX.data64F[0] * stdX.data64F[0];
+  var varY = stdY.data64F[0] * stdY.data64F[0];
+  var score = Math.min(varX, varY) / 10;
+  resized.delete(); gray.delete();
+  gradX.delete(); gradY.delete();
+  meanX.delete(); stdX.delete(); meanY.delete(); stdY.delete();
+  return score;
+}
+
+async function checkImageBlur(file) {
+  if (!cvReady) {
+    toast('Blur detection is still loading, please wait...', 'error');
+    return false;
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.src = url;
+  await img.decode();
+  const canvas = document.getElementById('canvasBlurCheck');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  const imgMat = cv.imread(canvas);
+  const score = computeBlurScore(imgMat);
+  imgMat.delete();
+  URL.revokeObjectURL(url);
+  const isSharp = score >= BLUR_THRESHOLD;
+  showBlurFeedback(isSharp, score);
+  return isSharp;
+}
+
+function showBlurFeedback(isSharp, score) {
+  const fb = document.getElementById('blurFeedback');
+  fb.style.display = 'flex';
+  if (isSharp) {
+    fb.style.background = '#ECFDF5';
+    fb.style.color = '#10B981';
+    fb.style.border = '1px solid #A7F3D0';
+    fb.innerHTML = '<i class="ph ph-check-circle" style="font-size:16px"></i> Sharp image (Score: ' + score.toFixed(1) + ')';
+  } else {
+    fb.style.background = '#FEF2F2';
+    fb.style.color = '#EF4444';
+    fb.style.border = '1px solid #FECACA';
+    fb.innerHTML = '<i class="ph ph-x-circle" style="font-size:16px"></i> Blurry image rejected (Score: ' + score.toFixed(1) + ' / Need: ' + BLUR_THRESHOLD + ')';
+  }
+}
+
+function hideBlurFeedback() {
+  var fb = document.getElementById('blurFeedback');
+  if (fb) fb.style.display = 'none';
 }
 
 /* ── File input change ── */
@@ -53,11 +131,19 @@ function handleDrop(e) {
   if (file) save(file);
 }
 
-/* ── Save file to slot ── */
-function save(file) {
+/* ── Save file to slot (with blur check) ── */
+async function save(file) {
   const ok = ['image/jpeg','image/png'].includes(file.type) && file.size <= 15*1024*1024;
   if (!ok) { toast('Only .jpg/.png up to 15 MB', 'error'); return; }
-  uploads[activeTab] = file;
+
+  const isSharp = await checkImageBlur(file);
+  if (!isSharp) {
+    toast('Image is too blurry — please upload a sharper screenshot', 'error');
+    return;
+  }
+
+  if (uploads[activeTab]?.url) URL.revokeObjectURL(uploads[activeTab].url);
+  uploads[activeTab] = { file, url: URL.createObjectURL(file) };
   renderZone();
   updateStatus();
 }
@@ -65,12 +151,26 @@ function save(file) {
 /* ── Clear ── */
 function clearFile(e) {
   e.stopPropagation();
+  if (uploads[activeTab]?.url) URL.revokeObjectURL(uploads[activeTab].url);
   uploads[activeTab] = null;
   renderZone();
   updateStatus();
+  hideBlurFeedback();
 }
 
-/* dots removed */
+/* ── Lightbox ── */
+function openLightbox() {
+  const slot = uploads[activeTab];
+  if (!slot) return;
+  const lb  = document.getElementById('lightbox');
+  const img = document.getElementById('lightboxImg');
+  img.src = slot.url;
+  lb.style.display = 'flex';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+}
 
 /* ── Status card ── */
 function updateStatus() {
@@ -113,6 +213,9 @@ function handleSubmit() {
     btn.style.background = '#10B981';
     btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Submitted!';
     toast('Lab evidence submitted!', 'success');
+    setTimeout(() => {
+      window.location.href = 'submissionResult.html?state=processing';
+    }, 600);
   }, 1500);
 }
 
@@ -127,6 +230,11 @@ function toast(msg, type) {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
+
+/* ── Keyboard shortcuts ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
 
 /* ── Init ── */
 switchTab(0);

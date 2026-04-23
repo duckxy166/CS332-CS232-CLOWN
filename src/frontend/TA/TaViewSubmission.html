@@ -67,45 +67,94 @@
   ════════════════════════════════ -->
   <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
     <!-- Logo -->
-    <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location='Ta_Dashboard.html'">
+    <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
       <i class="ph ph-cloud-check text-xl text-brand-500"></i>
       <span class="text-p1 font-bold tracking-wide">ValidMate</span>
     </div>
 
     <!-- Nav Links -->
     <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
-      <button onclick="window.location='Ta_Dashboard.html'"
+      <button onclick="window.location.href='Ta_Dashboard.html'"
         class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
         <i class="ph ph-squares-four text-sm"></i> Dashboard
       </button>
-      <button class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+      <button onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
         <i class="ph ph-users text-sm"></i> Students
       </button>
     </div>
 
-    <!-- User Profile -->
-    <div class="flex items-center gap-3 cursor-pointer border-l border-brand-800 pl-6">
-      <div class="text-right">
-        <div class="text-p1 font-semibold leading-none">John Doe</div>
-        <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
-      </div>
-      <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
-        JD
+    <!-- User Profile with Dropdown -->
+    <div class="relative h-full">
+      <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+        class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+        <div class="text-right">
+          <div class="text-p1 font-semibold leading-none">John Doe</div>
+          <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+          JD
+        </div>
+        <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+      </button>
+      <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+        <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+          <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+            JD
+          </div>
+          <div>
+            <div class="text-p1 font-bold text-brand-900 leading-tight">John Doe</div>
+            <div class="text-p2 text-gray-500 leading-tight mt-0.5">Head TA</div>
+          </div>
+        </div>
+        <button type="button" onclick="handleLogout()"
+          class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+          <i class="ph ph-sign-out text-lg"></i>
+          <span class="text-left">Sign Out</span>
+        </button>
       </div>
     </div>
   </nav>
 
+  <script>
+    function toggleProfileMenu(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('profileMenu');
+      const caret = document.getElementById('profileCaret');
+      const isHidden = menu.classList.toggle('hidden');
+      if (caret) caret.classList.toggle('rotate-180', !isHidden);
+    }
+    function handleLogout() { window.location.href = '../index.html'; }
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('profileMenu');
+      const btn = document.getElementById('profileBtn');
+      if (!menu || !btn) return;
+      if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add('hidden');
+        const caret = document.getElementById('profileCaret');
+        if (caret) caret.classList.remove('rotate-180');
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const menu = document.getElementById('profileMenu');
+        if (menu) menu.classList.add('hidden');
+        const caret = document.getElementById('profileCaret');
+        if (caret) caret.classList.remove('rotate-180');
+      }
+    });
+  </script>
+
   <!-- ════════════════════════════════
        SUB-NAVBAR  — Breadcrumb
   ════════════════════════════════ -->
-  <div class="bg-layout-surface border-b border-layout-border px-6 h-12 flex items-center shadow-sm">
-    <div class="flex items-center gap-1.5 text-p2 text-gray-500 font-semibold">
-      <button onclick="window.location='Ta_Dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+  <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+    <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
+      <button onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
         <i class="ph-fill ph-squares-four text-sm"></i> Overview
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
-      <button class="flex items-center gap-1 hover:text-brand-500 transition-colors">
-        <i class="ph-fill ph-list-checks text-sm"></i> Lab List
+      <button onclick="window.location.href='TaLablist.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-stack text-sm"></i> Lab List
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
       <span class="flex items-center gap-1 text-brand-800">
@@ -139,10 +188,10 @@
           </div>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button class="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-layout-border bg-layout-surface text-brand-800 text-btn hover:border-brand-500 hover:text-brand-500 transition-colors shadow-sm">
+          <button onclick="handleEditLab()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-layout-border bg-layout-surface text-brand-800 text-btn hover:border-brand-500 hover:text-brand-500 transition-colors shadow-sm">
             <i class="ph ph-pencil-simple text-sm"></i> Edit Lab
           </button>
-          <button class="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 bg-layout-surface text-status-error text-btn hover:bg-red-50 transition-colors shadow-sm">
+          <button onclick="handleDeleteLab()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 bg-layout-surface text-status-error text-btn hover:bg-red-50 transition-colors shadow-sm">
             <i class="ph ph-trash text-sm"></i> Delete
           </button>
         </div>
@@ -239,10 +288,66 @@
             <div class="relative">
               <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
               <input id="submissionSearch" type="text" placeholder="Search Email..."
-                class="pl-9 pr-4 py-2 text-p1 border border-layout-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-opacity-30 focus:border-brand-500 bg-layout-surface w-52 shadow-sm" />
+                class="pl-9 pr-4 py-2 text-p1 border border-layout-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-opacity-30 focus:border-brand-500 bg-layout-surface w-72 shadow-sm" />
             </div>
+
+            <!-- Filter (icon-only, dashboard style) -->
+            <div class="relative">
+              <button id="filterBtn" type="button" onclick="toggleFilterMenu(event)"
+                class="relative w-10 h-10 rounded-lg border border-layout-border bg-layout-surface text-gray-500 hover:text-brand-500 hover:border-brand-500 flex items-center justify-center shadow-sm transition-colors"
+                title="Filter & Sort">
+                <i class="ph ph-faders-horizontal text-lg"></i>
+                <span id="filterBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center">0</span>
+              </button>
+              <div id="filterMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-40">
+                <!-- Filter by Status -->
+                <div class="px-4 py-2 text-p2 font-bold text-gray-400 uppercase tracking-wider border-b border-layout-border">Status</div>
+                <button onclick="applyStatusFilter('all')"      class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="all">
+                  <span class="flex items-center gap-2"><i class="ph ph-list-bullets text-sm"></i> All</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500"></i>
+                </button>
+                <button onclick="applyStatusFilter('passed')"   class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="passed">
+                  <span class="flex items-center gap-2"><i class="ph-fill ph-check-circle text-sm text-status-success"></i> Passed</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500 hidden"></i>
+                </button>
+                <button onclick="applyStatusFilter('rejected')" class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="rejected">
+                  <span class="flex items-center gap-2"><i class="ph-fill ph-x-circle text-sm text-status-error"></i> Rejected</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500 hidden"></i>
+                </button>
+                <button onclick="applyStatusFilter('pending')"  class="status-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-status="pending">
+                  <span class="flex items-center gap-2"><i class="ph-fill ph-hourglass text-sm text-status-warning"></i> Pending</span>
+                  <i class="ph-fill ph-check status-check text-xs text-brand-500 hidden"></i>
+                </button>
+
+                <!-- Sort by -->
+                <div class="px-4 py-2 text-p2 font-bold text-gray-400 uppercase tracking-wider border-y border-layout-border">Sort by</div>
+                <button onclick="applySort('email')"       class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="email">
+                  <span class="flex items-center gap-2"><i class="ph ph-envelope text-sm"></i> Email</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+                <button onclick="applySort('score')"       class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="score">
+                  <span class="flex items-center gap-2"><i class="ph ph-chart-bar text-sm"></i> Score</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+                <button onclick="applySort('submittedAt')" class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="submittedAt">
+                  <span class="flex items-center gap-2"><i class="ph ph-clock text-sm"></i> Submitted At</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+                <button onclick="applySort('checkedAt')"   class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="checkedAt">
+                  <span class="flex items-center gap-2"><i class="ph ph-clock-countdown text-sm"></i> Checked At</span>
+                  <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                </button>
+
+                <div class="border-t border-layout-border">
+                  <button onclick="resetFilters()" class="w-full text-left px-4 py-2.5 text-p2 font-semibold text-gray-500 hover:bg-layout-bg flex items-center gap-2">
+                    <i class="ph ph-arrow-counter-clockwise text-sm"></i> Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Download All -->
-            <button class="bg-brand-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors">
+            <button onclick="handleDownloadAll()" class="bg-brand-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors">
               <i class="ph-bold ph-download-simple text-sm"></i> Download All
             </button>
           </div>

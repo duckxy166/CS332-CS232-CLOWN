@@ -190,8 +190,32 @@ document.getElementById('tabBar').addEventListener('click', e => {
       showToast('ต้องมีอย่างน้อย 1 Image', 'error');
       return;
     }
-    closeBtn.closest('.tab-btn').remove();
+    const tabToRemove   = closeBtn.closest('.tab-btn');
+    const removedSlotId = Number(tabToRemove.dataset.slot);
+    const wasActive     = removedSlotId === activeSlot;
+
+    // pick fallback neighbor BEFORE removing (prev sibling if exists, else next)
+    let fallbackTab = tabToRemove.previousElementSibling;
+    if (!fallbackTab || fallbackTab.classList.contains('tab-add')) {
+      fallbackTab = tabToRemove.nextElementSibling;
+    }
+    if (fallbackTab && fallbackTab.classList.contains('tab-add')) fallbackTab = null;
+
+    // drop the removed slot's state BEFORE reindex so it doesn't get carried over
+    delete slotStates[removedSlotId];
+    tabToRemove.remove();
+
+    if (wasActive && fallbackTab) {
+      // set activeSlot to fallback's OLD id so reindex maps it correctly
+      activeSlot = Number(fallbackTab.dataset.slot);
+    }
+
     reindexTabs();
+
+    // ensure exactly one tab has .active class matching activeSlot
+    document.querySelectorAll('.tab-btn:not(.tab-add)').forEach(b =>
+      b.classList.toggle('active', Number(b.dataset.slot) === activeSlot)
+    );
     renderState(activeSlot);
     return;
   }
@@ -218,10 +242,7 @@ document.getElementById('tabBar').addEventListener('click', e => {
     return;
   }
  
-  // ── สลับ tab ──
-  switchTab(Number(btn.dataset.slot));
 });
- 
 
 //  IMAGE UPLOAD / REMOVE
 document.getElementById('fileInput').addEventListener('change', function () {
@@ -235,11 +256,10 @@ document.getElementById('fileInput').addEventListener('change', function () {
   reader.readAsDataURL(file);
   this.value = '';
 });
- 
+
 document.getElementById('uploadZone').addEventListener('click', () =>
   document.getElementById('fileInput').click()
 );
- 
 const rmBtn = document.getElementById('removeImgBtn');
 rmBtn.addEventListener('click', e => {
   e.stopPropagation();
@@ -248,7 +268,7 @@ rmBtn.addEventListener('click', e => {
 });
 rmBtn.addEventListener('mouseenter', () => rmBtn.style.background = 'rgba(225,29,72,.85)');
 rmBtn.addEventListener('mouseleave', () => rmBtn.style.background = 'rgba(15,23,42,.65)');
- 
+
 //  ADD RULE
 document.getElementById('addRuleBtn').addEventListener('click', () => {
   const tr = document.createElement('tr');

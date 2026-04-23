@@ -4,8 +4,22 @@
    TaDashboard_script.js for consistency.
 ══════════════════════════════════════════════ */
 
-/* ── Lab Meta ── */
-const labData = {
+/* ── Lab Meta Catalogue (mock keyed by lab id) ── */
+const LABS = {
+  // CS 232
+  201: { title: "Lab 01 - CPU Registers",    section: "650001", deadline: "10 Apr 2026" },
+  202: { title: "Lab 02 - Pipelining",       section: "650001", deadline: "17 Apr 2026" },
+  203: { title: "Lab 03 - Cache Memory",     section: "650002", deadline: "24 Apr 2026" },
+  // CS 251
+  301: { title: "Lab 01 - Linked List",      section: "660001", deadline: "12 Apr 2026" },
+  302: { title: "Lab 02 - Binary Tree",      section: "660001", deadline: "19 Apr 2026" },
+  // CS 271
+  401: { title: "Lab 01 - Process Scheduling", section: "670001", deadline: "05 Apr 2026" },
+  402: { title: "Lab 02 - Threads & Mutex",    section: "670002", deadline: "12 Apr 2026" },
+};
+
+/* Shared description + rules (same for all mock labs) */
+const DEFAULT_META = {
   title:    "Cloud Storage Setup",
   section:  "650001",
   deadline: "16 Mar 2026",
@@ -20,6 +34,16 @@ const labData = {
     { type: "Text",           requirement: "optional",  keyword: "index",        weight: 20 },
   ],
 };
+
+/* ── Resolve current lab from ?lab= param ── */
+function resolveLab() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('lab');
+  const picked = id && LABS[id] ? LABS[id] : null;
+  return { ...DEFAULT_META, ...(picked || {}) };
+}
+
+const labData = resolveLab();
 
 /* ── Submissions Data ── */
 const submissions = [
@@ -320,22 +344,220 @@ function changePage(p) {
 }
 
 /* ────────────────────────────────────────
-   SEARCH
+   SEARCH + FILTER + SORT PIPELINE
 ──────────────────────────────────────── */
+const filterState = {
+  query: '',
+  status: 'all',        // all | passed | rejected | pending
+  sortKey: null,        // email | score | submittedAt | checkedAt
+  sortDir: 'asc',       // asc | desc
+};
+
+function parseDateTime(s) {
+  // "26 Mar 2026 · 20:58" -> Date
+  const m = (s || '').replace('·', '').replace(/\s+/g, ' ').trim();
+  const d = new Date(m);
+  return isNaN(d) ? 0 : d.getTime();
+}
+
+function applyPipeline() {
+  let data = [...submissions];
+
+  // search by email
+  if (filterState.query) {
+    data = data.filter(s => s.email.toLowerCase().includes(filterState.query));
+  }
+  // status filter
+  if (filterState.status !== 'all') {
+    data = data.filter(s => s.status === filterState.status);
+  }
+  // sort
+  if (filterState.sortKey) {
+    const key = filterState.sortKey;
+    const dir = filterState.sortDir === 'asc' ? 1 : -1;
+    data.sort((a, b) => {
+      let va, vb;
+      if (key === 'submittedAt' || key === 'checkedAt') {
+        va = parseDateTime(a[key]); vb = parseDateTime(b[key]);
+      } else if (key === 'score') {
+        va = a.score; vb = b.score;
+      } else {
+        va = String(a[key] ?? '').toLowerCase();
+        vb = String(b[key] ?? '').toLowerCase();
+      }
+      if (va < vb) return -1 * dir;
+      if (va > vb) return  1 * dir;
+      return 0;
+    });
+  }
+
+  filteredData = data;
+  currentPage  = 1;
+  expandedRows = new Set();
+  renderSubmissions(filteredData.slice(0, PAGE_SIZE));
+  renderStats(filteredData);
+  renderPagination();
+  updateFilterBadge();
+}
+
+function updateFilterBadge() {
+  const badge = document.getElementById('filterBadge');
+  if (!badge) return;
+  let count = 0;
+  if (filterState.status !== 'all') count++;
+  if (filterState.sortKey)           count++;
+  if (count > 0) {
+    badge.textContent = String(count);
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+/* ── Filter dropdown toggle ── */
+function toggleFilterMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('filterMenu');
+  if (menu) menu.classList.toggle('hidden');
+}
+
+/* ── Apply status filter (single-select) ── */
+function applyStatusFilter(status) {
+  filterState.status = status;
+  // update UI checkmarks
+  document.querySelectorAll('.status-item').forEach(btn => {
+    const check = btn.querySelector('.status-check');
+    if (!check) return;
+    if (btn.dataset.status === status) check.classList.remove('hidden');
+    else                               check.classList.add('hidden');
+  });
+  applyPipeline();
+}
+
+/* ── Apply sort: click same key toggles direction ── */
+function applySort(key) {
+  if (filterState.sortKey === key) {
+    filterState.sortDir = filterState.sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    filterState.sortKey = key;
+    filterState.sortDir = 'asc';
+  }
+  // update UI: show active key + arrow direction
+  document.querySelectorAll('.sort-item').forEach(btn => {
+    const dirIcon = btn.querySelector('.sort-dir');
+    if (!dirIcon) return;
+    const isActive = btn.dataset.key === filterState.sortKey;
+    btn.classList.toggle('text-brand-500', isActive);
+    btn.classList.toggle('text-brand-800', !isActive);
+    dirIcon.classList.toggle('text-brand-500', isActive);
+    dirIcon.classList.toggle('text-gray-400', !isActive);
+    dirIcon.classList.remove('ph-arrow-up', 'ph-arrow-down');
+    dirIcon.classList.add(isActive && filterState.sortDir === 'desc' ? 'ph-arrow-down' : 'ph-arrow-up');
+  });
+  applyPipeline();
+}
+
+/* ── Reset all filters/sort ── */
+function resetFilters() {
+  filterState.query = '';
+  filterState.status = 'all';
+  filterState.sortKey = null;
+  filterState.sortDir = 'asc';
+  const searchEl = document.getElementById('submissionSearch');
+  if (searchEl) searchEl.value = '';
+  // reset status UI
+  document.querySelectorAll('.status-item').forEach(btn => {
+    const check = btn.querySelector('.status-check');
+    if (!check) return;
+    if (btn.dataset.status === 'all') check.classList.remove('hidden');
+    else                              check.classList.add('hidden');
+  });
+  // reset sort UI
+  document.querySelectorAll('.sort-item').forEach(btn => {
+    const dirIcon = btn.querySelector('.sort-dir');
+    if (!dirIcon) return;
+    btn.classList.remove('text-brand-500');
+    btn.classList.add('text-brand-800');
+    dirIcon.classList.remove('text-brand-500', 'ph-arrow-down');
+    dirIcon.classList.add('text-gray-400', 'ph-arrow-up');
+  });
+  applyPipeline();
+}
+
+function buildLabListHref() {
+  const params = new URLSearchParams(window.location.search);
+  const course = params.get('course');
+  return course
+    ? `TaLablist.html?course=${encodeURIComponent(course)}`
+    : 'TaLablist.html';
+}
+
+function buildCreateLabHref() {
+  const params = new URLSearchParams(window.location.search);
+  const nextParams = new URLSearchParams();
+  const course = params.get('course');
+  const lab = params.get('lab');
+  if (course) nextParams.set('course', course);
+  if (lab) nextParams.set('lab', lab);
+  nextParams.set('mode', 'edit');
+  const query = nextParams.toString();
+  return `Ta_CreateLab.html${query ? `?${query}` : ''}`;
+}
+
+function handleEditLab() {
+  window.location.href = buildCreateLabHref();
+}
+
+function handleDeleteLab() {
+  if (!confirm(`Delete ${labData.title}?`)) return;
+  window.location.href = buildLabListHref();
+}
+
+function handleDownloadAll() {
+  const rows = [
+    ['Email', 'Status', 'Score', 'Submitted At', 'Checked At'],
+    ...filteredData.map(item => [item.email, item.status, item.score, item.submittedAt, item.checkedAt])
+  ];
+
+  const csv = rows
+    .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${labData.title.replace(/[^a-z0-9]+/gi, '_').toLowerCase()}_submissions.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const searchEl = document.getElementById('submissionSearch');
   if (searchEl) {
     searchEl.addEventListener('input', e => {
-      const q = e.target.value.trim().toLowerCase();
-      filteredData = submissions.filter(s => s.email.toLowerCase().includes(q));
-      currentPage  = 1;
-      expandedRows = new Set();
-      const slice  = filteredData.slice(0, PAGE_SIZE);
-      renderSubmissions(slice);
-      renderStats(filteredData);
-      renderPagination();
+      filterState.query = e.target.value.trim().toLowerCase();
+      applyPipeline();
     });
   }
+
+  // close filter menu when clicking outside
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('filterMenu');
+    const btn  = document.getElementById('filterBtn');
+    if (!menu || !btn) return;
+    if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const menu = document.getElementById('filterMenu');
+      if (menu) menu.classList.add('hidden');
+    }
+  });
 });
 
 /* ────────────────────────────────────────
@@ -346,6 +568,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('labTitle').textContent    = labData.title;
   document.getElementById('labSection').textContent  = labData.section;
   document.getElementById('labDeadline').textContent = labData.deadline;
+
+  document.title = `ValidMate – ${labData.title}`;
+
+  // Pass ?course= to the Lab List breadcrumb so it returns to the right course
+  const courseParam = new URLSearchParams(window.location.search).get('course');
+  if (courseParam) {
+    document.querySelectorAll('button[onclick*="TaLablist.html"]').forEach(btn => {
+      btn.setAttribute('onclick', `window.location.href='${buildLabListHref()}'`);
+    });
+  }
 
   renderRules();
   renderStats(submissions);

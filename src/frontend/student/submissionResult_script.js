@@ -12,15 +12,24 @@ function updateResultView(state) {
     }
 }
 
+function getResultState() {
+    const params = new URLSearchParams(window.location.search);
+    const state = params.get('state');
+    return ['processing', 'passed', 'rejected'].includes(state) ? state : null;
+}
+
 /**
  * ตัวอย่างการใช้งาน:
  * เมื่อโหลดหน้ามา ให้เริ่มที่ 'processing'
  * จากนั้นรอฟังผลจาก Backend (เช่น fetch API)
  */
 window.addEventListener('DOMContentLoaded', () => {
-    // ทดสอบสลับหน้าหลังจากผ่านไป 3 วินาที
-    setTimeout(() => {
-        // เปลี่ยนเป็น 'passed' หรือ 'rejected' ตามผลจาก backend
-        updateResultView('passed'); 
-    }, 3000);
+    const state = getResultState() || 'processing';
+    updateResultView(state);
+
+    if (state === 'processing') {
+        setTimeout(() => {
+            updateResultView('passed');
+        }, 3000);
+    }
 });
