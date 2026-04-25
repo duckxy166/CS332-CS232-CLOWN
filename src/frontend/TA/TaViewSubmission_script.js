@@ -58,12 +58,12 @@ const submissions = [
         { label: "Successfully", ok: true },
         { label: "Lambda",       ok: true },
         { label: "index",        ok: true },
-      ]},
+      ], ai: { confidence: 96, level: "High", text: "Confirmation banner is clear and the success state matches the reference behavior." }},
       { label: "Image 2", status: "passed", checks: [
         { label: "Buckets", ok: true },
         { label: "Upload",  ok: true },
         { label: "Objects", ok: true },
-      ]},
+      ], ai: { confidence: 92, level: "High", text: "All three target objects are present and laid out as in the reference." }},
     ],
   },
   {
@@ -77,12 +77,12 @@ const submissions = [
         { label: "Successfully", ok: true },
         { label: "Lambda",       ok: true },
         { label: "index",        ok: true },
-      ]},
+      ], ai: { confidence: 88, level: "Medium", text: "Lambda function output is correct and the index.js handler is referenced as expected." }},
       { label: "Image 2", status: "rejected", checks: [
         { label: "Buckets", ok: true },
         { label: "Upload",  ok: false, note: "Missing" },
         { label: "Objects", ok: true },
-      ]},
+      ], ai: { confidence: 71, level: "Low", issue: true, text: "Could not find the \"Upload\" intent in the bucket view. The upload action may be hidden behind a menu or scrolled out of frame." }},
     ],
   },
   {
@@ -96,12 +96,12 @@ const submissions = [
         { label: "Successfully", ok: true },
         { label: "Lambda",       ok: true },
         { label: "index",        ok: true },
-      ]},
+      ], ai: { confidence: 95, level: "High", text: "All required keywords detected with strong layout match against the reference." }},
       { label: "Image 2", status: "passed", checks: [
         { label: "Buckets", ok: true },
         { label: "Upload",  ok: true },
         { label: "Objects", ok: true },
-      ]},
+      ], ai: { confidence: 94, level: "High", text: "Bucket UI elements visible and aligned with reference positions." }},
     ],
   },
   {
@@ -115,12 +115,12 @@ const submissions = [
         { label: "Successfully", ok: false, note: "Missing" },
         { label: "Lambda",       ok: true },
         { label: "index",        ok: false, note: "Not found" },
-      ]},
+      ], ai: { confidence: 58, level: "Low", issue: true, text: "Success confirmation is missing and the index handler reference is not visible in the screenshot." }},
       { label: "Image 2", status: "rejected", checks: [
         { label: "Buckets", ok: true },
         { label: "Upload",  ok: false, note: "Missing" },
         { label: "Objects", ok: false, note: "Missing" },
-      ]},
+      ], ai: { confidence: 52, level: "Low", issue: true, text: "Multiple required intents are missing — only the bucket list is visible; upload and object views were not captured." }},
     ],
   },
   {
@@ -134,12 +134,12 @@ const submissions = [
         { label: "Successfully", ok: true },
         { label: "Lambda",       ok: true },
         { label: "index",        ok: false, note: "Missing" },
-      ]},
+      ], ai: { confidence: 80, level: "Medium", text: "Core success state is present; index.js reference is faint but acceptable." }},
       { label: "Image 2", status: "passed", checks: [
         { label: "Buckets", ok: true },
         { label: "Upload",  ok: true },
         { label: "Objects", ok: true },
-      ]},
+      ], ai: { confidence: 90, level: "High", text: "All bucket-related elements visible and recognizable." }},
     ],
   }
 ];
@@ -167,6 +167,41 @@ function checkIcon(ok) {
     : `<i class="ph-bold ph-x text-status-error text-xs flex-shrink-0"></i>`;
 }
 
+function aiFeedbackHTML(ai, status) {
+  if (!ai) return '';
+  const isIssue = ai.issue || status === 'rejected';
+  const variant = isIssue ? 'ai-issue' : 'ai-ok';
+  const levelColor =
+    ai.level === 'High'   ? 'text-status-success' :
+    ai.level === 'Medium' ? 'text-status-warning' :
+                            'text-status-error';
+  const barColor =
+    ai.level === 'High'   ? 'bg-status-success' :
+    ai.level === 'Medium' ? 'bg-status-warning' :
+                            'bg-status-error';
+  const issueBadge = isIssue
+    ? '<span class="ai-issue-badge">Issue Found</span>'
+    : '';
+
+  return `
+    <div class="ai-feedback ${variant}">
+      <div class="ai-feedback-head">
+        <div class="ai-feedback-title">
+          <span class="ai-icon-bubble"><i class="ph-fill ph-robot"></i></span>
+          <span class="ai-label">AI Feedback</span>
+          ${issueBadge}
+        </div>
+        <div class="ai-confidence">
+          <span class="ai-confidence-label">Confidence</span>
+          <span class="ai-bar"><span class="ai-bar-fill ${barColor}" style="width:${ai.confidence}%"></span></span>
+          <span class="ai-confidence-val ${levelColor}">${ai.confidence}% · ${ai.level}</span>
+        </div>
+      </div>
+      <p class="ai-feedback-text">${ai.text}</p>
+    </div>
+  `;
+}
+
 function imageCardHTML(img) {
   const isPass = img.status === 'passed';
   const cardClass = img.status === 'passed' ? 'vc-passed' : img.status === 'pending' ? 'vc-pending' : 'vc-rejected';
@@ -180,15 +215,19 @@ function imageCardHTML(img) {
 
   return `
     <div class="validation-card ${cardClass}">
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-p1 font-semibold text-brand-800">${img.label}</span>
-        ${statusPill(img.status)}
+      <div class="flex items-start gap-3 mb-3">
+        <div class="thumb-placeholder">
+          <i class="ph ph-image"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="text-p1 font-semibold text-brand-800">${img.label}</span>
+            ${statusPill(img.status)}
+          </div>
+          <ul class="space-y-1">${checksHTML}</ul>
+        </div>
       </div>
-      <!-- Thumbnail placeholder (replaces screenshot image) -->
-      <div class="thumb-placeholder mb-3">
-        <i class="ph ph-image"></i>
-      </div>
-      <ul class="space-y-1.5">${checksHTML}</ul>
+      ${aiFeedbackHTML(img.ai, img.status)}
     </div>
   `;
 }

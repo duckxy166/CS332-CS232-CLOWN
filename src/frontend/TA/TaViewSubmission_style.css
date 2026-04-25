@@ -169,7 +169,7 @@ td {
   opacity: 0;
 }
 .breakdown-panel.open {
-  max-height: 600px;
+  max-height: 1200px;
   opacity: 1;
 }
 
@@ -179,6 +179,113 @@ td {
 }
 .chevron-icon.open {
   transform: rotate(180deg);
+}
+
+/* ── AI FEEDBACK CARD ── */
+.ai-feedback {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-left: 3px solid #4F46E5;
+  border-radius: 0.6rem;
+  font-size: 12.5px;
+  color: #475569;
+}
+.ai-feedback.ai-issue {
+  border-left-color: #EF4444;
+  background: #FFFDFD;
+}
+.ai-feedback-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+.ai-feedback-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.ai-icon-bubble {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #EEF2FF;
+  border: 1px solid #E0E7FF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4F46E5;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.ai-feedback.ai-issue .ai-icon-bubble {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #EF4444;
+}
+.ai-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4F46E5;
+}
+.ai-feedback.ai-issue .ai-label { color: #EF4444; }
+
+.ai-issue-badge {
+  display: inline-block;
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-left: 0.25rem;
+}
+
+.ai-confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 11px;
+}
+.ai-confidence-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94A3B8;
+}
+.ai-bar {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 5px;
+  background: #E2E8F0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ai-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+}
+.ai-confidence-val {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.ai-feedback-text {
+  color: #475569;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* Pagination buttons */

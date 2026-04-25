@@ -17,11 +17,8 @@ function captureState(idx) {
     const kwText   = tr.querySelector('.keyword');
     const keyword  = kwInput ? kwInput.value : (kwText ? kwText.textContent.trim() : '');
     const weight   = Number(tr.querySelector('.weight-cell input[type="number"]')?.value || 0);
-    const textPos  = tr.querySelector('.pos-cell input[type="checkbox"]')?.checked || false;
-    const tolSel   = tr.querySelector('.tol-cell select');
-    const tolerance = tolSel ? tolSel.value : 'N/A';
     const mandatory = tr.querySelector('.mand-cell input[type="checkbox"]')?.checked || false;
-    rules.push({ keyword, weight, textPos, tolerance, mandatory });
+    rules.push({ keyword, weight, mandatory });
   });
   slotStates[idx] = {
     rules,
@@ -64,13 +61,6 @@ function renderImage(src) {
 }
  
 function buildRowHTML(rule) {
-  const tolHTML = rule.textPos
-    ? `<select class="tol-select">
-         <option${rule.tolerance === 'Med (±15%)' ? ' selected' : ''}>Med (±15%)</option>
-         <option${rule.tolerance === 'Low (±5%)'  ? ' selected' : ''}>Low (±5%)</option>
-         <option${rule.tolerance === 'High (±25%)'? ' selected' : ''}>High (±25%)</option>
-       </select>`
-    : `<span class="na-text">N/A</span>`;
   return `
     <td class="keyword">
       <input type="text" value="${rule.keyword}"
@@ -78,20 +68,13 @@ function buildRowHTML(rule) {
         style="width:100%;border:none;background:transparent;outline:none;
                font-family:monospace;font-size:12.5px;color:#0f172a;"/>
     </td>
-    <td class="weight-cell">
+    <td class="weight-cell text-center">
       <div class="weight-input-wrap">
         <input type="number" value="${rule.weight}" min="0" max="100"/>
         <span>%</span>
       </div>
     </td>
-    <td class="pos-cell">
-      <label class="toggle">
-        <input type="checkbox"${rule.textPos ? ' checked' : ''}/>
-        <span class="slider"></span>
-      </label>
-    </td>
-    <td class="tol-cell">${tolHTML}</td>
-    <td class="mand-cell">
+    <td class="mand-cell text-center">
       <label class="toggle mandatory">
         <input type="checkbox"${rule.mandatory ? ' checked' : ''}/>
         <span class="slider"></span>
@@ -104,16 +87,6 @@ function bindRow(tr) {
   tr.querySelectorAll('input[type="number"]').forEach(i =>
     i.addEventListener('input', updateWeight)
   );
-  tr.querySelector('.pos-cell input[type="checkbox"]').addEventListener('change', function () {
-    const tolCell = tr.querySelector('.tol-cell');
-    tolCell.innerHTML = this.checked
-      ? `<select class="tol-select">
-           <option>Med (±15%)</option>
-           <option>Low (±5%)</option>
-           <option>High (±25%)</option>
-         </select>`
-      : `<span class="na-text">N/A</span>`;
-  });
 }
  
 function updateWeight() {
@@ -168,10 +141,8 @@ function reindexTabs() {
   document.querySelectorAll('#rulesBody tr').forEach(tr => {
     const kw  = tr.querySelector('.keyword')?.textContent.trim() || '';
     const w   = Number(tr.querySelector('.weight-cell input')?.value || 0);
-    const tp  = tr.querySelector('.pos-cell input')?.checked || false;
-    const tol = tr.querySelector('.tol-cell select')?.value || 'N/A';
     const man = tr.querySelector('.mand-cell input')?.checked || false;
-    rules.push({ keyword: kw, weight: w, textPos: tp, tolerance: tol, mandatory: man });
+    rules.push({ keyword: kw, weight: w, mandatory: man });
   });
   slotStates[1] = { rules, minScore: 75, mustPass: false, image: null };
   slotStates[2] = defaultState();
@@ -272,7 +243,7 @@ rmBtn.addEventListener('mouseleave', () => rmBtn.style.background = 'rgba(15,23,
 //  ADD RULE
 document.getElementById('addRuleBtn').addEventListener('click', () => {
   const tr = document.createElement('tr');
-  tr.innerHTML = buildRowHTML({ keyword: '', weight: 0, textPos: false, tolerance: 'N/A', mandatory: false });
+  tr.innerHTML = buildRowHTML({ keyword: '', weight: 0, mandatory: false });
   document.getElementById('rulesBody').appendChild(tr);
   bindRow(tr);
   updateWeight();
@@ -367,8 +338,6 @@ async function handleCreateLab() {
     keywords  : state.rules.map(r => ({
       keyword   : r.keyword,
       weight    : r.weight,
-      textPos   : r.textPos,
-      tolerance : r.tolerance,
       mandatory : r.mandatory
     }))
   }));

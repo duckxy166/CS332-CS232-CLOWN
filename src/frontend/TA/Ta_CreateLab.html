@@ -312,27 +312,21 @@
       <table class="rules-table w-full border-collapse">
         <thead>
           <tr>
-            <th>Target Keyword</th>
-            <th>Weight</th>
-            <th>Text Position</th>
-            <th>Tolerance</th>
-            <th>Mandatory</th>
+            <th class="text-left">Target Keyword</th>
+            <th class="text-center">Weight</th>
+            <th class="text-center">Mandatory</th>
           </tr>
         </thead>
         <tbody id="rulesBody">
           <tr>
             <td class="keyword">successfully created</td>
-            <td class="weight-cell"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
-            <td class="pos-cell"><label class="toggle"><input type="checkbox" checked/><span class="slider"></span></label></td>
-            <td class="tol-cell"><select class="tol-select"><option>Med (±15%)</option><option>Low (±5%)</option><option>High (±25%)</option></select></td>
-            <td class="mand-cell"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
+            <td class="weight-cell text-center"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
+            <td class="mand-cell text-center"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
           </tr>
           <tr>
             <td class="keyword">integration-lab</td>
-            <td class="weight-cell"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
-            <td class="pos-cell"><label class="toggle"><input type="checkbox"/><span class="slider"></span></label></td>
-            <td class="tol-cell"><span class="na-text">N/A</span></td>
-            <td class="mand-cell"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
+            <td class="weight-cell text-center"><div class="weight-input-wrap"><input type="number" value="40" min="0" max="100"/><span>%</span></div></td>
+            <td class="mand-cell text-center"><label class="toggle mandatory"><input type="checkbox"/><span class="slider"></span></label></td>
           </tr>
         </tbody>
       </table>
@@ -350,24 +344,75 @@
       </div>
 
       <!-- Pass Criteria -->
-      <div class="mt-4 flex flex-wrap items-center gap-5 px-4 py-3.5 bg-layout-bg border border-layout-border rounded-lg">
+      <div class="mt-4 px-5 py-4 bg-layout-bg border border-layout-border rounded-xl grid grid-cols-1 gap-4">
         <div class="flex items-center gap-1.5 text-p2 font-bold uppercase tracking-wider text-gray-600">
-          <i class="ph ph-list-checks text-brand-500 text-base"></i> Pass Criteria
+          <i class="ph-fill ph-star text-brand-500 text-base"></i> Pass Criteria
         </div>
-        <div class="flex items-center gap-2 text-p1 text-gray-700">
-          <input type="checkbox" id="minScore" checked class="w-4 h-4 accent-brand-500 cursor-pointer" />
-          <label for="minScore">Min. Score:</label>
-          <div class="flex items-center gap-1.5">
-            <input type="number" id="minScoreVal" value="75" min="0" max="100"
-              class="w-14 text-center px-2 py-1 rounded-md border border-layout-border text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
-            <span class="text-p1 text-gray-500">%</span>
+
+        <!-- AI-Powered Grading card -->
+        <div class="flex items-center justify-between gap-4 px-4 py-3.5 bg-layout-surface border border-layout-border rounded-xl hover:border-brand-500/40 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center flex-shrink-0 border border-brand-100">
+              <i class="ph-fill ph-robot text-lg"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-p1 font-bold text-brand-900">AI-Powered Grading</span>
+                <span class="text-[10px] font-bold tracking-wider text-brand-500 bg-brand-50 border border-brand-100 rounded px-1.5 py-0.5 uppercase">Beta</span>
+              </div>
+              <div id="aiGradingStatus" class="text-p2 text-gray-500 mt-0.5">
+                <span class="text-status-success font-semibold">On</span> — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.
+              </div>
+            </div>
+          </div>
+          <label class="toggle mandatory inline-flex items-center cursor-pointer flex-shrink-0">
+            <input type="checkbox" id="aiGradingToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+          <div class="flex items-center gap-2 text-p1 text-gray-700">
+            <input type="checkbox" id="minScore" checked class="w-4 h-4 accent-brand-500 cursor-pointer" />
+            <label for="minScore" class="cursor-pointer">Min. Score:</label>
+            <div class="flex items-center gap-1.5">
+              <input type="number" id="minScoreVal" value="75" min="0" max="100"
+                class="w-14 text-center px-2 py-1 rounded-md border border-layout-border bg-layout-surface text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+              <span class="text-p1 text-gray-500">%</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-p1 text-gray-700">
+            <input type="checkbox" id="mustPass" class="w-4 h-4 accent-brand-500 cursor-pointer" />
+            <label for="mustPass" class="cursor-pointer">Must pass all Mandatory Rules</label>
           </div>
         </div>
-        <div class="flex items-center gap-2 text-p1 text-gray-700">
-          <input type="checkbox" id="mustPass" class="w-4 h-4 accent-brand-500 cursor-pointer" />
-          <label for="mustPass">Must pass all Mandatory Rules</label>
-        </div>
       </div>
+
+      <script>
+        (function(){
+          const t = document.getElementById('aiGradingToggle');
+          const s = document.getElementById('aiGradingStatus');
+          if (!t || !s) return;
+          t.addEventListener('change', () => {
+            s.innerHTML = t.checked
+              ? '<span class="text-status-success font-semibold">On</span> — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.'
+              : '<span class="text-gray-500 font-semibold">Off</span> — Strict keyword matching only.';
+          });
+        })();
+      </script>
+
+      <script>
+        (function(){
+          const t = document.getElementById('aiGradingToggle');
+          const s = document.getElementById('aiGradingStatus');
+          if (!t || !s) return;
+          t.addEventListener('change', () => {
+            s.textContent = t.checked
+              ? 'On — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.'
+              : 'Off — Strict keyword matching only.';
+          });
+        })();
+      </script>
     </section>
 
   </div>

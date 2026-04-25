@@ -123,17 +123,20 @@
 
 /* ── RULES TABLE ── */
 .rules-table th {
-  text-align: left;
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: .6px;
   text-transform: uppercase;
   color: var(--gray-400);
-  padding: 10px 0;
+  padding: 10px 12px;
   border-bottom: 1.5px solid var(--gray-100);
 }
+.rules-table th.text-left { text-align: left; }
+.rules-table th.text-center { text-align: center; }
+.rules-table th.text-right { text-align: right; }
+
 .rules-table td {
-  padding: 12px 0;
+  padding: 12px;
   vertical-align: middle;
   border-bottom: 1px solid var(--gray-100);
   font-size: 13px;
@@ -142,12 +145,13 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12.5px;
   color: var(--gray-900);
-  width: 220px;
 }
-.rules-table td.weight-cell { width: 110px; }
-.rules-table td.pos-cell,
-.rules-table td.tol-cell,
-.rules-table td.mand-cell { width: 120px; }
+.rules-table td.text-center { text-align: center; }
+.rules-table td.text-right { text-align: right; }
+
+.rules-table td.keyword { width: 50%; }
+.rules-table td.weight-cell { width: 25%; }
+.rules-table td.mand-cell { width: 25%; }
 
 .weight-input-wrap {
   display: inline-flex;
@@ -202,21 +206,3 @@
 .toggle input:checked + .slider { background: var(--success); }
 .toggle input:checked + .slider::before { transform: translateX(16px); }
 .toggle.mandatory input:checked + .slider { background: var(--brand); }
-
-/* Tolerance select */
-.tol-select {
-  border: 1.5px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12.5px;
-  color: var(--gray-700);
-  background: var(--surface);
-  cursor: pointer;
-  outline: none;
-  transition: border-color .15s, box-shadow .15s;
-}
-.tol-select:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(79,70,229,.10);
-}
-.na-text { color: var(--gray-300); font-size: 13px; }
