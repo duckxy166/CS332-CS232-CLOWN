@@ -4,7 +4,6 @@ const API_BASE = 'https://YOUR_API_GATEWAY_URL';
 //  SLOT STATE
 const slotStates = {};
 let activeSlot = 1;
-let slotCount   = 2;
  
 function defaultState() {
   return { rules: [], minScore: 75, mustPass: false, image: null };
@@ -40,8 +39,8 @@ function renderState(idx) {
   });
   document.getElementById('minScoreVal').value  = state.minScore;
   document.getElementById('mustPass').checked   = state.mustPass;
-  document.getElementById('keyRulesLabel').textContent = `for Image ${idx}`;
   updateWeight();
+  renderSlotSelector();
   renderImage(state.image);
 }
  
@@ -63,7 +62,7 @@ function renderImage(src) {
 function buildRowHTML(rule) {
   return `
     <td class="keyword">
-      <input type="text" value="${rule.keyword}"
+      <input type="text" value="${rule.keyword.replace(/"/g,'&quot;')}"  
         placeholder="Enter keyword..."
         style="width:100%;border:none;background:transparent;outline:none;
                font-family:monospace;font-size:12.5px;color:#0f172a;"/>
@@ -80,6 +79,14 @@ function buildRowHTML(rule) {
         <span class="slider"></span>
       </label>
     </td>
+    <td class="del-cell text-center">
+      <button type="button" class="del-rule-btn"
+        style="background:none;border:none;cursor:pointer;color:#94A3B8;padding:4px 6px;border-radius:6px;transition:color .15s,background .15s;"
+        onmouseenter="this.style.color='#E11D48';this.style.background='#FFF1F2'"
+        onmouseleave="this.style.color='#94A3B8';this.style.background='none'">
+        <i class="ph ph-trash" style="font-size:15px;pointer-events:none;"></i>
+      </button>
+    </td>
   `;
 }
  
@@ -87,6 +94,29 @@ function bindRow(tr) {
   tr.querySelectorAll('input[type="number"]').forEach(i =>
     i.addEventListener('input', updateWeight)
   );
+  tr.querySelector('.keyword input')?.addEventListener('input', updateSetupProgress);
+  tr.querySelector('.del-rule-btn')?.addEventListener('click', () => {
+    tr.remove();
+    distributeWeight();
+  });
+}
+ 
+function renderSlotSelector() {
+  const container = document.getElementById('slotSelector');
+  if (!container) return;
+  container.innerHTML = '';
+  document.querySelectorAll('.tab-btn:not(.tab-add)').forEach(tab => {
+    const id = Number(tab.dataset.slot);
+    const isActive = id === activeSlot;
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.textContent = `Image ${id}`;
+    pill.className = isActive
+      ? 'text-p2 font-semibold text-white bg-brand-500 border border-brand-500 rounded-full px-2.5 py-0.5 transition-colors'
+      : 'text-p2 font-semibold text-gray-500 bg-transparent border border-layout-border rounded-full px-2.5 py-0.5 hover:border-brand-500 hover:text-brand-500 transition-colors';
+    pill.addEventListener('click', () => switchTab(id));
+    container.appendChild(pill);
+  });
 }
  
 function updateWeight() {
@@ -100,6 +130,18 @@ function updateWeight() {
   document.getElementById('weightVal').style.color       = color;
   document.getElementById('progressFill').style.width    = `${pct}%`;
   document.getElementById('progressFill').style.background = color;
+  updateSetupProgress();
+}
+ 
+function distributeWeight() {
+  const inputs = [...document.querySelectorAll('#rulesBody input[type="number"]')];
+  if (inputs.length === 0) { updateWeight(); return; }
+  const base = Math.floor(100 / inputs.length);
+  const remainder = 100 - base * inputs.length;
+  inputs.forEach((inp, i) => {
+    inp.value = i === inputs.length - 1 ? base + remainder : base;
+  });
+  updateWeight();
 }
  
 function switchTab(idx) {
@@ -132,7 +174,7 @@ function reindexTabs() {
  
   Object.keys(slotStates).forEach(k => delete slotStates[k]);
   Object.assign(slotStates, newSlotStates);
-  document.getElementById('keyRulesLabel').textContent = `for Image ${activeSlot}`;
+  renderSlotSelector();
 }
  
 //  INIT  — อ่าน slot 1 จาก static HTML แล้วแปลงเป็น state
@@ -145,10 +187,56 @@ function reindexTabs() {
     rules.push({ keyword: kw, weight: w, mandatory: man });
   });
   slotStates[1] = { rules, minScore: 75, mustPass: false, image: null };
-  slotStates[2] = defaultState();
   document.querySelectorAll('#rulesBody tr').forEach(tr => bindRow(tr));
   updateWeight();
+  renderState(1);
+  document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]')
+    ?.addEventListener('input', updateSetupProgress);
+  document.querySelector('input[type="date"]')
+    ?.addEventListener('change', updateSetupProgress);
 })();
+ 
+function updateSetupProgress() {
+  const steps = [
+    { key: 'Lab Name', done: !!document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]')?.value.trim() },
+    { key: 'Class',    done: (document.querySelectorAll('.tag-list')[0]?.querySelectorAll('.tag.selected').length || 0) > 0 },
+    { key: 'Section',  done: (document.querySelectorAll('.tag-list')[1]?.querySelectorAll('.tag.selected').length || 0) > 0 },
+    { key: 'Due Date', done: !!document.querySelector('input[type="date"]')?.value },
+    { key: 'Image',    done: Object.keys(slotStates).map(Number).every(id => slotStates[id].image) },
+    { key: 'Keywords', done: (() => {
+      const activeInputs = [...document.querySelectorAll('#rulesBody .keyword input')];
+      if (activeInputs.length === 0) return false;
+      if (!activeInputs.every(inp => inp.value.trim() !== '')) return false;
+      return Object.keys(slotStates).map(Number).every(id => {
+        if (id === activeSlot) return true;
+        return slotStates[id].rules.length > 0 && slotStates[id].rules.every(r => r.keyword.trim() !== '');
+      });
+    })() },
+    { key: 'Weight',   done: (() => {
+      let activeTotal = 0;
+      document.querySelectorAll('#rulesBody input[type="number"]').forEach(i => activeTotal += Number(i.value)||0);
+      return Object.keys(slotStates).map(Number).every(id => {
+        if (id === activeSlot) return activeTotal === 100;
+        return slotStates[id].rules.reduce((s, r) => s + (r.weight || 0), 0) === 100;
+      });
+    })() },
+  ];
+  const done  = steps.filter(s => s.done).length;
+  const pct   = Math.round((done / steps.length) * 100);
+  const color = pct === 100 ? '#059669' : '#4F46E5';
+
+  const bar    = document.getElementById('setupBar');
+  const pctEl  = document.getElementById('setupPct');
+  const stepsEl = document.getElementById('setupSteps');
+  if (bar)    { bar.style.width = `${pct}%`; bar.style.background = color; }
+  if (pctEl)  { pctEl.textContent = `${pct}%`; pctEl.style.color = color; }
+  if (stepsEl) {
+    stepsEl.innerHTML = steps.map(s =>
+      `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:${s.done ? '#10B981' : '#94A3B8'}">`+
+      `<i class="ph-fill ${s.done ? 'ph-check-circle' : 'ph-circle'}" style="font-size:12px;"></i>${s.key}</span>`
+    ).join('');
+  }
+}
  
 //  TAB EVENTS
 document.getElementById('tabBar').addEventListener('click', e => {
@@ -212,9 +300,10 @@ document.getElementById('tabBar').addEventListener('click', e => {
     switchTab(newId);
     return;
   }
- 
-});
 
+  switchTab(Number(btn.dataset.slot));
+});
+ 
 //  IMAGE UPLOAD / REMOVE
 document.getElementById('fileInput').addEventListener('change', function () {
   const file = this.files[0];
@@ -223,6 +312,7 @@ document.getElementById('fileInput').addEventListener('change', function () {
   reader.onload = e => {
     slotStates[activeSlot].image = e.target.result;
     renderImage(e.target.result);
+    updateSetupProgress();
   };
   reader.readAsDataURL(file);
   this.value = '';
@@ -236,6 +326,7 @@ rmBtn.addEventListener('click', e => {
   e.stopPropagation();
   slotStates[activeSlot].image = null;
   renderImage(null);
+  updateSetupProgress();
 });
 rmBtn.addEventListener('mouseenter', () => rmBtn.style.background = 'rgba(225,29,72,.85)');
 rmBtn.addEventListener('mouseleave', () => rmBtn.style.background = 'rgba(15,23,42,.65)');
@@ -246,13 +337,14 @@ document.getElementById('addRuleBtn').addEventListener('click', () => {
   tr.innerHTML = buildRowHTML({ keyword: '', weight: 0, mandatory: false });
   document.getElementById('rulesBody').appendChild(tr);
   bindRow(tr);
-  updateWeight();
+  distributeWeight();
 });
  
 
 //  TAG TOGGLE
 function toggleTag(el) {
   el.classList.toggle('selected');
+  updateSetupProgress();
 }
  
 
@@ -291,32 +383,45 @@ function showToast(msg, type = 'success') {
 
 //  VALIDATE
 function validateForm() {
-  const labNameInput = document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]');
-  if (!labNameInput?.value.trim())
+  if (!document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]')?.value.trim())
     return 'กรุณากรอก Lab Name';
- 
-  const selectedClasses = document.querySelectorAll('.tag-list .tag.selected');
-  if (selectedClasses.length === 0)
+
+  if ((document.querySelectorAll('.tag-list')[0]?.querySelectorAll('.tag.selected').length || 0) === 0)
     return 'กรุณาเลือก Class อย่างน้อย 1 วิชา';
- 
-  const dueDateInput = document.querySelector('input[type="date"]');
-  if (!dueDateInput?.value)
+
+  if ((document.querySelectorAll('.tag-list')[1]?.querySelectorAll('.tag.selected').length || 0) === 0)
+    return 'กรุณาเลือก Section อย่างน้อย 1 ห้อง';
+
+  if (!document.querySelector('input[type="date"]')?.value)
     return 'กรุณาเลือก Due Date';
- 
+
+  const slotIds = Object.keys(slotStates).map(Number);
+
+  for (const id of slotIds) {
+    const label = `Image ${id}`;
+    if (!slotStates[id].image)
+      return `กรุณาอัพโหลดรูป ${label}`;
+    if (slotStates[id].rules.length === 0)
+      return `กรุณาเพิ่ม Key Rule สำหรับ ${label}`;
+    if (slotStates[id].rules.some(r => !r.keyword.trim()))
+      return `กรุณาใส่ Keyword ให้ครบทุก Rule ใน ${label}`;
+    const totalW = slotStates[id].rules.reduce((s, r) => s + (r.weight || 0), 0);
+    if (totalW !== 100)
+      return `Weight รวมของ ${label} ต้องเท่ากับ 100% (ปัจจุบัน ${totalW}%)`;
+  }
+
   return null;
 }
  
 
 //  CREATE LAB  →  POST /lab-config
 async function handleCreateLab() {
+  captureState(activeSlot);
   const validationError = validateForm();
   if (validationError) {
     showToast(validationError, 'error');
     return;
   }
- 
-  // บันทึก slot ปัจจุบันก่อน
-  captureState(activeSlot);
  
   // ── ดึงค่าจาก form ──
   const labName    = document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]').value.trim();

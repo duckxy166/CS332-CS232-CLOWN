@@ -40,7 +40,7 @@ function renderZone() {
 }
 
 /* ── OpenCV Blur Detection ── */
-const BLUR_THRESHOLD = 200;
+const BLUR_THRESHOLD = 100;
 
 function computeBlurScore(imageMat) {
   var resized = new cv.Mat();

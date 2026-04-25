@@ -149,9 +149,10 @@
 .rules-table td.text-center { text-align: center; }
 .rules-table td.text-right { text-align: right; }
 
-.rules-table td.keyword { width: 50%; }
-.rules-table td.weight-cell { width: 25%; }
-.rules-table td.mand-cell { width: 25%; }
+.rules-table td.keyword { width: 45%; }
+.rules-table td.weight-cell { width: 22%; }
+.rules-table td.mand-cell { width: 22%; }
+.rules-table td.del-cell { width: 11%; }
 
 .weight-input-wrap {
   display: inline-flex;
