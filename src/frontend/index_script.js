@@ -25,9 +25,9 @@
                 // หน่วงเวลา 1 วิให้ระบบโหลดเสร็จแล้วค่อยเปลี่ยนหน้า
                 setTimeout(() => {
                     if (userRole && userRole.toLowerCase() === 'ta') {
-                        window.location.replace("indexTA.html");
+                        window.location.replace("TA/Ta_Dashboard.html");
                     } else {
-                        window.location.replace("submission.html");
+                        window.location.replace("student/student_dashboard.html");
                     }
                 }, 1000);
             } else {

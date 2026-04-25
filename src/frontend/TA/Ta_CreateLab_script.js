@@ -1,5 +1,7 @@
-//  API CONFIG  — เปลี่ยน BASE_URL ให้ตรงกับ API Gateway 
+//  API CONFIG  — เปลี่ยน BASE_URL ให้ตรงกับ API Gateway
 const API_BASE = 'https://YOUR_API_GATEWAY_URL';
+//  ใช้ mock เมื่อ API_BASE ยังเป็น placeholder (โหมด dev)
+const USE_MOCK_API = API_BASE.includes('YOUR_API_GATEWAY_URL');
  
 //  SLOT STATE
 const slotStates = {};
@@ -477,18 +479,25 @@ async function handleCreateLab() {
   btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating...';
  
   try {
-    const res  = await fetch(`${API_BASE}/lab-config`, {
-      method  : 'POST',
-      headers : { 'Content-Type': 'application/json' },
-      body    : JSON.stringify(payload)
-    });
- 
-    const data = await res.json();
- 
+    let data;
+    if (USE_MOCK_API) {
+      // ── MOCK: simulate network delay then succeed ──
+      await new Promise(r => setTimeout(r, 900));
+      const mockId = 'LAB-' + Date.now().toString(36).toUpperCase();
+      data = { success: true, labID: mockId };
+      console.info('[MOCK handleCreateLab] payload:', payload);
+    } else {
+      const res = await fetch(`${API_BASE}/lab-config`, {
+        method  : 'POST',
+        headers : { 'Content-Type': 'application/json' },
+        body    : JSON.stringify(payload)
+      });
+      data = await res.json();
+    }
+
     if (data.success) {
       showToast(`✓ สร้าง Lab "${labName}" สำเร็จ! (ID: ${data.labID})`, 'success');
-      // uncomment เพื่อ redirect หลังสำเร็จ:
-      // setTimeout(() => window.location.href = 'Ta_Dashboard.html', 1800);
+      setTimeout(() => window.location.href = 'Ta_Dashboard.html', 1500);
     } else {
       showToast(`Error: ${data.error || 'Unknown error'}`, 'error');
     }
@@ -496,7 +505,7 @@ async function handleCreateLab() {
     showToast(`Network error: ${err.message}`, 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<i class="ph ph-plus-circle"></i> Create Lab';
+    btn.innerHTML = '<i class="ph-bold ph-check-circle text-sm"></i> Create Lab';
   }
 }
  
@@ -504,3 +513,66 @@ async function handleCreateLab() {
 const _style = document.createElement('style');
 _style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
 document.head.appendChild(_style);
+
+// ════════════════════════════════════════════════════════════
+//  EDIT MODE — prefill form when ?mode=edit&lab=<id>
+//  Mock data keyed by lab id (matches TaViewSubmission LABS map)
+// ════════════════════════════════════════════════════════════
+const MOCK_LAB_DETAILS = {
+  201: { name: 'Lab 01 - CPU Registers',     subject: 'CS232', sections: ['1001'],         due: '2026-04-10', time: '23:59', desc: 'Configure registers in Verilog.' },
+  202: { name: 'Lab 02 - Pipelining',        subject: 'CS232', sections: ['1001'],         due: '2026-04-17', time: '23:59', desc: 'Implement 5-stage pipeline.' },
+  203: { name: 'Lab 03 - Cache Memory',      subject: 'CS232', sections: ['1002'],         due: '2026-04-24', time: '23:59', desc: 'Direct-mapped cache simulation.' },
+  301: { name: 'Lab 01 - Linked List',       subject: 'CS232', sections: ['1001', '1002'], due: '2026-04-12', time: '23:59', desc: 'Doubly linked list operations.' },
+  302: { name: 'Lab 02 - Binary Tree',       subject: 'CS232', sections: ['1001'],         due: '2026-04-19', time: '23:59', desc: 'BST insert/delete/search.' },
+  401: { name: 'Lab 01 - Process Scheduling',subject: 'CS232', sections: ['1001'],         due: '2026-04-05', time: '23:59', desc: 'Round-robin scheduler.' },
+  402: { name: 'Lab 02 - Threads & Mutex',   subject: 'CS232', sections: ['1002'],         due: '2026-04-12', time: '23:59', desc: 'Mutex-protected counter.' },
+};
+
+(function applyEditMode() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') !== 'edit') return;
+  const labId = params.get('lab');
+  const data = MOCK_LAB_DETAILS[labId];
+  if (!data) return;
+
+  // Header / breadcrumb
+  document.title = `ValidMate - Edit ${data.name}`;
+  const headerTitle = document.querySelector('h1.text-h3');
+  if (headerTitle) headerTitle.textContent = 'Edit Lab';
+  const headerSub = headerTitle?.nextElementSibling;
+  if (headerSub) headerSub.textContent = `Update details for ${data.name}`;
+  const breadcrumb = document.querySelector('.text-brand-800 .ph-file-code')?.parentElement;
+  if (breadcrumb) breadcrumb.lastChild.textContent = ' Edit Lab';
+
+  // Lab Name
+  const nameInput = document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]');
+  if (nameInput) nameInput.value = data.name;
+
+  // Class tags — select matching subject
+  document.querySelectorAll('.tag-list')[0]?.querySelectorAll('.tag').forEach(t => {
+    if (t.textContent.trim() === data.subject) t.classList.add('selected');
+    else t.classList.remove('selected');
+  });
+
+  // Section tags
+  document.querySelectorAll('.tag-list')[1]?.querySelectorAll('.tag').forEach(t => {
+    if (data.sections.includes(t.textContent.trim())) t.classList.add('selected');
+    else t.classList.remove('selected');
+  });
+
+  // Due date / time
+  const dateEl = document.querySelector('input[type="date"]');
+  if (dateEl) dateEl.value = data.due;
+  const timeEl = document.querySelector('input[type="time"]');
+  if (timeEl) timeEl.value = data.time;
+
+  // Description
+  const descEl = document.querySelector('textarea');
+  if (descEl) descEl.value = data.desc;
+
+  // Update Create button → Update Lab
+  const createBtn = document.getElementById('createLabBtn');
+  if (createBtn) createBtn.innerHTML = '<i class="ph-bold ph-floppy-disk text-sm"></i> Update Lab';
+
+  updateSetupProgress();
+})();

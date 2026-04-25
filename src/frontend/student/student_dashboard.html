@@ -87,6 +87,36 @@
         </div>
     </nav>
 
+    <script>
+      function toggleProfileMenu(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('profileMenu');
+        const caret = document.getElementById('profileCaret');
+        const isHidden = menu.classList.toggle('hidden');
+        if (caret) caret.classList.toggle('rotate-180', !isHidden);
+      }
+      function handleLogout() {
+        localStorage.removeItem('cognito_id_token');
+        window.location.href = '../index.html';
+      }
+      document.addEventListener('click', (e) => {
+        const menu = document.getElementById('profileMenu');
+        const btn = document.getElementById('profileBtn');
+        if (!menu || !btn) return;
+        if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+          menu.classList.add('hidden');
+          const caret = document.getElementById('profileCaret');
+          if (caret) caret.classList.remove('rotate-180');
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const menu = document.getElementById('profileMenu');
+          if (menu) menu.classList.add('hidden');
+        }
+      });
+    </script>
+
     <!-- ════════════════════════════════
        SUB-NAVBAR — Breadcrumb (matches TA pages)
   ════════════════════════════════ -->

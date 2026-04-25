@@ -101,7 +101,7 @@
             const isHidden = menu.classList.toggle('hidden');
             if (caret) caret.classList.toggle('rotate-180', !isHidden);
         }
-        function handleLogout() { window.location.href = '../index.html'; }
+        function handleLogout() { localStorage.removeItem('cognito_id_token'); window.location.href = '../index.html'; }
         document.addEventListener('click', (e) => {
             const menu = document.getElementById('profileMenu');
             const btn = document.getElementById('profileBtn');
