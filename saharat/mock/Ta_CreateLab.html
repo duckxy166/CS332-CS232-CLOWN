@@ -307,20 +307,20 @@
     <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
       class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
       <div class="text-right">
-        <div class="text-p1 font-semibold leading-none">John Doe</div>
-        <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
+        <div class="text-p1 font-semibold leading-none" id="navUserName">—</div>
+        <div class="text-p2 text-gray-400 leading-none mt-1">TA</div>
       </div>
-      <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+      <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500" id="navUserAvatar">
         JD
       </div>
       <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
     </button>
     <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
       <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
-        <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">JD</div>
+        <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100" id="menuUserAvatar">?</div>
         <div>
-          <div class="text-p1 font-bold text-brand-900 leading-tight">John Doe</div>
-          <div class="text-p2 text-gray-500 leading-tight mt-0.5">Head TA</div>
+          <div class="text-p1 font-bold text-brand-900 leading-tight" id="menuUserName">—</div>
+          <div class="text-p2 text-gray-500 leading-tight mt-0.5" id="menuUserEmail">—</div>
         </div>
       </div>
       <button type="button" onclick="handleLogout()"
@@ -340,7 +340,7 @@
     const isHidden = menu.classList.toggle('hidden');
     if (caret) caret.classList.toggle('rotate-180', !isHidden);
   }
-  function handleLogout() { window.location.href = 'index.html'; }
+  function handleLogout() { if (typeof Mock !== 'undefined') Mock.Cognito.logout(); window.location.href = 'index.html'; }
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('profileMenu');
     const btn = document.getElementById('profileBtn');
@@ -558,24 +558,62 @@
       </div>
 
       <!-- Pass Criteria -->
-      <div class="mt-4 flex flex-wrap items-center gap-5 px-4 py-3.5 bg-layout-bg border border-layout-border rounded-lg">
+      <div class="mt-4 px-5 py-4 bg-layout-bg border border-layout-border rounded-xl grid grid-cols-1 gap-4">
         <div class="flex items-center gap-1.5 text-p2 font-bold uppercase tracking-wider text-gray-600">
-          <i class="ph ph-list-checks text-brand-500 text-base"></i> Pass Criteria
+          <i class="ph-fill ph-star text-brand-500 text-base"></i> Pass Criteria
         </div>
-        <div class="flex items-center gap-2 text-p1 text-gray-700">
-          <input type="checkbox" id="minScore" checked class="w-4 h-4 accent-brand-500 cursor-pointer" />
-          <label for="minScore">Min. Score:</label>
-          <div class="flex items-center gap-1.5">
-            <input type="number" id="minScoreVal" value="75" min="0" max="100"
-              class="w-14 text-center px-2 py-1 rounded-md border border-layout-border text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
-            <span class="text-p1 text-gray-500">%</span>
+
+        <!-- AI-Powered Grading card -->
+        <div class="flex items-center justify-between gap-4 px-4 py-3.5 bg-layout-surface border border-layout-border rounded-xl hover:border-brand-500/40 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center flex-shrink-0 border border-brand-100">
+              <i class="ph-fill ph-robot text-lg"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-p1 font-bold text-brand-900">AI-Powered Grading</span>
+                <span class="text-[10px] font-bold tracking-wider text-brand-500 bg-brand-50 border border-brand-100 rounded px-1.5 py-0.5 uppercase">Beta</span>
+              </div>
+              <div id="aiGradingStatus" class="text-p2 text-gray-500 mt-0.5">
+                <span class="text-status-success font-semibold">On</span> — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.
+              </div>
+            </div>
+          </div>
+          <label class="toggle mandatory inline-flex items-center cursor-pointer flex-shrink-0">
+            <input type="checkbox" id="aiGradingToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+          <div class="flex items-center gap-2 text-p1 text-gray-700">
+            <input type="checkbox" id="minScore" checked class="w-4 h-4 accent-brand-500 cursor-pointer" />
+            <label for="minScore" class="cursor-pointer">Min. Score:</label>
+            <div class="flex items-center gap-1.5">
+              <input type="number" id="minScoreVal" value="75" min="0" max="100"
+                class="w-14 text-center px-2 py-1 rounded-md border border-layout-border bg-layout-surface text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
+              <span class="text-p1 text-gray-500">%</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-p1 text-gray-700">
+            <input type="checkbox" id="mustPass" class="w-4 h-4 accent-brand-500 cursor-pointer" />
+            <label for="mustPass" class="cursor-pointer">Must pass all Mandatory Rules</label>
           </div>
         </div>
-        <div class="flex items-center gap-2 text-p1 text-gray-700">
-          <input type="checkbox" id="mustPass" class="w-4 h-4 accent-brand-500 cursor-pointer" />
-          <label for="mustPass">Must pass all Mandatory Rules</label>
-        </div>
       </div>
+
+      <script>
+        (function(){
+          const t = document.getElementById('aiGradingToggle');
+          const s = document.getElementById('aiGradingStatus');
+          if (!t || !s) return;
+          t.addEventListener('change', () => {
+            s.innerHTML = t.checked
+              ? '<span class="text-status-success font-semibold">On</span> — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.'
+              : '<span class="text-gray-500 font-semibold">Off</span> — Strict keyword matching only.';
+          });
+        })();
+      </script>
     </section>
 
   </div>
@@ -643,9 +681,33 @@
   });
 </script>
 
+<script src="mock-aws.js"></script>
 <script>
-//  API CONFIG  — เปลี่ยน BASE_URL ให้ตรงกับ API Gateway 
-const API_BASE = 'https://YOUR_API_GATEWAY_URL';
+// ── Global error overlay so silent JS errors don't show a blank page
+window.addEventListener('error', e => {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);max-width:90%;z-index:99999;background:#FEF2F2;color:#991B1B;border:1px solid #FCA5A5;padding:12px 18px;border-radius:10px;font:600 13px Inter,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.15)';
+  div.innerHTML = '⚠ JS error: ' + (e.error?.stack || e.message);
+  document.body.appendChild(div);
+});
+
+//  AUTH GUARD — non-aggressive: only redirect if no session at all
+const _session = Mock.Cognito.current();
+if (!_session) {
+  if (confirm('You are not logged in. Go to login page?')) window.location.href = 'index.html';
+} else if (_session.user.role !== 'TA') {
+  console.warn('[Ta_CreateLab] Wrong role — expected TA, got', _session.user.role);
+  // soft warn instead of silent redirect so the user can see the page
+}
+if (_session) {
+  const u = _session.user;
+  const initials = (u.fullName || u.email || '?').trim().split(/\s+/).map(p => p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('navUserName').textContent  = u.fullName || u.email;
+  document.getElementById('navUserAvatar').textContent = initials;
+  document.getElementById('menuUserName').textContent  = u.fullName || u.email;
+  document.getElementById('menuUserEmail').textContent = u.email;
+  document.getElementById('menuUserAvatar').textContent = initials;
+}
  
 //  SLOT STATE
 const slotStates = {};
@@ -1085,38 +1147,30 @@ async function handleCreateLab() {
   const selectedSections = [...(tagLists[1]?.querySelectorAll('.tag.selected') || [])]
     .map(t => t.textContent.trim());
  
-  // ── Rules ต่อ slot ──
-  const rules = Object.entries(slotStates).map(([slot, state]) => ({
-    imageSlot : Number(slot),
-    keywords  : state.rules.map(r => ({
-      keyword   : r.keyword,
-      weight    : r.weight,
-      mandatory : r.mandatory
-    }))
+  // ── Slots (image + rules merged per slot) ──
+  const slots = Object.entries(slotStates).map(([slot, state]) => ({
+    slot  : Number(slot),
+    image : state.image,
+    rules : state.rules.map(r => ({ keyword: r.keyword, weight: r.weight, mandatory: r.mandatory }))
   }));
- 
-  // ── Images (เฉพาะ slot ที่มีรูป) ──
-  const images = Object.entries(slotStates)
-    .filter(([, state]) => state.image)
-    .map(([slot, state]) => ({ slot: Number(slot), data: state.image }));
  
   // ── Thresholds ──
   const thresholds = {
     minScore          : Number(document.getElementById('minScoreVal')?.value || 75),
-    mustPassMandatory : document.getElementById('mustPass')?.checked || false
+    mustPassMandatory : document.getElementById('mustPass')?.checked || false,
+    aiGrading         : document.getElementById('aiGradingToggle')?.checked !== false
   };
  
-  // ── Payload ──
+  // ── Payload (Mock.API.createLab schema) ──
   const payload = {
     labName,
-    subjectId   : selectedClasses[0] || '',
-    sections    : selectedSections,
-    description,
+    subjectId      : selectedClasses[0] || '',
+    sections       : selectedSections,
+    labDescription : description,
     deadline,
-    images,
-    rules,
+    slots,
     thresholds,
-    createdBy   : 'TA'
+    createdBy      : (Mock.Cognito.current()?.user.email) || 'TA'
   };
  
   // ── Loading state ──
@@ -1125,24 +1179,18 @@ async function handleCreateLab() {
   btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating...';
  
   try {
-    const res  = await fetch(`${API_BASE}/lab-config`, {
-      method  : 'POST',
-      headers : { 'Content-Type': 'application/json' },
-      body    : JSON.stringify(payload)
-    });
- 
-    const data = await res.json();
- 
+    // λ referenceUpload + λ labConfig (mocked)
+    const data = await Mock.API.createLab(payload);
     if (data.success) {
-      showToast(`✓ สร้าง Lab "${labName}" สำเร็จ! (ID: ${data.labID})`, 'success');
-      // uncomment เพื่อ redirect หลังสำเร็จ:
-      // setTimeout(() => window.location.href = 'Ta_Dashboard.html', 1800);
+      showToast(`✓ สร้าง Lab "${labName}" สำเร็จ! (ID: ${data.labId})`, 'success');
+      setTimeout(() => window.location.href = 'Ta_Dashboard.html', 1500);
     } else {
       showToast(`Error: ${data.error || 'Unknown error'}`, 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ph ph-plus-circle"></i> Create Lab';
     }
   } catch (err) {
-    showToast(`Network error: ${err.message}`, 'error');
-  } finally {
+    showToast(`Mock error: ${err.message}`, 'error');
     btn.disabled = false;
     btn.innerHTML = '<i class="ph ph-plus-circle"></i> Create Lab';
   }

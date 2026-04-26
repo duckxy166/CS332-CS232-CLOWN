@@ -214,10 +214,10 @@ body {
             <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
                 class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
                 <div class="text-right">
-                    <div class="text-p1 font-semibold leading-none">Alex Student</div>
-                    <div class="text-p2 text-gray-400 leading-none mt-1">Undergraduate</div>
+                    <div class="text-p1 font-semibold leading-none" id="navUserName">—</div>
+                    <div class="text-p2 text-gray-400 leading-none mt-1">Student</div>
                 </div>
-                <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+                <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500" id="navUserAvatar">
                     AS
                 </div>
                 <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
@@ -225,11 +225,11 @@ body {
             <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
                 <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
                     <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
-                        AS
+                        <span id="menuUserAvatar">?</span>
                     </div>
                     <div>
-                        <div class="text-p1 font-bold text-brand-900 leading-tight">Alex Student</div>
-                        <div class="text-p2 text-gray-500 leading-tight mt-0.5">Undergraduate</div>
+                        <div class="text-p1 font-bold text-brand-900 leading-tight" id="menuUserName">—</div>
+                        <div class="text-p2 text-gray-500 leading-tight mt-0.5" id="menuUserEmail">—</div>
                     </div>
                 </div>
                 <button type="button" onclick="handleLogout()"
@@ -249,7 +249,7 @@ body {
             const isHidden = menu.classList.toggle('hidden');
             if (caret) caret.classList.toggle('rotate-180', !isHidden);
         }
-        function handleLogout() { window.location.href = 'index.html'; }
+        function handleLogout() { Mock.Cognito.logout(); window.location.href = 'index.html'; }
         document.addEventListener('click', (e) => {
             const menu = document.getElementById('profileMenu');
             const btn = document.getElementById('profileBtn');
@@ -323,52 +323,91 @@ body {
     </div>
     </main>
 
+    <script src="mock-aws.js"></script>
     <script>
-// ข้อมูลจำลอง - ในอนาคตก้อนนี้จะถูกดึงมาจาก Database ผ่าน Backend API
-let labs = [
+// ── Auth guard ───────────────────────────────────────
+const _session = Mock.Cognito.current();
+if (!_session || _session.user.role !== 'STUDENT') window.location.href = 'index.html';
+if (_session) {
+  const u = _session.user;
+  const initials = (u.fullName || u.email || '?').trim().split(/\s+/).map(p => p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('navUserName').textContent  = u.fullName || u.email;
+  document.getElementById('navUserAvatar').textContent = initials;
+  document.getElementById('menuUserName').textContent  = u.fullName || u.email;
+  document.getElementById('menuUserEmail').textContent = u.email;
+  document.getElementById('menuUserAvatar').textContent = initials;
+}
+
+// ── Build student-facing labs list from real DynamoDB LabConfig ──
+function buildLabsFromMock() {
+  const subjectId = new URLSearchParams(window.location.search).get('subjectId');
+  const myEmail   = _session.user.email;
+  const allLabs   = Mock.API.listLabs();
+  const mySubs    = Mock.API.listMySubmissions(myEmail);
+  return allLabs
+    .filter(lab => !subjectId || lab.subjectId === subjectId)
+    .map(lab => {
+      const sub = mySubs.find(s => s.labId === lab.id);
+      const status = !sub                       ? 'NOT_SUBMITTED'
+                   : sub.status === 'pending'    ? 'PENDING'
+                   : sub.status === 'passed'     ? 'PASSED'
+                   : /* 'rejected' */              'FAILED';
+      const dueIso = lab.deadline;
+      const due = dueIso ? new Date(dueIso) : null;
+      const meta = status === 'PASSED'        ? `Graded ${sub?.checkedAt ? new Date(sub.checkedAt).toLocaleDateString('en-US', { month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}`
+                : status === 'FAILED'         ? 'Upload Failed - System Error'
+                : status === 'PENDING'        ? `Submitted ${sub?.submittedAt ? new Date(sub.submittedAt).toLocaleDateString('en-US', { month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}`
+                : due                          ? `DUE ${due.toLocaleDateString('en-US', { month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }).toUpperCase()}`
+                                                : 'NO DEADLINE';
+      const metaIcon = status === 'PASSED' ? 'ph-check-circle'
+                    : status === 'FAILED' ? 'ph-warning-octagon'
+                    : status === 'PENDING'? 'ph-clock'
+                                            : 'ph-calendar-blank';
+      return {
+        id: lab.id,
+        title: lab.labName,
+        desc: lab.labDescription || '',
+        status,
+        score: sub?.score ?? null,
+        submissionId: sub?.id ?? null,
+        meta,
+        metaIcon
+      };
+    });
+}
+
+let labs = buildLabsFromMock();
+let searchTerm = '';
+let currentFilter = 'ALL';
+
+// ── Update course header (CS 232 / Computer Architecture / Lab count) ──
+const SUBJECT_TITLES = {
+  'CS 232': 'Computer Architecture',
+  'CS 251': 'Data Structures',
+  'CS 271': 'Operating Systems'
+};
+function updateCourseHeader() {
+  const subjectId = new URLSearchParams(window.location.search).get('subjectId') || '';
+  const codeEl    = document.getElementById('courseCode');
+  const nameEl    = document.getElementById('courseName');
+  const countEl   = document.getElementById('labCount');
+  const sectionEl = document.getElementById('courseSection');
+  if (codeEl && subjectId)  codeEl.textContent = subjectId;
+  if (nameEl && subjectId)  nameEl.textContent = SUBJECT_TITLES[subjectId] || subjectId;
+  if (countEl)              countEl.textContent = labs.length;
+  // Section: use the first lab's first section (if any)
+  const firstSection = labs[0]?.sections?.[0] || '650001';
+  if (sectionEl) sectionEl.textContent = firstSection;
+}
+
+// (Original demo data, replaced — keep for reference)
+const _demoLabs = [
     { id: 5, title: "Lab 05 - CPU Pipelining", desc: "Upload AWS EC2 instance screenshots", status: "NOT_SUBMITTED", score: null, meta: "DUE TOMORROW, 11:59 PM", metaIcon: "ph-calendar-blank" },
     { id: 4, title: "Lab 04 - Cache Memory Design", desc: "S3 bucket configuration and deployment", status: "PENDING", score: null, meta: "Submitted Oct 12, 2:30 PM", metaIcon: "ph-clock" },
     { id: 3, title: "Lab 03 - ALU Logic Verification", desc: "Lambda function trigger validation", status: "FAILED", score: null, meta: "Upload Failed - System Error", metaIcon: "ph-warning-octagon" },
     { id: 2, title: "Lab 02 - Instruction Set Architecture", desc: "IAM Role policy creation", status: "PASSED", score: 100, meta: "Graded Oct 05, 10:15 AM", metaIcon: "ph-check-circle" },
     { id: 1, title: "Lab 01 - Intro to Verilog", desc: "Basic cloud environment setup", status: "PASSED", score: 100, meta: "Graded Sep 28, 09:00 AM", metaIcon: "ph-check-circle" }
 ];
-
-let currentFilter = 'ALL';
-let searchTerm = '';
-
-const COURSE_META = {
-    'CS 232': { name: 'Computer Architecture', section: '650001' },
-    'CS 251': { name: 'Data Structures', section: '660001' },
-    'CS 271': { name: 'Operating Systems', section: '670001' },
-};
-
-function getCurrentSubjectId() {
-    return new URLSearchParams(window.location.search).get('subjectId') || 'CS 232';
-}
-
-function updateCourseHeader() {
-    const subjectId = getCurrentSubjectId();
-    const meta = COURSE_META[subjectId] || { name: subjectId, section: '650001' };
-    const completedCount = labs.filter(lab => lab.status === 'PASSED' || lab.status === 'FAILED').length;
-    const totalCount = 6;
-    const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
-
-    const courseCode = document.getElementById('courseCode');
-    const breadcrumbCourse = document.getElementById('breadcrumbCourse');
-    const courseName = document.getElementById('courseName');
-    const courseSection = document.getElementById('courseSection');
-    const progressText = document.getElementById('progressText');
-    const progressFill = document.getElementById('progressFill');
-    const labCount = document.getElementById('labCount');
-
-    if (courseCode) courseCode.textContent = subjectId;
-    if (breadcrumbCourse) breadcrumbCourse.textContent = subjectId;
-    if (courseName) courseName.textContent = meta.name;
-    if (courseSection) courseSection.textContent = meta.section;
-    if (progressText) progressText.textContent = `${completedCount}/${totalCount}`;
-    if (progressFill) progressFill.style.width = `${progressPct}%`;
-    if (labCount) labCount.textContent = String(totalCount);
-}
 
 /**
  * ฟังก์ชันหลักในการวาดรายการ Lab บนหน้าจอ
@@ -487,6 +526,17 @@ function filterLabs(type) {
  * ค้นหาตัวที่เป็น PENDING และเปลี่ยนสถานะหลังจาก 5 วินาที
  */
 function simulateBackendCheck() {
+    setInterval(() => {
+        const next = buildLabsFromMock();
+        if (JSON.stringify(next) !== JSON.stringify(labs)) {
+            labs = next;
+            updateCourseHeader();
+            renderLabs();
+        }
+    }, 2000);
+}
+
+function _UNUSED_legacySimulator() {
     setInterval(() => {
         let hasChange = false;
         labs = labs.map(lab => {

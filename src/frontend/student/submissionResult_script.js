@@ -5,7 +5,7 @@ function updateResultView(state) {
         view.classList.add('hidden');
     });
 
-    // แสดงหน้าที่ต้องการ (processing, passed, rejected)
+    // แสดงหน้าที่ต้องการ (processing, passed, failed)
     const target = document.getElementById('state-' + state);
     if (target) {
         target.classList.remove('hidden');
@@ -15,7 +15,7 @@ function updateResultView(state) {
 function getResultState() {
     const params = new URLSearchParams(window.location.search);
     const state = params.get('state');
-    return ['processing', 'passed', 'rejected'].includes(state) ? state : null;
+    return ['processing', 'passed', 'failed'].includes(state) ? state : null;
 }
 
 /**

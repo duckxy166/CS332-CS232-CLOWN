@@ -2,7 +2,7 @@
 let labs = [
     { id: 5, title: "Lab 05 - CPU Pipelining", desc: "Upload AWS EC2 instance screenshots", status: "NOT_SUBMITTED", score: null, meta: "DUE TOMORROW, 11:59 PM", metaIcon: "ph-calendar-blank" },
     { id: 4, title: "Lab 04 - Cache Memory Design", desc: "S3 bucket configuration and deployment", status: "PENDING", score: null, meta: "Submitted Oct 12, 2:30 PM", metaIcon: "ph-clock" },
-    { id: 3, title: "Lab 03 - ALU Logic Verification", desc: "Lambda function trigger validation", status: "REJECTED", score: null, meta: "Failed 1 Mandatory Rule", metaIcon: null },
+    { id: 3, title: "Lab 03 - ALU Logic Verification", desc: "Lambda function trigger validation", status: "FAILED", score: null, meta: "Upload Failed - System Error", metaIcon: "ph-warning-octagon" },
     { id: 2, title: "Lab 02 - Instruction Set Architecture", desc: "IAM Role policy creation", status: "PASSED", score: 100, meta: "Graded Oct 05, 10:15 AM", metaIcon: "ph-check-circle" },
     { id: 1, title: "Lab 01 - Intro to Verilog", desc: "Basic cloud environment setup", status: "PASSED", score: 100, meta: "Graded Sep 28, 09:00 AM", metaIcon: "ph-check-circle" }
 ];
@@ -23,7 +23,7 @@ function getCurrentSubjectId() {
 function updateCourseHeader() {
     const subjectId = getCurrentSubjectId();
     const meta = COURSE_META[subjectId] || { name: subjectId, section: '650001' };
-    const completedCount = labs.filter(lab => lab.status === 'PASSED' || lab.status === 'REJECTED').length;
+    const completedCount = labs.filter(lab => lab.status === 'PASSED' || lab.status === 'FAILED').length;
     const totalCount = 6;
     const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
 
@@ -59,7 +59,7 @@ function renderLabs() {
         if (currentFilter === 'PENDING') {
             matchesFilter = (lab.status === 'PENDING');
         } else if (currentFilter === 'COMPLETED') {
-            matchesFilter = (lab.status === 'PASSED' || lab.status === 'REJECTED');
+            matchesFilter = (lab.status === 'PASSED' || lab.status === 'FAILED');
         }
         return matchesSearch && matchesFilter;
     });
@@ -74,15 +74,15 @@ function renderLabs() {
     }
 
     container.innerHTML = filteredLabs.map(lab => {
-        const isRejected = lab.status === 'REJECTED';
-        const metaColor = isRejected ? 'text-status-error font-bold' : 'text-gray-400';
+        const isFailed = lab.status === 'FAILED';
+        const metaColor = isFailed ? 'text-status-error font-bold' : 'text-gray-400';
         const metaIcon = lab.metaIcon ? `<i class="ph ${lab.metaIcon} text-sm"></i>` : '';
         return `
-        <div class="bg-layout-surface p-5 rounded-xl border ${isRejected ? 'border-status-error border-l-4' : 'border-layout-border'} shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md">
+        <div class="bg-layout-surface p-5 rounded-xl border ${isFailed ? 'border-status-error border-l-4' : 'border-layout-border'} shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 transition-all hover:shadow-md">
             <div class="flex items-center gap-4 w-full">
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl
                     ${lab.status === 'PASSED' ? 'bg-status-successBg text-status-success' :
-                      lab.status === 'REJECTED' ? 'bg-status-errorBg text-status-error' :
+                      lab.status === 'FAILED' ? 'bg-status-errorBg text-status-error' :
                       lab.status === 'PENDING' ? 'bg-status-warningBg text-status-warning' : 'bg-layout-bg text-gray-400'}">
                     <i class="ph-fill ph-file-text"></i>
                 </div>
@@ -113,12 +113,12 @@ function renderStatusUI(lab) {
                 <span class="text-p2 font-bold text-status-success bg-status-successBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Passed</span>
                 <button type="button" onclick="window.location.href='submissionResult.html?state=passed'" class="px-6 py-2 border border-layout-border rounded-lg text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors whitespace-nowrap">View Results</button>
             `;
-        case 'REJECTED':
+        case 'FAILED':
             return `
                 <span class="flex items-center gap-1 text-p2 font-bold text-status-error bg-status-errorBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">
-                    <i class="ph-fill ph-x-circle text-sm"></i> Rejected
+                    <i class="ph-fill ph-warning-octagon text-sm"></i> Failed
                 </span>
-                <button type="button" onclick="window.location.href='submissionResult.html?state=rejected'" class="px-6 py-2 border border-red-200 rounded-lg text-btn text-status-error hover:bg-red-50 transition-colors whitespace-nowrap">View Feedback</button>
+                <button type="button" onclick="window.location.href='submissionResult.html?state=failed'" class="px-6 py-2 border border-red-200 rounded-lg text-btn text-status-error hover:bg-red-50 transition-colors whitespace-nowrap">View Details</button>
             `;
         case 'PENDING':
             return `
@@ -169,7 +169,7 @@ function simulateBackendCheck() {
                 const isPassed = Math.random() > 0.2; // โอกาสผ่าน 80%
                 return {
                     ...lab,
-                    status: isPassed ? 'PASSED' : 'REJECTED',
+                    status: isPassed ? 'PASSED' : 'FAILED',
                     score: isPassed ? Math.floor(Math.random() * (100 - 80 + 1)) + 80 : null
                 };
             }

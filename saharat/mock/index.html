@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidMate - Sign In (Mock)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
+            fontSize: {
+              'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+              'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+              'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+              'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+              'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
+            },
+            colors: {
+              brand:  { 50:'#F0F4FA', 100:'#E0E9F4', 500:'#4F46E5', 800:'#1E293B', 900:'#0F172A' },
+              layout: { bg:'#F8FAFC', surface:'#FFFFFF', border:'#E2E8F0' },
+              status: { success:'#10B981', successBg:'#ECFDF5', error:'#EF4444', errorBg:'#FEF2F2', warning:'#F59E0B' }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body { background: radial-gradient(1200px 600px at 50% -10%, #EEF2FF 0%, transparent 60%), #F8FAFC; }
+    </style>
+</head>
+<body class="font-sans text-brand-800 m-0 p-0 min-h-screen grid place-items-center">
+
+<div class="w-full max-w-md mx-auto px-6">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <div class="w-14 h-14 mx-auto rounded-2xl bg-brand-500 text-white grid place-items-center mb-4 shadow-lg">
+      <i class="ph-fill ph-cloud-check text-2xl"></i>
+    </div>
+    <h1 class="text-h3 font-bold text-brand-900">ValidMate</h1>
+    <p class="text-p2 text-gray-500 mt-1">AWS Serverless Mock — Sign in to continue</p>
+  </div>
+
+  <!-- Card -->
+  <div class="bg-layout-surface border border-layout-border rounded-2xl shadow-sm p-7">
+    <form onsubmit="return handleAuth(event)">
+      <div class="mb-4">
+        <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Email</label>
+        <input type="email" id="email" required placeholder="ta@example.com"
+          class="w-full px-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+      </div>
+
+      <div class="mb-5">
+        <label class="block text-p2 font-bold uppercase tracking-wider text-gray-600 mb-2">Password</label>
+        <input type="password" id="password" required placeholder="password"
+          class="w-full px-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+      </div>
+
+      <button type="submit" class="w-full bg-brand-500 hover:bg-indigo-600 text-white px-5 py-3 rounded-lg text-btn flex items-center justify-center gap-2 shadow-sm transition-colors">
+        <i class="ph-bold ph-sign-in"></i>
+        <span id="submitLabel">Sign In</span>
+      </button>
+    </form>
+
+    <div class="mt-5 p-3 bg-layout-bg border border-layout-border rounded-lg">
+      <div class="text-p2 font-bold uppercase tracking-wider text-gray-500 mb-1">Demo accounts</div>
+      <div class="text-p2 text-gray-600 grid gap-1">
+        <div class="flex items-center gap-2"><i class="ph ph-chalkboard-teacher text-brand-500"></i> <code class="bg-white border border-layout-border px-1.5 py-0.5 rounded text-[11px]">ta@example.com</code> · TA</div>
+        <div class="flex items-center gap-2"><i class="ph ph-student text-brand-500"></i> <code class="bg-white border border-layout-border px-1.5 py-0.5 rounded text-[11px]">student@example.com</code> · Student</div>
+        <div class="text-[11px] text-gray-400 mt-1">Password for both: <code class="bg-white border border-layout-border px-1 rounded">password</code></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-center text-p2 text-gray-400 mt-6">
+    <a href="README.md" target="_blank" class="hover:text-brand-500 transition-colors"><i class="ph ph-book-open"></i> Architecture &amp; flow diagram</a>
+  </p>
+</div>
+
+<style>
+  .role-btn { background: transparent; border: 1px solid transparent; color: #64748B; cursor: pointer; }
+  .role-btn.active { background: #FFFFFF; color: #4F46E5; box-shadow: 0 1px 3px rgba(15,23,42,0.06); }
+</style>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed bottom-7 right-7 px-5 py-3 rounded-lg text-white font-semibold shadow-lg flex items-center gap-2 z-50"></div>
+
+<script src="mock-aws.js"></script>
+<script>
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.className = `fixed bottom-7 right-7 px-5 py-3 rounded-lg text-white font-semibold shadow-lg flex items-center gap-2 z-50 ${type === 'success' ? 'bg-status-success' : 'bg-status-error'}`;
+    t.innerHTML = `<i class="ph-fill ${type === 'success' ? 'ph-check-circle' : 'ph-x-circle'}"></i> ${msg}`;
+    setTimeout(() => t.classList.add('hidden'), 2800);
+  }
+
+  function handleAuth(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const pw    = document.getElementById('password').value;
+    try {
+      const session = Mock.Cognito.login(email, pw);
+      const target = session.user.role === 'TA' ? 'Ta_Dashboard.html' : 'student_dashboard.html';
+      setTimeout(() => window.location.href = target, 350);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+    return false;
+  }
+
+  // Wait for boot to seed users, then check auto-login
+  window.addEventListener('DOMContentLoaded', () => {
+    const s = Mock.Cognito.current();
+    if (s) window.location.href = s.user.role === 'TA' ? 'Ta_Dashboard.html' : 'student_dashboard.html';
+  });
+</script>
+</body>
+</html>

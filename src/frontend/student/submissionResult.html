@@ -166,25 +166,25 @@
           </div>
           <h2 class="text-[28px] font-bold text-brand-900 mb-3">Submission Passed</h2>
           <p class="text-slate-500 text-[15px] max-w-md leading-relaxed">
-            Your submission has been evaluated and successfully met all criteria. Great work!
+            ไฟล์ของคุณถูกบันทึกเข้าระบบ (S3) เรียบร้อยแล้ว<br>รอการตรวจประเมินจาก TA
           </p>
           <button class="btn-dark mt-10" onclick="window.location.href='student_Lablist.html'">
             <i class="ph ph-list-bullets"></i> Back to Lab List
           </button>
         </div>
 
-        <div id="state-rejected" class="status-view hidden flex flex-col items-center">
+        <div id="state-failed" class="status-view hidden flex flex-col items-center">
           <div class="top-accent bg-rose-500"></div>
           <div class="icon-circle bg-rose-50 text-rose-500 mb-8">
-            <i class="ph-fill ph-x-circle"></i>
+            <i class="ph-fill ph-warning-octagon"></i>
           </div>
-          <h2 class="text-[28px] font-bold text-brand-900 mb-3">Submission Rejected</h2>
+          <h2 class="text-[28px] font-bold text-brand-900 mb-3">System Error</h2>
           <p class="text-slate-500 text-[15px] max-w-md leading-relaxed">
-            Your submission has been evaluated and did not meet the required criteria for this lab. Please review the instructions and try again.
+            ระบบเกิดข้อผิดพลาดระหว่างการอัพโหลด<br>ไฟล์ของคุณยังไม่ถูกบันทึก กรุณาลองส่งใหม่อีกครั้ง
           </p>
           <div class="flex gap-3 mt-10 w-full justify-center">
             <button class="btn-dark" onclick="window.location.href='submissionPage.html'">
-              <i class="ph ph-arrows-counter-clockwise"></i> Re-submit Lab
+              <i class="ph ph-arrows-counter-clockwise"></i> Try Again
             </button>
             <button class="btn-outline" onclick="window.location.href='student_Lablist.html'">
               Back to Lab List

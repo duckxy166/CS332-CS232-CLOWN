@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidMate - Lab List</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'Sarabun', 'sans-serif'],
+            },
+            fontSize: {
+              'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+              'h1': ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h2': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+              'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+              'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+              'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+              'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
+            },
+            colors: {
+              brand: {
+                50: '#F0F4FA',
+                100: '#E0E9F4',
+                500: '#4F46E5',
+                800: '#1E293B',
+                900: '#0F172A',
+              },
+              layout: {
+                bg: '#F8FAFC',
+                surface: '#FFFFFF',
+                border: '#E2E8F0',
+              },
+              status: {
+                success: '#10B981',
+                error: '#EF4444',
+                warning: '#F59E0B',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+/* TaLabList — Minimal overrides (all layout handled by Tailwind) */
+
+/* Reset */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Remove default button/anchor styling */
+button { font-family: inherit; cursor: pointer; }
+a { text-decoration: none; color: inherit; }
+</style>
+</head>
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
+
+    <!-- ════════════════════════════════
+         TOP NAVBAR  (identical to Dashboard)
+    ════════════════════════════════ -->
+    <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
+            <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+            <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+        </div>
+
+        <!-- Nav Links -->
+        <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
+            <button onclick="window.location.href='Ta_Dashboard.html'"
+                class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+                <i class="ph ph-squares-four text-sm"></i> Dashboard
+            </button>
+            <button onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+                <i class="ph ph-users text-sm"></i> Students
+            </button>
+        </div>
+
+        <!-- User Profile with Dropdown -->
+        <div class="relative h-full">
+            <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+                class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+                <div class="text-right">
+                    <div class="text-p1 font-semibold leading-none" id="navUserName">—</div>
+                    <div class="text-p2 text-gray-400 leading-none mt-1">TA</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500" id="navUserAvatar">
+                    JD
+                </div>
+                <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+            </button>
+            <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+                <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+                    <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+                        <span id="menuUserAvatar">?</span>
+                    </div>
+                    <div>
+                        <div class="text-p1 font-bold text-brand-900 leading-tight" id="menuUserName">—</div>
+                        <div class="text-p2 text-gray-500 leading-tight mt-0.5" id="menuUserEmail">—</div>
+                    </div>
+                </div>
+                <button type="button" onclick="handleLogout()"
+                    class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+                    <i class="ph ph-sign-out text-lg"></i>
+                    <span class="text-left">Sign Out</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function toggleProfileMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('profileMenu');
+            const caret = document.getElementById('profileCaret');
+            const isHidden = menu.classList.toggle('hidden');
+            if (caret) caret.classList.toggle('rotate-180', !isHidden);
+        }
+        function handleLogout() { if (typeof Mock !== 'undefined') Mock.Cognito.logout(); window.location.href = 'index.html'; }
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const btn = document.getElementById('profileBtn');
+            if (!menu || !btn) return;
+            if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const menu = document.getElementById('profileMenu');
+                if (menu) menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+    </script>
+
+    <!-- ════════════════════════════════
+         SUB-NAVBAR — Breadcrumb
+    ════════════════════════════════ -->
+    <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+        <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
+            <button onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+                <i class="ph-fill ph-squares-four text-sm"></i> Overview
+            </button>
+            <i class="ph ph-caret-right text-xs text-gray-400"></i>
+            <span class="flex items-center gap-1 text-brand-800">
+                <i class="ph-fill ph-stack text-sm text-brand-500"></i> Lab List
+            </span>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         MAIN CONTENT
+    ════════════════════════════════ -->
+    <main class="p-6 md:p-8 lg:p-10 overflow-y-auto w-full">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 gap-6 auto-rows-min">
+
+            <!-- Header -->
+            <div class="grid grid-cols-[1fr_auto] items-end gap-4">
+                <div>
+                    <a href="Ta_Dashboard.html" class="flex items-center gap-1 text-p2 font-bold text-gray-400 hover:text-brand-500 no-underline uppercase mb-4 transition-colors">
+                        <i class="ph ph-arrow-left text-sm"></i> Back to Dashboard
+                    </a>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="ph ph-folder-open"></i>
+                        </div>
+                        <div>
+                            <h1 id="courseCode" class="text-h3 font-bold text-brand-800">CS232</h1>
+                            <p class="text-p1 text-gray-500"><span id="courseName">Computer Architecture</span> &bull; Manage active labs</p>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="window.location.href='Ta_CreateLab.html'" class="bg-brand-500 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors cursor-pointer">
+                    <i class="ph-bold ph-plus-circle text-sm"></i> Create New Lab
+                </button>
+            </div>
+
+            <!-- Filter & Search -->
+            <div class="grid grid-cols-[1fr_auto] gap-4 items-center">
+                <div class="relative">
+                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                    <input type="text" id="labSearch" placeholder="Search labs by name or section..." oninput="searchLabs()"
+                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-layout-border bg-layout-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-p1 shadow-sm">
+                </div>
+                <p class="text-p2 font-bold text-gray-400 uppercase tracking-widest">
+                    Total Labs: <span id="count-num" class="text-brand-500 text-h4 ml-1">0</span>
+                </p>
+            </div>
+
+            <!-- Lab Cards -->
+            <div id="labList" class="grid grid-cols-1 gap-4"></div>
+
+        </div>
+    </main>
+
+    <script src="mock-aws.js"></script>
+    <script>
+/* ── Auth guard ── */
+const session = Mock.Cognito.current();
+if (!session || session.user.role !== 'TA') window.location.href = 'index.html';
+if (session) {
+  const u = session.user;
+  const initials = (u.fullName || u.email || '?').trim().split(/\s+/).map(p => p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('navUserName').textContent  = u.fullName || u.email;
+  document.getElementById('navUserAvatar').textContent = initials;
+  document.getElementById('menuUserName').textContent  = u.fullName || u.email;
+  document.getElementById('menuUserEmail').textContent = u.email;
+  document.getElementById('menuUserAvatar').textContent = initials;
+}
+
+/* ── Course catalogue (display name per subjectId) ── */
+const COURSE_NAMES = {
+  'CS 232': 'Computer Architecture',
+  'CS 251': 'Data Structures',
+  'CS 271': 'Operating Systems'
+};
+
+function getCurrentCourse() {
+    const code = new URLSearchParams(window.location.search).get('course') || 'CS 232';
+    return { code, name: COURSE_NAMES[code] || code };
+}
+
+const currentCourse = getCurrentCourse();
+
+/* ── Build labs list from real DynamoDB LabConfig + Submission ── */
+function buildLabs() {
+  const allLabs = Mock.API.listLabs().filter(l => l.subjectId === currentCourse.code);
+  return allLabs.map(lab => {
+    const subs = Mock.DB.scan('Submission', s => s.labId === lab.id);
+    const submitted = subs.filter(s => s.status !== 'pending').length;
+    return {
+      id: lab.id,
+      name: lab.labName,
+      section: (lab.sections || []).join(', ') || '—',
+      total: subs.length,
+      submitted,
+      deadline: lab.deadline ? new Date(lab.deadline).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+    };
+  });
+}
+
+let labs = buildLabs();
+
+function renderLabs(data = labs) {
+    const list = document.getElementById('labList');
+    const count = document.getElementById('count-num');
+    const header = document.getElementById('course-header');
+    if(!list) return;
+
+    count.innerText = data.length;
+    list.innerHTML = '';
+
+    data.forEach(lab => {
+        const pending = lab.total - lab.submitted;
+        const card = document.createElement('div');
+        card.className = 'bg-layout-surface border border-layout-border rounded-xl px-6 py-5 grid grid-cols-[44px_1fr_80px_100px_auto_40px] items-center gap-6 hover:border-brand-500 hover:shadow-md transition-all cursor-pointer';
+        card.onclick = () => openLab(lab.id);
+
+        card.innerHTML = `
+            <div class="w-11 h-11 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="ph ph-file-text text-xl text-gray-400"></i>
+            </div>
+            <div>
+                <h4 class="text-h4 font-bold text-brand-800 mb-1">${lab.name}</h4>
+                <span class="inline-flex items-center gap-1.5 text-p2 font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md">
+                    <i class="ph ph-users-three text-xs"></i> Section ${lab.section}
+                </span>
+            </div>
+            <div class="text-center">
+                <p class="text-p2 font-bold text-gray-300 uppercase tracking-wider mb-1">Pending</p>
+                <p class="text-2xl font-bold text-status-warning">${pending}</p>
+            </div>
+            <div class="text-center">
+                <p class="text-p2 font-bold text-gray-300 uppercase tracking-wider mb-1">Submitted</p>
+                <p class="text-2xl font-bold text-brand-800">${lab.submitted}<span class="text-base text-gray-300">/${lab.total}</span></p>
+            </div>
+            <button class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-layout-border bg-layout-surface text-p1 font-bold hover:border-brand-500 hover:text-brand-500 transition-colors shadow-sm" onclick="event.stopPropagation(); downloadLabSubmissions(${lab.id})">
+                <i class="ph ph-download-simple text-sm"></i> Download All
+            </button>
+            <div class="relative">
+                <button class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-300 hover:text-brand-800 hover:bg-gray-100 transition-colors" onclick="event.stopPropagation(); toggleMenu(event, ${lab.id})">
+                    <i class="ph-fill ph-dots-three-outline-vertical text-lg"></i>
+                </button>
+                <div id="menu-${lab.id}" class="absolute right-0 top-full mt-1 bg-layout-surface border border-layout-border rounded-xl shadow-xl z-50 min-w-[160px] overflow-hidden hidden">
+                    <button class="w-full text-left px-4 py-3 text-p1 font-semibold text-status-error flex items-center gap-2 hover:bg-red-50 transition-colors" onclick="event.stopPropagation(); removeLab(${lab.id})">
+                        <i class="ph ph-trash text-sm"></i> Delete Lab
+                    </button>
+                </div>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+function toggleMenu(e, id) {
+    e.stopPropagation();
+    const menu = document.getElementById(`menu-${id}`);
+    document.querySelectorAll('[id^="menu-"]').forEach(m => {
+        if(m.id !== `menu-${id}`) m.classList.add('hidden');
+    });
+    menu.classList.toggle('hidden');
+}
+
+function removeLab(id) {
+    if(confirm('Are you sure you want to delete this lab?')) {
+        Mock.API.deleteLab(id);
+        labs = buildLabs();
+        renderLabs();
+    }
+}
+
+function searchLabs() {
+    const q = document.getElementById('labSearch').value.toLowerCase();
+    const filtered = labs.filter(l => l.name.toLowerCase().includes(q) || l.section.includes(q));
+    renderLabs(filtered);
+}
+
+function downloadLabSubmissions(id) {
+    const lab = labs.find(l => l.id === id);
+    if (!lab) return;
+
+    const rows = [
+        ['Lab', 'Section', 'Submitted', 'Total', 'Pending', 'Deadline'],
+        [lab.name, lab.section, lab.submitted, lab.total, lab.total - lab.submitted, lab.deadline]
+    ];
+
+    const csv = rows
+        .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${lab.name.replace(/[^a-z0-9]+/gi, '_').toLowerCase()}_submissions.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// คลิกที่อื่นเพื่อปิดเมนู
+window.onclick = () => document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add('hidden'));
+
+/* ── Navigate to Lab Report (TaViewSubmission.html) ── */
+function openLab(id) {
+    const params = new URLSearchParams();
+    params.set('course', currentCourse.code);
+    params.set('lab', id);
+    window.location.href = `TaViewSubmission.html?${params.toString()}`;
+}
+
+/* ── Update header with current course info ── */
+function updateCourseHeader() {
+    const codeEl = document.getElementById('courseCode');
+    const nameEl = document.getElementById('courseName');
+    if (codeEl) codeEl.innerText = currentCourse.code;
+    if (nameEl) nameEl.innerText = currentCourse.name;
+    document.title = `ValidMate - ${currentCourse.code} Lab List`;
+}
+
+// โหลดครั้งแรก
+document.addEventListener('DOMContentLoaded', () => {
+    updateCourseHeader();
+    renderLabs();
+});
+
+/* ── Live refresh while pending submissions exist ── */
+setInterval(() => {
+  const next = buildLabs();
+  if (JSON.stringify(next) !== JSON.stringify(labs)) {
+    labs = next;
+    const q = document.getElementById('labSearch')?.value || '';
+    if (q) searchLabs(); else renderLabs();
+  }
+}, 2000);
+</script>
+</body>
+</html>

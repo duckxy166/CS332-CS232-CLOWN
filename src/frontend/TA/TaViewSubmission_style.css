@@ -313,3 +313,114 @@ td {
 
 /* Row hover */
 /* row hover handled per-status above */
+
+/* ── TA DECISION FOOTER ── */
+.ta-decision-footer {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ta-decision-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ta-decision-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #EEF2FF;
+  border: 1px solid #E0E7FF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4F46E5;
+  font-size: 13px;
+}
+
+.ta-decision-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.ta-decision-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ta-state-passed   { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+.ta-state-rejected { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.ta-state-pending  { background: #FFFBEB; color: #D97706; border: 1px solid #FCD34D; }
+
+.ta-decision-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.ta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid;
+  background: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ta-btn-pass {
+  border-color: #A7F3D0;
+  color: #059669;
+}
+.ta-btn-pass:hover {
+  background: #ECFDF5;
+  border-color: #10B981;
+}
+.ta-btn-pass.active {
+  background: #10B981;
+  border-color: #10B981;
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+.ta-btn-reject {
+  border-color: #FECACA;
+  color: #DC2626;
+}
+.ta-btn-reject:hover {
+  background: #FEF2F2;
+  border-color: #EF4444;
+}
+.ta-btn-reject.active {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+}
+
+@media (max-width: 640px) {
+  .ta-decision-footer { grid-template-columns: 1fr; }
+  .ta-decision-actions { width: 100%; }
+  .ta-btn { flex: 1; justify-content: center; }
+}

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ValidMate - Dashboard</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Tailwind CSS (CDN for immediate preview) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'Sarabun', 'sans-serif'],
+            },
+            fontSize: {
+              'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
+              'h1': ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h2': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+              'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }], /* adjusted for card titles */
+              'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+              'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+              'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+              'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
+            },
+            colors: {
+              brand: {
+                50: '#F0F4FA',
+                100: '#E0E9F4',
+                500: '#4F46E5', // Purple-ish primary
+                800: '#1E293B',
+                900: '#0F172A', // Dark nav background
+              },
+              layout: {
+                bg: '#F8FAFC',
+                surface: '#FFFFFF',
+                border: '#E2E8F0',
+              },
+              status: {
+                success: '#10B981',
+                successBg: '#ECFDF5',
+                error: '#EF4444',
+                warning: '#F59E0B',
+                warningBg: '#FFFBEB',
+              }
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
+
+    <!-- Main Top Navbar (Dark) -->
+    <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
+            <i class="ph ph-cloud-check text-xl text-brand-500"></i>
+            <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+        </div>
+
+        <!-- Main Nav Links -->
+        <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
+            <button type="button" onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-2 px-4 bg-brand-900 text-white rounded-lg h-10 my-auto text-p1 font-bold">
+                <i class="ph ph-squares-four text-sm"></i> Dashboard
+            </button>
+            <button type="button" onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
+                <i class="ph ph-users text-sm"></i> Students
+            </button>
+        </div>
+
+        <!-- User Profile with Dropdown -->
+        <div class="relative h-full">
+            <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
+                class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
+                <div class="text-right">
+                    <div class="text-p1 font-semibold leading-none" id="navUserName">—</div>
+                    <div class="text-p2 text-gray-400 leading-none mt-1" id="navUserRole">TA</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500" id="navUserAvatar">
+                    ?
+                </div>
+                <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
+            </button>
+            <!-- Dropdown Menu -->
+            <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+                <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
+                    <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+                        <span id="menuUserAvatar">?</span>
+                    </div>
+                    <div>
+                        <div class="text-p1 font-bold text-brand-900 leading-tight" id="menuUserName">—</div>
+                        <div class="text-p2 text-gray-500 leading-tight mt-0.5" id="menuUserEmail">—</div>
+                    </div>
+                </div>
+                <button type="button" onclick="handleLogout()"
+                    class="w-full grid grid-cols-[auto_1fr] items-center gap-3 px-4 py-3 text-p1 font-semibold text-status-error hover:bg-red-50 transition-colors">
+                    <i class="ph ph-sign-out text-lg"></i>
+                    <span class="text-left">Sign Out</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile dropdown controller -->
+    <script>
+        function toggleProfileMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('profileMenu');
+            const caret = document.getElementById('profileCaret');
+            const isHidden = menu.classList.toggle('hidden');
+            if (caret) caret.classList.toggle('rotate-180', !isHidden);
+        }
+        function handleLogout() {
+            if (typeof Mock !== 'undefined') Mock.Cognito.logout();
+            window.location.href = 'index.html';
+        }
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profileMenu');
+            const btn = document.getElementById('profileBtn');
+            if (!menu || !btn) return;
+            if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const menu = document.getElementById('profileMenu');
+                if (menu) menu.classList.add('hidden');
+                const caret = document.getElementById('profileCaret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        });
+    </script>
+
+    <!-- Sub-Navbar (Breadcrumb) -->
+    <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
+        <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold cursor-pointer">
+            <i class="ph-fill ph-squares-four text-sm"></i> Overview <i class="ph ph-caret-right text-xs text-gray-400"></i>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="p-6 md:p-8 lg:p-10 overflow-y-auto w-full grid grid-cols-1 gap-8 auto-rows-min">
+        
+        <!-- Summary Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Classes Card -->
+            <div class="bg-layout-surface rounded-xl border border-layout-border p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+                        <i class="ph-fill ph-books"></i>
+                    </div>
+                    <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider">Active</span>
+                </div>
+                <div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-brand-800" id="statClasses">0</span>
+                        <span class="text-h4 text-gray-600">Classes</span>
+                    </div>
+                    <div class="text-p1 text-gray-500 mt-1" id="statClassesSub">No active classes</div>
+                </div>
+            </div>
+
+            <!-- Total Labs Card -->
+            <div class="bg-layout-surface rounded-xl border border-layout-border p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl">
+                        <i class="ph-fill ph-file-code"></i>
+                    </div>
+                    <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider">In Progress</span>
+                </div>
+                <div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-brand-800" id="statTotalLabs">0</span>
+                        <span class="text-h4 text-gray-600">Total Labs</span>
+                    </div>
+                    <div class="text-p1 text-gray-500 mt-1" id="statTotalLabsSub">No labs yet</div>
+                </div>
+            </div>
+
+            <!-- Pending Reviews Card -->
+            <div class="bg-layout-surface rounded-xl border-2 border-amber-400 p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-500 flex items-center justify-center text-xl">
+                        <i class="ph-fill ph-warning-circle"></i>
+                    </div>
+                    <span class="bg-amber-50 text-amber-600 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 tracking-wider">
+                        <div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Action Required
+                    </span>
+                </div>
+                <div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-brand-800" id="statPending">0</span>
+                        <span class="text-h4 text-amber-600">Pending</span>
+                    </div>
+                    <div class="text-p1 text-amber-600 font-semibold mt-1" id="statPendingSub">All caught up</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Search Bar Grid -->
+        <div class="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
+            <!-- Toggles -->
+            <div class="flex gap-3">
+                <button id="pendingFilterBtn" type="button" onclick="setDashboardFilter('pending')" class="px-6 py-2 rounded-full bg-brand-900 text-white text-btn font-bold uppercase">All Pending</button>
+                <button id="doneFilterBtn" type="button" onclick="setDashboardFilter('done')" class="px-6 py-2 rounded-full text-gray-600 hover:text-brand-800 text-btn font-semibold uppercase border border-gray-300">All Done</button>
+            </div>
+
+            <!-- Spacer -->
+            <div></div>
+
+            <!-- Search & Action -->
+            <div class="flex gap-3">
+                <div class="relative w-64">
+                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
+                    <input type="text" id="searchInput" placeholder="Search class or lab..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-layout-border bg-layout-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-p1 shadow-sm">
+                </div>
+                <button onclick="window.location.href='Ta_CreateLab.html'" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors cursor-pointer">
+                    <i class="ph-bold ph-plus-circle"></i> New Lab
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Header -->
+        <div class="grid grid-cols-[1fr_auto] items-center border-b border-gray-200 pb-2">
+            <h2 class="text-h4 text-gray-400 uppercase tracking-widest font-bold">ALL CLASSES</h2>
+            <div class="relative">
+                <button id="filterBtn" type="button" onclick="toggleFilterMenu(event)"
+                    class="flex items-center gap-1.5 text-gray-500 hover:text-brand-500 text-p2 font-semibold transition-colors">
+                    <i class="ph ph-faders-horizontal text-xs"></i> <span id="filterLabel">Filter</span>
+                    <i class="ph ph-caret-down text-xs" id="filterCaret"></i>
+                </button>
+                <div id="filterMenu" class="hidden absolute right-0 top-full mt-2 w-56 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-40">
+                    <div class="px-4 py-2 text-p2 font-bold text-gray-400 uppercase tracking-wider border-b border-layout-border">Sort by</div>
+                    <button onclick="applySort('code')"        class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="code">
+                        <span class="flex items-center gap-2"><i class="ph ph-book-open text-sm"></i> Course</span>
+                        <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                    </button>
+                    <button onclick="applySort('totalLabs')"   class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="totalLabs">
+                        <span class="flex items-center gap-2"><i class="ph ph-folder text-sm"></i> Total Labs</span>
+                        <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                    </button>
+                    <button onclick="applySort('progress')"    class="sort-item w-full text-left px-4 py-2.5 text-p1 font-semibold text-brand-800 hover:bg-layout-bg flex items-center justify-between" data-key="progress">
+                        <span class="flex items-center gap-2"><i class="ph ph-chart-line-up text-sm"></i> Progress</span>
+                        <i class="ph ph-arrow-up sort-dir text-xs text-gray-400"></i>
+                    </button>
+                    <div class="border-t border-layout-border">
+                        <button onclick="resetSort()" class="w-full text-left px-4 py-2.5 text-p2 font-semibold text-gray-500 hover:bg-layout-bg flex items-center gap-2">
+                            <i class="ph ph-arrow-counter-clockwise text-sm"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Class Grid -->
+        <div id="labGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Cards rendered by script -->
+        </div>
+
+    </main>
+
+    <script src="mock-aws.js"></script>
+    <script>
+ /* ── Auth guard ── */
+if (typeof Mock === 'undefined') { console.error('Mock backend not loaded'); }
+const session = Mock.Cognito.current();
+if (!session || session.user.role !== 'TA') {
+  window.location.href = 'index.html';
+}
+if (session) {
+  const u = session.user;
+  const initials = (u.fullName || u.email || '?').trim().split(/\s+/).map(p => p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('navUserName').textContent  = u.fullName || u.email;
+  document.getElementById('navUserRole').textContent  = 'TA';
+  document.getElementById('navUserAvatar').textContent = initials;
+  document.getElementById('menuUserName').textContent  = u.fullName || u.email;
+  document.getElementById('menuUserEmail').textContent = u.email;
+  document.getElementById('menuUserAvatar').textContent = initials;
+}
+
+/* ── Course catalogue (display name + color per subjectId) ── */
+const COURSE_CATALOGUE = {
+  'CS 232': { name: 'Computer Architecture', color: 'indigo-500', lightColor: 'indigo-50' },
+  'CS 251': { name: 'Data Structures',       color: 'blue-500',   lightColor: 'blue-50'   },
+  'CS 271': { name: 'Operating Systems',     color: 'emerald-500',lightColor: 'emerald-50'}
+};
+
+/* ── Build courses from real labs in DynamoDB ── */
+function buildCoursesFromLabs() {
+  const labs = Mock.API.listLabs();
+  const allSubs = Mock.DB.scan('Submission');
+  const map = {};
+  labs.forEach(lab => {
+    const code = lab.subjectId || 'Uncategorized';
+    if (!map[code]) {
+      const meta = COURSE_CATALOGUE[code] || { name: code, color: 'gray-500', lightColor: 'gray-50' };
+      map[code] = { code, name: meta.name, color: meta.color, lightColor: meta.lightColor,
+                    totalLabs: 0, sections: new Set(), pendingReviews: 0, totalSubs: 0, gradedSubs: 0 };
+    }
+    map[code].totalLabs += 1;
+    (lab.sections || []).forEach(s => map[code].sections.add(s));
+    const subs = allSubs.filter(s => s.labId === lab.id);
+    map[code].totalSubs   += subs.length;
+    map[code].gradedSubs  += subs.filter(s => s.status !== 'pending').length;
+    map[code].pendingReviews += subs.filter(s => s.status === 'pending').length;
+  });
+  return Object.values(map).map(c => ({
+    ...c,
+    sections: c.sections.size,
+    progress: c.totalSubs === 0 ? 100 : Math.round(c.gradedSubs / c.totalSubs * 100),
+    status: c.pendingReviews + ' Pending'
+  }));
+}
+
+let courses = buildCoursesFromLabs();
+
+function updateTopStats() {
+  const labs = Mock.API.listLabs();
+  const subs = Mock.DB.scan('Submission');
+  const pending = subs.filter(s => s.status === 'pending').length;
+  document.getElementById('statClasses').textContent  = courses.length;
+  document.getElementById('statClassesSub').textContent = courses.length === 0 ? 'No active classes' : `${courses.length} subject${courses.length>1?'s':''} · ${courses.reduce((a,c)=>a+c.sections,0)} section(s)`;
+  document.getElementById('statTotalLabs').textContent = labs.length;
+  document.getElementById('statTotalLabsSub').textContent = labs.length === 0 ? 'No labs yet' : `${subs.length} total submission${subs.length===1?'':'s'}`;
+  document.getElementById('statPending').textContent  = pending;
+  document.getElementById('statPendingSub').textContent = pending === 0 ? 'All caught up' : 'Action required →';
+}
+updateTopStats();
+
+/* refresh course tiles every 2s so live grading shows up */
+setInterval(() => {
+  const next = buildCoursesFromLabs();
+  if (JSON.stringify(next) !== JSON.stringify(courses)) {
+    courses = next;
+    renderGrid(document.getElementById('searchInput').value || '');
+  }
+  updateTopStats();
+}, 2000);
+
+/* ── Sort state ── */
+let viewFilter = 'done';
+let sortState = { key: null, dir: 'asc' }; // key: 'code' | 'totalLabs' | 'progress'
+const sortLabels = { code: 'Course', totalLabs: 'Total Labs', progress: 'Progress' };
+
+function updateDashboardFilterButtons() {
+  const pendingBtn = document.getElementById('pendingFilterBtn');
+  const doneBtn = document.getElementById('doneFilterBtn');
+  if (!pendingBtn || !doneBtn) return;
+
+  const setActive = (btn, active) => {
+    btn.classList.toggle('bg-brand-900', active);
+    btn.classList.toggle('text-white', active);
+    btn.classList.toggle('font-bold', active);
+    btn.classList.toggle('text-gray-600', !active);
+    btn.classList.toggle('hover:text-brand-800', !active);
+    btn.classList.toggle('font-semibold', !active);
+    btn.classList.toggle('border', !active);
+    btn.classList.toggle('border-gray-300', !active);
+  };
+
+  setActive(pendingBtn, viewFilter === 'pending');
+  setActive(doneBtn, viewFilter === 'done');
+}
+
+function setDashboardFilter(filter) {
+  viewFilter = filter;
+  updateDashboardFilterButtons();
+  renderGrid(document.getElementById('searchInput').value);
+}
+
+function applySort(key) {
+  if (sortState.key === key) {
+    sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortState = { key, dir: 'asc' };
+  }
+  updateFilterLabel();
+  renderGrid(document.getElementById('searchInput').value);
+  closeFilterMenu();
+}
+
+function resetSort() {
+  sortState = { key: null, dir: 'asc' };
+  updateFilterLabel();
+  renderGrid(document.getElementById('searchInput').value);
+  closeFilterMenu();
+}
+
+function updateFilterLabel() {
+  const label = document.getElementById('filterLabel');
+  if (!label) return;
+  if (!sortState.key) {
+    label.textContent = 'Filter';
+  } else {
+    const arrow = sortState.dir === 'asc' ? '↑' : '↓';
+    label.textContent = `${sortLabels[sortState.key]} ${arrow}`;
+  }
+  // Update the arrow icon in the dropdown items
+  document.querySelectorAll('.sort-item').forEach(btn => {
+    const icon = btn.querySelector('.sort-dir');
+    const isActive = btn.dataset.key === sortState.key;
+    if (!icon) return;
+    icon.classList.toggle('text-brand-500', isActive);
+    icon.classList.toggle('text-gray-400', !isActive);
+    icon.classList.remove('ph-arrow-up', 'ph-arrow-down');
+    icon.classList.add(isActive && sortState.dir === 'desc' ? 'ph-arrow-down' : 'ph-arrow-up');
+  });
+}
+
+function toggleFilterMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('filterMenu');
+  const caret = document.getElementById('filterCaret');
+  const isHidden = menu.classList.toggle('hidden');
+  if (caret) caret.classList.toggle('rotate-180', !isHidden);
+}
+
+function closeFilterMenu() {
+  const menu = document.getElementById('filterMenu');
+  const caret = document.getElementById('filterCaret');
+  if (menu) menu.classList.add('hidden');
+  if (caret) caret.classList.remove('rotate-180');
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('filterMenu');
+  const btn = document.getElementById('filterBtn');
+  if (!menu || !btn) return;
+  if (!menu.classList.contains('hidden') && !btn.contains(e.target) && !menu.contains(e.target)) {
+    closeFilterMenu();
+  }
+});
+
+/* ── Render ── */
+function renderGrid(filter = "") {
+  const grid = document.getElementById("labGrid");
+  const q = filter.toLowerCase();
+
+  let filtered = courses.filter(c =>
+    c.code.toLowerCase().includes(q) ||
+    c.name.toLowerCase().includes(q)
+  );
+
+  filtered = filtered.filter(c =>
+    viewFilter === 'pending' ? c.pendingReviews > 0 : c.pendingReviews === 0
+  );
+
+  if (sortState.key) {
+    const { key, dir } = sortState;
+    filtered = [...filtered].sort((a, b) => {
+      const va = a[key];
+      const vb = b[key];
+      const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full py-12 flex flex-col items-center justify-center text-gray-500 bg-layout-surface rounded-xl border border-layout-border border-dashed">
+        <i class="ph-fill ph-magnifying-glass text-4xl mb-2 text-gray-300"></i>
+        <p class="text-p1 font-semibold">No classes found</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((c, i) => {
+    const isComplete = c.progress === 100;
+    const progressTextColor = isComplete ? 'text-emerald-500' : 'text-brand-800';
+    return `
+    <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer" onclick="openCourse('${c.code}')">
+      
+      <!-- Top Color Bar -->
+      <div class="h-1.5 w-full bg-${c.color}"></div>
+      
+      <div class="p-5 flex-1 flex flex-col">
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-3">
+            <span class="bg-${c.lightColor} text-${c.color} text-xs font-bold px-2.5 py-1 rounded border border-${c.color} border-opacity-20">${c.code}</span>
+            <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-brand-500 hover:text-white transition-colors" onclick="event.stopPropagation(); openCourse('${c.code}')">
+                <i class="ph ph-arrow-right text-sm"></i>
+            </button>
+        </div>
+        
+        <!-- Course Name -->
+        <h3 class="text-h3 text-brand-800 mb-4">${c.name}</h3>
+        
+        <!-- Progress -->
+        <div class="mb-5">
+            <div class="flex justify-between items-end mb-1.5">
+                <span class="text-p2 text-gray-400 font-semibold">Grading Progress</span>
+                <span class="text-p2 font-bold ${progressTextColor}">${c.progress}%</span>
+            </div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-${c.color} rounded-full" style="width: ${c.progress}%"></div>
+            </div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 gap-0 mb-5 border border-gray-100 rounded-lg overflow-hidden">
+            <div class="p-3 border-r border-gray-100">
+                <div class="text-xs text-gray-400 font-semibold flex items-center gap-1 mb-1">
+                    <i class="ph-fill ph-folder"></i> Total Labs
+                </div>
+                <div class="text-h3 text-brand-800">${c.totalLabs}</div>
+            </div>
+            <div class="p-3">
+                <div class="text-xs text-gray-400 font-semibold flex items-center gap-1 mb-1">
+                    <i class="ph-fill ph-users"></i> Sections
+                </div>
+                <div class="text-h3 text-brand-800">${c.sections}</div>
+            </div>
+        </div>
+        
+        <!-- Pending Status Alert -->
+        ${c.pendingReviews > 0 ? `
+            <div class="bg-amber-50 rounded-lg p-3 flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2 text-amber-500 font-bold text-p1">
+                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                    ${c.pendingReviews} Pending Reviews
+                </div>
+                <span class="text-xs text-amber-500 font-bold tracking-wider uppercase">Action req</span>
+            </div>
+        ` : `
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2 text-emerald-500 font-bold text-p1">
+                    <i class="ph-fill ph-check-circle"></i>
+                    All caught up
+                </div>
+                <span class="text-xs text-emerald-500 font-bold tracking-wider">0 Pending</span>
+            </div>
+        `}
+        
+        <!-- Spacer -->
+        <div class="flex-1"></div>
+        
+        <!-- Divider -->
+        <div class="border-t border-gray-100 -mx-5"></div>
+        
+        <!-- Add New Lab Button -->
+        <button class="w-full pt-3 flex items-center justify-center gap-2 text-gray-500 hover:text-brand-800 font-semibold transition-colors text-p1" onclick="event.stopPropagation(); addLab(${i})">
+            <i class="ph ph-plus-circle text-lg"></i> Add New Lab
+        </button>
+      </div>
+    </div>
+  `;
+  }).join("");
+}
+
+/* ── Open Course (navigate to lab list page) ── */
+function openCourse(code) {
+  window.location.href = `TaLablist.html?course=${encodeURIComponent(code)}`;
+}
+
+/* ── Add Lab (navigate to create lab page) ── */
+function addLab(idx) {
+  window.location.href = 'Ta_CreateLab.html';
+}
+
+/* ── Search ── */
+document.getElementById("searchInput").addEventListener("input", e => {
+  renderGrid(e.target.value);
+});
+
+/* ── Init ── */
+updateDashboardFilterButtons();
+renderGrid();
+</script>
+</body>
+</html>

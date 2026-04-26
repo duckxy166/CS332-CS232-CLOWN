@@ -202,6 +202,34 @@ function aiFeedbackHTML(ai, status) {
   `;
 }
 
+function decisionFooterHTML(sub, idx) {
+  const isPassed   = sub.status === 'passed';
+  const isRejected = sub.status === 'rejected';
+  const stateLabel =
+    isPassed   ? '<span class="ta-decision-state ta-state-passed"><i class="ph-fill ph-check-circle"></i> Accepted</span>' :
+    isRejected ? '<span class="ta-decision-state ta-state-rejected"><i class="ph-fill ph-flag"></i> Flagged for Review</span>' :
+                 '<span class="ta-decision-state ta-state-pending"><i class="ph-fill ph-hourglass"></i> Pending</span>';
+  return `
+    <div class="ta-decision-footer">
+      <div class="ta-decision-info">
+        <i class="ph-fill ph-user-check ta-decision-icon"></i>
+        <span class="ta-decision-label">TA Decision</span>
+        ${stateLabel}
+      </div>
+      <div class="ta-decision-actions">
+        <button type="button" class="ta-btn ta-btn-pass${isPassed ? ' active' : ''}"
+          onclick="event.stopPropagation(); setSubmissionDecision(${idx}, 'passed')">
+          <i class="ph-bold ph-check"></i> Accept (Pass)
+        </button>
+        <button type="button" class="ta-btn ta-btn-reject${isRejected ? ' active' : ''}"
+          onclick="event.stopPropagation(); setSubmissionDecision(${idx}, 'rejected')">
+          <i class="ph-bold ph-flag"></i> Reject (Review)
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 function imageCardHTML(img) {
   const isPass = img.status === 'passed';
   const cardClass = img.status === 'passed' ? 'vc-passed' : img.status === 'pending' ? 'vc-pending' : 'vc-rejected';
@@ -320,6 +348,7 @@ function renderSubmissions(data) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               ${breakdownHTML}
             </div>
+            ${decisionFooterHTML(s, i)}
           </div>
         </div>
 
@@ -399,7 +428,7 @@ function parseDateTime(s) {
   return isNaN(d) ? 0 : d.getTime();
 }
 
-function applyPipeline() {
+function applyPipeline(opts = {}) {
   let data = [...submissions];
 
   // search by email
@@ -431,12 +460,42 @@ function applyPipeline() {
   }
 
   filteredData = data;
-  currentPage  = 1;
-  expandedRows = new Set();
-  renderSubmissions(filteredData.slice(0, PAGE_SIZE));
+  if (!opts.preserveState) {
+    currentPage  = 1;
+    expandedRows = new Set();
+  } else {
+    const pages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+    if (currentPage > pages) currentPage = pages;
+  }
+  const slice = filteredData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  renderSubmissions(slice);
   renderStats(filteredData);
   renderPagination();
   updateFilterBadge();
+}
+
+function formatTimestampNow() {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const hour = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${day} ${month} ${year} · ${hour}:${min}`;
+}
+
+function setSubmissionDecision(idx, decision) {
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const sub = filteredData[startIdx + idx];
+  if (!sub) return;
+  const orig = submissions.find(s => s.email === sub.email);
+  if (!orig) return;
+  if (orig.status === decision) return; // no-op if already in that state
+  orig.status = decision;
+  orig.checkedAt = formatTimestampNow();
+  expandedRows.add(idx);
+  applyPipeline({ preserveState: true });
 }
 
 function updateFilterBadge() {

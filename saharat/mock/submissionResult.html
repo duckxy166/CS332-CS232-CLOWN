@@ -134,10 +134,10 @@
       <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
         class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
         <div class="text-right">
-          <div class="text-p1 font-semibold leading-none">Alex Student</div>
-          <div class="text-p2 text-gray-400 leading-none mt-1">Undergraduate</div>
+          <div class="text-p1 font-semibold leading-none" id="navUserName">—</div>
+          <div class="text-p2 text-gray-400 leading-none mt-1">Student</div>
         </div>
-        <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+        <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500" id="navUserAvatar">
           AS
         </div>
         <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
@@ -145,11 +145,11 @@
       <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
         <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
           <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
-            AS
+            <span id="menuUserAvatar">?</span>
           </div>
           <div>
-            <div class="text-p1 font-bold text-brand-900 leading-tight">Alex Student</div>
-            <div class="text-p2 text-gray-500 leading-tight mt-0.5">Undergraduate</div>
+            <div class="text-p1 font-bold text-brand-900 leading-tight" id="menuUserName">—</div>
+            <div class="text-p2 text-gray-500 leading-tight mt-0.5" id="menuUserEmail">—</div>
           </div>
         </div>
         <button type="button" onclick="handleLogout()"
@@ -169,7 +169,7 @@
       const isHidden = menu.classList.toggle('hidden');
       if (caret) caret.classList.toggle('rotate-180', !isHidden);
     }
-    function handleLogout() { window.location.href = 'index.html'; }
+    function handleLogout() { Mock.Cognito.logout(); window.location.href = 'index.html'; }
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('profileMenu');
       const btn = document.getElementById('profileBtn');
@@ -274,8 +274,22 @@
     </div>
   </main>
 
+  <script src="mock-aws.js"></script>
   <script>
-// ฟังก์ชันสลับสถานะหน้าจอ
+/* ── Auth guard ── */
+const _session = Mock.Cognito.current();
+if (!_session || _session.user.role !== 'STUDENT') window.location.href = 'index.html';
+if (_session) {
+  const u = _session.user;
+  const initials = (u.fullName || u.email || '?').trim().split(/\s+/).map(p => p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('navUserName').textContent  = u.fullName || u.email;
+  document.getElementById('navUserAvatar').textContent = initials;
+  document.getElementById('menuUserName').textContent  = u.fullName || u.email;
+  document.getElementById('menuUserEmail').textContent = u.email;
+  document.getElementById('menuUserAvatar').textContent = initials;
+}
+
+// ฟังก์ชั่นสลับสถานะหน้าจอ
 function updateResultView(state) {
     // ซ่อนทุกหน้าก่อน
     document.querySelectorAll('.status-view').forEach(view => {
@@ -295,19 +309,39 @@ function getResultState() {
     return ['processing', 'passed', 'failed'].includes(state) ? state : null;
 }
 
-/**
- * ตัวอย่างการใช้งาน:
- * เมื่อโหลดหน้ามา ให้เริ่มที่ 'processing'
- * จากนั้นรอฟังผลจาก Backend (เช่น fetch API)
- */
+/* ── If we have ?sub=submissionId, drive the view from the live submission status ── */
+function pollSubmission(submissionId) {
+  const tick = () => {
+    const result = Mock.API.getResult(submissionId);
+    if (!result) {
+      updateResultView('failed');
+      return;
+    }
+    const status = result.submission.status;
+    if (status === 'pending') {
+      updateResultView('processing');
+      setTimeout(tick, 1500);
+    } else if (status === 'passed') {
+      updateResultView('passed');
+    } else {
+      // 'rejected' (TA flagged) → show failed view as "system review needed" for student
+      updateResultView('failed');
+    }
+  };
+  tick();
+}
+
+/* ── Init: prefer ?sub=ID (live polling), fallback to ?state= for legacy demo ── */
 window.addEventListener('DOMContentLoaded', () => {
+    const submissionId = new URLSearchParams(window.location.search).get('sub');
+    if (submissionId) {
+      pollSubmission(submissionId);
+      return;
+    }
     const state = getResultState() || 'processing';
     updateResultView(state);
-
     if (state === 'processing') {
-        setTimeout(() => {
-            updateResultView('passed');
-        }, 3000);
+        setTimeout(() => updateResultView('passed'), 3000);
     }
 });
 </script>
