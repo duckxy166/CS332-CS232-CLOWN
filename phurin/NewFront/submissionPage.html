@@ -290,12 +290,12 @@
         <i class="ph-fill ph-squares-four text-sm"></i> Overview
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
-      <button type="button" onclick="window.location.href='student_Lablist.html?subjectId=CS%20232'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
-        <i class="ph-fill ph-stack text-sm"></i> CS 232
+      <button type="button" id="breadcrumbSubject" onclick="window.location.href='student_Lablist.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-stack text-sm"></i> <span id="breadcrumbSubjectText">Lab</span>
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
       <span class="flex items-center gap-1 text-brand-800">
-        <i class="ph-fill ph-file-text text-sm text-brand-500"></i> Lab 05 - CPU Pipelining
+        <i class="ph-fill ph-file-text text-sm text-brand-500"></i> <span id="breadcrumbLabName">Loading…</span>
       </span>
     </div>
   </div>
@@ -314,10 +314,10 @@
             </div>
             <div>
               <div class="flex items-center gap-2 mb-1">
-                <span class="bg-indigo-50 text-brand-500 text-p2 font-bold px-2.5 py-0.5 rounded-md tracking-wide">CS 232</span>
+                <span id="labSubjectBadge" class="bg-indigo-50 text-brand-500 text-p2 font-bold px-2.5 py-0.5 rounded-md tracking-wide">—</span>
                 <span class="text-p2 text-gray-400 font-medium">Active Assignment</span>
               </div>
-              <h1 class="text-h3 font-bold text-brand-900 leading-tight">Lab 05 - CPU Pipelining</h1>
+              <h1 id="labTitle" class="text-h3 font-bold text-brand-900 leading-tight">Loading…</h1>
             </div>
           </div>
           <!-- Right: due date -->
@@ -325,7 +325,7 @@
             <i class="ph ph-calendar-blank text-gray-400 text-lg"></i>
             <div>
               <div class="text-p2 font-bold text-gray-400 uppercase tracking-widest mb-0.5">Due Date</div>
-              <div class="text-p1 font-bold text-brand-800">Tomorrow, 11:59 PM</div>
+              <div id="labDueDate" class="text-p1 font-bold text-brand-800">—</div>
             </div>
           </div>
         </div>
@@ -341,40 +341,8 @@
             <h2 class="flex items-center gap-2 text-p2 font-bold text-gray-400 uppercase tracking-widest mb-5">
               <i class="ph-fill ph-book-open-text text-brand-500 text-sm"></i> Lab Instructions
             </h2>
-            <div class="text-p1 text-gray-600 space-y-4 leading-relaxed">
-
-              <p>Please upload your screenshots demonstrating the successful configuration of your AWS EC2 instance.</p>
-
-              <div>
-                <p class="font-bold text-brand-900 mb-3">Requirements for this submission:</p>
-                <ol class="space-y-3">
-                  <li class="flex items-start gap-3">
-                    <span class="num-badge">1</span>
-                    <span>A screenshot of the AWS Management Console showing the running instance.</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <span class="num-badge">2</span>
-                    <span>A screenshot of your terminal successfully SSH'd into the instance.</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <span class="num-badge">3</span>
-                    <span>The instance must be named with your student ID (e.g., EC2-12345678).</span>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <span class="num-badge">4</span>
-                    <span>Ensure the public IP address is clearly visible in the console screenshot.</span>
-                  </li>
-                </ol>
-              </div>
-
-              <p>Do not upload video files. If you encounter errors during the deployment, refer to Chapter 4 of the textbook or visit office hours before the deadline.</p>
-
-              <p><span class="font-bold text-brand-900">Note:</span> Since there are multiple screenshots required, please utilize the 'Picture 1', 'Picture 2', and 'Picture 3' tabs in the submission box.</p>
-
-              <div class="flex items-start gap-2.5 bg-status-errorBg border border-red-200 rounded-lg px-4 py-3">
-                <i class="ph-fill ph-warning-circle text-status-error flex-shrink-0 mt-0.5"></i>
-                <p class="text-status-error text-p1 font-semibold">Any submission not following these exact guidelines will receive an automatic deduction of 10 points.</p>
-              </div>
+            <div id="labInstructions" class="text-p1 text-gray-600 space-y-4 leading-relaxed">
+              <p class="text-gray-400 italic">Loading instructions…</p>
             </div>
           </div>
         </div>
@@ -402,12 +370,8 @@
               <span class="text-p2 font-bold text-gray-400 uppercase tracking-widest">Evidence Upload Area</span>
             </div>
 
-            <!-- Tabs -->
-            <div class="flex gap-5 mb-3.5 border-b border-layout-border pb-2">
-              <button id="tab-0" onclick="switchTab(0)" class="text-p1 font-bold text-brand-500 bg-transparent border-0 border-b-2 border-brand-500 pb-2 cursor-pointer">Picture 1</button>
-              <button id="tab-1" onclick="switchTab(1)" class="text-p1 font-medium text-gray-400 bg-transparent border-0 border-b-2 border-transparent pb-2 cursor-pointer">Picture 2</button>
-              <button id="tab-2" onclick="switchTab(2)" class="text-p1 font-medium text-gray-400 bg-transparent border-0 border-b-2 border-transparent pb-2 cursor-pointer">Picture 3</button>
-            </div>
+            <!-- Tabs (rendered dynamically by initPage) -->
+            <div id="tabContainer" class="flex gap-5 mb-3.5 border-b border-layout-border pb-2"></div>
 
             <!-- Drop zone -->
             <div id="dropZone"
@@ -471,21 +435,76 @@
   <script>
 /* studentSubmission_script.js */
 
-const uploads = [null, null, null];
+const API_BASE = 'https://y0uutvozaa.execute-api.us-east-1.amazonaws.com/dev';
+const LABS_CACHE_KEY = 'labs_cache_v1';
+const LABS_CACHE_TTL = 30000;
+
+async function fetchLabsCached() {
+  try {
+    const raw = sessionStorage.getItem(LABS_CACHE_KEY);
+    if (raw) {
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < LABS_CACHE_TTL) return data;
+    }
+  } catch {}
+  const res = await fetch(`${API_BASE}/labs`);
+  const data = await res.json();
+  try { sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+  return data;
+}
+
+function getEmail() {
+  const override = localStorage.getItem('dev_email');
+  if (override) return override;
+  try {
+    const token = localStorage.getItem('cognito_id_token');
+    if (!token) return null;
+    const p = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    return p.email
+        || p['cognito:username']
+        || p.preferred_username
+        || p.username
+        || p.sub
+        || null;
+  } catch { return null; }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve({ base64: reader.result.split(',')[1], type: file.type || 'image/png' });
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let uploads = [];
 let activeTab = 0;
+
+/* ── Render tab buttons ── */
+function renderTabs() {
+  const container = document.getElementById('tabContainer');
+  container.innerHTML = uploads.map((_, i) =>
+    `<button id="tab-${i}" onclick="switchTab(${i})" class="text-p1 bg-transparent border-0 border-b-2 pb-2 cursor-pointer"
+      style="color:${i===0?'#4F46E5':'#94A3B8'};font-weight:${i===0?'700':'500'};border-bottom:2px solid ${i===0?'#4F46E5':'transparent'}">
+      Picture ${i+1}
+    </button>`
+  ).join('');
+}
 
 /* ── Tabs ── */
 function switchTab(idx) {
   activeTab = idx;
-  [0,1,2].forEach(i => {
+  uploads.forEach((_, i) => {
     const b = document.getElementById('tab-'+i);
+    if (!b) return;
     if (i === idx) {
-      b.style.color       = '#4F46E5';
-      b.style.fontWeight  = '700';
+      b.style.color        = '#4F46E5';
+      b.style.fontWeight   = '700';
       b.style.borderBottom = '2px solid #4F46E5';
     } else {
-      b.style.color       = '#94A3B8';
-      b.style.fontWeight  = '500';
+      b.style.color        = '#94A3B8';
+      b.style.fontWeight   = '500';
       b.style.borderBottom = '2px solid transparent';
     }
   });
@@ -650,18 +669,19 @@ function updateStatus() {
   const wrap  = document.getElementById('statusIconWrap');
   const icon  = document.getElementById('statusIcon');
   const label = document.getElementById('currentStatus');
+  const total = uploads.length;
   if (n === 0) {
     card.style.borderLeftColor = '#F59E0B';
     wrap.style.background      = '#FFFBEB';
     icon.style.color           = '#F59E0B';
     icon.className             = 'ph-fill ph-hourglass-medium';
     label.textContent          = 'Pending Upload';
-  } else if (n < 3) {
+  } else if (n < total) {
     card.style.borderLeftColor = '#4F46E5';
     wrap.style.background      = '#EEF2FF';
     icon.style.color           = '#4F46E5';
     icon.className             = 'ph-fill ph-upload-simple';
-    label.textContent          = n + ' of 3 Uploaded';
+    label.textContent          = `${n} of ${total} Uploaded`;
   } else {
     card.style.borderLeftColor = '#10B981';
     wrap.style.background      = '#ECFDF5';
@@ -672,22 +692,52 @@ function updateStatus() {
 }
 
 /* ── Submit ── */
-function handleSubmit() {
+async function handleSubmit() {
   if (!uploads.filter(Boolean).length) {
     toast('Upload at least one screenshot first.', 'error');
     return;
   }
+
+  const email = getEmail();
+  if (!email) { toast('Session expired — please log in again.', 'error'); return; }
+
+  const labID = new URLSearchParams(window.location.search).get('lab');
+  if (!labID) { toast('No lab selected.', 'error'); return; }
+
   const btn = document.getElementById('submitBtn');
-  btn.disabled   = true;
-  btn.innerHTML  = '<i class="ph-fill ph-spinner-gap"></i> Submitting…';
-  setTimeout(() => {
+  btn.disabled  = true;
+  btn.innerHTML = '<i class="ph-fill ph-spinner-gap"></i> Submitting…';
+
+  try {
+    const screenshots = (await Promise.all(
+      uploads.map(async (u, i) => {
+        if (!u) return null;
+        const { base64, type } = await fileToBase64(u.file);
+        return { imgId: i + 1, imageBase64: base64, imageType: type };
+      })
+    )).filter(Boolean);
+
+    const res  = await fetch(`${API_BASE}/submit`, {
+      method  : 'POST',
+      headers : { 'Content-Type': 'application/json' },
+      body    : JSON.stringify({ email, labID, screenshots })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Submit failed');
+
+    localStorage.setItem('submission_email', email);
+    localStorage.setItem('submission_labID', labID);
+
     btn.style.background = '#10B981';
     btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Submitted!';
     toast('Lab evidence submitted!', 'success');
-    setTimeout(() => {
-      window.location.href = 'submissionResult.html?state=processing';
-    }, 600);
-  }, 1500);
+    setTimeout(() => window.location.href = 'submissionResult.html?state=processing', 600);
+
+  } catch (err) {
+    toast(`Error: ${err.message}`, 'error');
+    btn.disabled  = false;
+    btn.innerHTML = 'Submit Lab';
+  }
 }
 
 /* ── Toast ── */
@@ -707,8 +757,65 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeLightbox();
 });
 
-/* ── Init ── */
-switchTab(0);
+/* ── Init: load lab config from API ── */
+async function initPage() {
+  const labID = new URLSearchParams(window.location.search).get('lab');
+  if (!labID) {
+    uploads = [null];
+    renderTabs();
+    switchTab(0);
+    return;
+  }
+
+  try {
+    const data = await fetchLabsCached();
+    const labs = Array.isArray(data) ? data : (data.labs || []);
+    const lab  = labs.find(l => l.labID === labID);
+
+    if (lab) {
+      // Header
+      const badge = document.getElementById('labSubjectBadge');
+      const title = document.getElementById('labTitle');
+      const due   = document.getElementById('labDueDate');
+      if (badge) badge.textContent = lab.subjectId || '—';
+      if (title) title.textContent = lab.labName   || '—';
+      if (due) {
+        const d = lab.deadline ? new Date(lab.deadline) : null;
+        due.textContent = d ? d.toLocaleString('en-US', { dateStyle:'medium', timeStyle:'short' }) : '—';
+      }
+
+      // Breadcrumb
+      const subjectText = document.getElementById('breadcrumbSubjectText');
+      const labText     = document.getElementById('breadcrumbLabName');
+      const subjectBtn  = document.getElementById('breadcrumbSubject');
+      if (subjectText) subjectText.textContent = lab.subjectId || 'Lab';
+      if (labText)     labText.textContent     = lab.labName   || labID;
+      if (subjectBtn)  subjectBtn.onclick = () =>
+        window.location.href = `student_Lablist.html?subjectId=${encodeURIComponent(lab.subjectId || '')}`;
+
+      // Instructions
+      const instrEl = document.getElementById('labInstructions');
+      if (instrEl) {
+        instrEl.innerHTML = lab.description
+          ? `<p>${lab.description.replace(/\n/g, '<br>')}</p>`
+          : `<p class="text-gray-400 italic">No instructions provided.</p>`;
+      }
+
+      // Slots based on images array
+      const slotCount = (lab.images && lab.images.length) ? lab.images.length : 1;
+      uploads = new Array(slotCount).fill(null);
+    } else {
+      uploads = [null];
+    }
+  } catch {
+    uploads = [null];
+  }
+
+  renderTabs();
+  switchTab(0);
+}
+
+initPage();
 </script>
 </body>
 </html>

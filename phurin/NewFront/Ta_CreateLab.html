@@ -645,7 +645,7 @@
 
 <script>
 //  API CONFIG  — เปลี่ยน BASE_URL ให้ตรงกับ API Gateway 
-const API_BASE = 'https://YOUR_API_GATEWAY_URL';
+const API_BASE = 'https://y0uutvozaa.execute-api.us-east-1.amazonaws.com/dev';
  
 //  SLOT STATE
 const slotStates = {};
@@ -1062,7 +1062,7 @@ function validateForm() {
 }
  
 
-//  CREATE LAB  →  POST /lab-config
+//  CREATE LAB  →  POST /labs
 async function handleCreateLab() {
   captureState(activeSlot);
   const validationError = validateForm();
@@ -1085,63 +1085,60 @@ async function handleCreateLab() {
   const selectedSections = [...(tagLists[1]?.querySelectorAll('.tag.selected') || [])]
     .map(t => t.textContent.trim());
  
-  // ── Rules ต่อ slot ──
-  const rules = Object.entries(slotStates).map(([slot, state]) => ({
-    imageSlot : Number(slot),
-    keywords  : state.rules.map(r => ({
-      keyword   : r.keyword,
-      weight    : r.weight,
-      mandatory : r.mandatory
-    }))
-  }));
- 
-  // ── Images (เฉพาะ slot ที่มีรูป) ──
-  const images = Object.entries(slotStates)
-    .filter(([, state]) => state.image)
-    .map(([slot, state]) => ({ slot: Number(slot), data: state.image }));
- 
-  // ── Thresholds ──
-  const thresholds = {
-    minScore          : Number(document.getElementById('minScoreVal')?.value || 75),
-    mustPassMandatory : document.getElementById('mustPass')?.checked || false
-  };
- 
-  // ── Payload ──
-  const payload = {
-    labName,
-    subjectId   : selectedClasses[0] || '',
-    sections    : selectedSections,
-    description,
-    deadline,
-    images,
-    rules,
-    thresholds,
-    createdBy   : 'TA'
-  };
- 
-  // ── Loading state ──
   const btn = document.getElementById('createLabBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating...';
- 
+
   try {
-    const res  = await fetch(`${API_BASE}/lab-config`, {
+    const labID = crypto.randomUUID();
+
+    // ── Upload reference images → /reference ──
+    btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Uploading images…';
+    const uploadedImages = [];
+    for (const [slot, state] of Object.entries(slotStates)) {
+      if (!state.image) continue;
+      const imgId  = Number(slot);
+      const mime   = state.image.split(';')[0].split(':')[1] || 'image/png';
+      const b64    = state.image.split(',')[1];
+      const refRes = await fetch(`${API_BASE}/reference`, {
+        method  : 'POST',
+        headers : { 'Content-Type': 'application/json' },
+        body    : JSON.stringify({ imageBase64: b64, imageType: mime, labID, enableLLM: true })
+      });
+      const refData = await refRes.json();
+      if (!refData.success) throw new Error(`Image ${imgId} upload failed: ${refData.error}`);
+      uploadedImages.push({ id: imgId, refS3Key: refData.s3Key, llmDescription: refData.llmDescription || null });
+    }
+
+    // ── Transform rules ──
+    let ruleId = 1;
+    const rules = [];
+    for (const [slot, state] of Object.entries(slotStates)) {
+      const imgId = Number(slot);
+      for (const r of (state.rules || [])) {
+        rules.push({ id: ruleId++, imgId, kw: r.keyword, wt: Number(r.weight), mand: !!r.mandatory, pos: false, refX: null, refY: null, sens: 'medium' });
+      }
+    }
+
+    // ── Transform thresholds ──
+    const thresholds = Object.entries(slotStates).map(([slot, state]) => ({
+      imgId: Number(slot), useScore: true, scoreMin: Number(state.minScore || 75)
+    }));
+
+    // ── Create lab → /labs ──
+    btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating…';
+    const res  = await fetch(`${API_BASE}/labs`, {
       method  : 'POST',
       headers : { 'Content-Type': 'application/json' },
-      body    : JSON.stringify(payload)
+      body    : JSON.stringify({ labID, labName, subjectId: selectedClasses[0] || '', sections: selectedSections, description, deadline, images: uploadedImages, rules, thresholds, createdBy: 'TA' })
     });
- 
     const data = await res.json();
- 
-    if (data.success) {
-      showToast(`✓ สร้าง Lab "${labName}" สำเร็จ! (ID: ${data.labID})`, 'success');
-      // uncomment เพื่อ redirect หลังสำเร็จ:
-      // setTimeout(() => window.location.href = 'Ta_Dashboard.html', 1800);
-    } else {
-      showToast(`Error: ${data.error || 'Unknown error'}`, 'error');
-    }
+    if (!data.success) throw new Error(data.error || 'Unknown error');
+
+    showToast(`✓ สร้าง Lab "${labName}" สำเร็จ!`, 'success');
+    setTimeout(() => window.location.href = 'TaLablist.html', 1500);
+
   } catch (err) {
-    showToast(`Network error: ${err.message}`, 'error');
+    showToast(`Error: ${err.message}`, 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="ph ph-plus-circle"></i> Create Lab';

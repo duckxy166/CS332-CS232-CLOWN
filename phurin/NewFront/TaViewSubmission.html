@@ -468,13 +468,13 @@ td {
             <i class="ph-fill ph-flask"></i>
           </div>
           <div>
-            <h1 class="text-h3 font-bold text-brand-800" id="labTitle">Cloud Storage Setup</h1>
+            <h1 class="text-h3 font-bold text-brand-800" id="labTitle">Loading…</h1>
             <div class="flex items-center gap-3 mt-1 flex-wrap">
               <span class="flex items-center gap-1 text-p2 text-gray-500">
-                <i class="ph-fill ph-users text-xs"></i> Section <span id="labSection">650001</span>
+                <i class="ph-fill ph-users text-xs"></i> Section <span id="labSection">–</span>
               </span>
               <span id="deadlineBadge" class="flex items-center gap-1 text-p2 font-semibold text-status-error">
-                <i class="ph-fill ph-warning-circle text-xs"></i> Deadline: <span id="labDeadline">16 Mar 2026</span>
+                <i class="ph-fill ph-warning-circle text-xs"></i> Deadline: <span id="labDeadline">–</span>
               </span>
             </div>
           </div>
@@ -522,14 +522,8 @@ td {
         <h2 class="flex items-center gap-2 text-p2 text-gray-400 font-bold uppercase tracking-widest mb-4">
           <i class="ph-fill ph-align-left text-sm text-brand-500"></i> Lab Description
         </h2>
-        <div class="text-p1 text-gray-600 space-y-1.5">
-          <p class="font-semibold text-brand-800">Topic: Creating an image upload notification system using AWS Lambda and SNS.</p>
-          <p class="text-gray-400 font-semibold text-p2 mt-2 mb-1">Task Details:</p>
-          <ul class="space-y-1 text-gray-600">
-            <li class="flex items-start gap-2"><i class="ph ph-minus text-xs mt-1 text-gray-400 flex-shrink-0"></i>Configure AWS Lambda to receive S3 events</li>
-            <li class="flex items-start gap-2"><i class="ph ph-minus text-xs mt-1 text-gray-400 flex-shrink-0"></i>Write Node.js code to extract bucketName and validate file extensions (.jpg, .png)</li>
-            <li class="flex items-start gap-2"><i class="ph ph-minus text-xs mt-1 text-gray-400 flex-shrink-0"></i>Ensure correct IAM role permissions are attached to the function</li>
-          </ul>
+        <div id="labDescription" class="text-p1 text-gray-600 space-y-1.5">
+          <p class="text-gray-400 italic">Loading description…</p>
         </div>
       </section>
 
@@ -678,49 +672,82 @@ td {
    TaDashboard_script.js for consistency.
 ══════════════════════════════════════════════ */
 
-/* ── Lab Meta Catalogue (mock keyed by lab id) ── */
-const LABS = {
-  // CS 232
-  201: { title: "Lab 01 - CPU Registers",    section: "650001", deadline: "10 Apr 2026" },
-  202: { title: "Lab 02 - Pipelining",       section: "650001", deadline: "17 Apr 2026" },
-  203: { title: "Lab 03 - Cache Memory",     section: "650002", deadline: "24 Apr 2026" },
-  // CS 251
-  301: { title: "Lab 01 - Linked List",      section: "660001", deadline: "12 Apr 2026" },
-  302: { title: "Lab 02 - Binary Tree",      section: "660001", deadline: "19 Apr 2026" },
-  // CS 271
-  401: { title: "Lab 01 - Process Scheduling", section: "670001", deadline: "05 Apr 2026" },
-  402: { title: "Lab 02 - Threads & Mutex",    section: "670002", deadline: "12 Apr 2026" },
-};
+const API_BASE = 'https://y0uutvozaa.execute-api.us-east-1.amazonaws.com/dev';
 
-/* Shared description + rules (same for all mock labs) */
-const DEFAULT_META = {
-  title:    "Cloud Storage Setup",
-  section:  "650001",
-  deadline: "16 Mar 2026",
-  description: [
-    "Configure AWS Lambda to receive S3 events",
-    "Write Node.js code to extract bucketName and validate file extensions (.jpg, .png)",
-    "Ensure correct IAM role permissions are attached to the function",
-  ],
-  rules: [
-    { type: "Text",           requirement: "mandatory", keyword: "Successfully", weight: 40 },
-    { type: "Text + Position",requirement: "optional",  keyword: "Lambda",       weight: 40 },
-    { type: "Text",           requirement: "optional",  keyword: "index",        weight: 20 },
-  ],
-};
+let labData = { title: 'Loading…', section: '–', deadline: '–', description: [], rules: [] };
+let submissions = [];
 
-/* ── Resolve current lab from ?lab= param ── */
-function resolveLab() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('lab');
-  const picked = id && LABS[id] ? LABS[id] : null;
-  return { ...DEFAULT_META, ...(picked || {}) };
+function formatTs(ts) {
+  if (!ts) return '–';
+  const d = new Date(ts);
+  if (isNaN(d)) return ts;
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${String(d.getDate()).padStart(2,'0')} ${mo[d.getMonth()]} ${d.getFullYear()} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-const labData = resolveLab();
+function formatDeadline(ts) {
+  if (!ts) return '–';
+  const d = new Date(ts);
+  if (isNaN(d)) return ts;
+  return d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+}
 
-/* ── Submissions Data ── */
-const submissions = [
+function normalizeLab(lab) {
+  if (!lab) return labData;
+  return {
+    title:       lab.labName || 'Lab',
+    section:     (lab.sections || []).join(', ') || '–',
+    deadline:    formatDeadline(lab.deadline),
+    description: lab.description ? [lab.description] : [],
+    rules: (lab.rules || []).map(r => ({
+      type:        r.pos ? 'Text + Position' : 'Text',
+      requirement: r.mand ? 'mandatory' : 'optional',
+      keyword:     r.kw,
+      weight:      r.wt,
+    })),
+  };
+}
+
+function normalizeSubmission(s) {
+  return {
+    email:       s.email,
+    status:      (s.status || 'pending').toLowerCase(),
+    score:       s.totalScore ?? 0,
+    submittedAt: formatTs(s.submittedAt),
+    checkedAt:   formatTs(s.checkedAt),
+    images: (s.scoreResult || []).map((img, i) => ({
+      label:      `Image ${i + 1}`,
+      status:     (img.status || 'pending').toLowerCase(),
+      url:        s.screenshots?.[i]?.url ?? null,
+      confidence: img.llmConfidence ?? null,
+      reason:     img.llmFeedback   ?? null,
+      llmSkipped: img.llmCheckSkipped === true,
+      llmError:   img.llmError ?? null,
+      checks: (img.ruleResults || []).map(r => ({
+        label: r.keyword,
+        ok:    r.passed,
+        note:  r.passed ? '' : 'Missing',
+      })),
+    })),
+  };
+}
+
+async function loadSubmissions() {
+  const labID = new URLSearchParams(window.location.search).get('lab');
+  if (!labID) return;
+  try {
+    const res  = await fetch(`${API_BASE}/submissions?labID=${encodeURIComponent(labID)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    labData     = normalizeLab(data.lab);
+    submissions = (data.submissions || []).map(normalizeSubmission);
+  } catch (err) {
+    console.error('loadSubmissions:', err);
+  }
+}
+
+/* ── placeholder so old refs to submissions array still compile ── */
+const _submissions_placeholder = [
   {
     email: "phonpawee.sae@dome.tu.ac.th",
     status: "passed",
@@ -886,11 +913,35 @@ function imageCardHTML(img) {
         <span class="text-p1 font-semibold text-brand-800">${img.label}</span>
         ${statusPill(img.status)}
       </div>
-      <!-- Thumbnail placeholder (replaces screenshot image) -->
-      <div class="thumb-placeholder mb-3">
-        <i class="ph ph-image"></i>
-      </div>
+      ${img.url
+        ? `<img src="${img.url}" class="w-full rounded mb-3 object-cover max-h-32" alt="screenshot" onerror="this.style.display='none'">`
+        : `<div class="thumb-placeholder mb-3"><i class="ph ph-image"></i></div>`}
       <ul class="space-y-1.5">${checksHTML}</ul>
+      ${img.confidence !== null ? `
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-p2 font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+              <i class="ph-fill ph-robot text-xs"></i> AI Confidence
+            </span>
+            <span class="text-p2 font-bold ${img.confidence >= 0.8 ? 'text-status-success' : img.confidence >= 0.5 ? 'text-status-warning' : 'text-status-error'}">
+              ${Math.round(img.confidence * 100)}%
+            </span>
+          </div>
+          <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full ${img.confidence >= 0.8 ? 'bg-status-success' : img.confidence >= 0.5 ? 'bg-status-warning' : 'bg-status-error'}"
+                 style="width:${Math.round(img.confidence * 100)}%"></div>
+          </div>
+          ${img.reason ? `<p class="text-p2 text-gray-500 mt-2 italic">"${img.reason}"</p>` : ''}
+        </div>` : (img.llmSkipped ? `
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="flex items-start gap-2 text-p2 text-gray-500">
+            <i class="ph ph-info text-sm mt-0.5 text-gray-400"></i>
+            <div>
+              <span class="font-semibold text-gray-600">AI review skipped</span>
+              ${img.llmError ? `<p class="italic mt-0.5">${img.llmError}</p>` : ''}
+            </div>
+          </div>
+        </div>` : '')}
     </div>
   `;
 }
@@ -1296,15 +1347,22 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ────────────────────────────────────────
    INIT
 ──────────────────────────────────────── */
-(function init() {
-  // Lab meta
+(async function init() {
+  await loadSubmissions();
+
   document.getElementById('labTitle').textContent    = labData.title;
   document.getElementById('labSection').textContent  = labData.section;
   document.getElementById('labDeadline').textContent = labData.deadline;
-
   document.title = `ValidMate – ${labData.title}`;
 
-  // Pass ?course= to the Lab List breadcrumb so it returns to the right course
+  const descEl = document.getElementById('labDescription');
+  if (descEl) {
+    const parts = (labData.description || []).filter(Boolean);
+    descEl.innerHTML = parts.length
+      ? parts.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
+      : `<p class="text-gray-400 italic">No description provided.</p>`;
+  }
+
   const courseParam = new URLSearchParams(window.location.search).get('course');
   if (courseParam) {
     document.querySelectorAll('button[onclick*="TaLablist.html"]').forEach(btn => {

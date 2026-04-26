@@ -368,12 +368,28 @@
     });
 //----------------------------------------------------------------------
 
-// TODO: เปลี่ยน URL ตรงนี้เมื่อ deploy API Gateway แล้ว
-const API_BASE_URL = "https://YOUR_API_GATEWAY_URL/prod";
+const API_BASE_URL = "https://y0uutvozaa.execute-api.us-east-1.amazonaws.com/dev";
 
 const ENDPOINTS = {
-  labLister: `${API_BASE_URL}/lab-lister`,
+  labLister: `${API_BASE_URL}/labs`,
 };
+const LABS_CACHE_KEY = 'labs_cache_v1';
+const LABS_CACHE_TTL = 30000;
+
+async function fetchLabsCached() {
+  try {
+    const raw = sessionStorage.getItem(LABS_CACHE_KEY);
+    if (raw) {
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < LABS_CACHE_TTL) return data;
+    }
+  } catch {}
+  const res = await fetch(ENDPOINTS.labLister, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  const data = await res.json();
+  try { sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+  return data;
+}
 
 // ── MOCK DATA (ใช้เมื่อ API_BASE_URL ยังไม่ได้ตั้งค่า) ────────
 const MOCK_LABS = [
@@ -592,14 +608,7 @@ async function loadDashboard() {
   }
 
   try {
-    const res = await fetch(ENDPOINTS.labLister, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-
-    const data = await res.json();
+    const data = await fetchLabsCached();
 
     if (!data.success) throw new Error(data.error || "Unknown error from server");
 

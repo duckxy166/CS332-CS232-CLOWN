@@ -267,43 +267,82 @@
     </main>
 
     <script>
- /* ── Data ── */
-/* ── Synced with TaLablist mock: every lab has total=5, submitted=5 ── */
-const courses = [
-  {
-    code: "CS 232",
-    name: "Computer Architecture",
-    progress: 100,           // 15/15 submitted
-    totalLabs: 3,
-    sections: 2,             // 650001, 650002
-    pendingReviews: 0,
-    status: "0 Pending",
-    color: "indigo-500",
-    lightColor: "indigo-50"
-  },
-  {
-    code: "CS 251",
-    name: "Data Structures",
-    progress: 100,           // 10/10 submitted
-    totalLabs: 2,
-    sections: 1,             // 660001
-    pendingReviews: 0,
-    status: "0 Pending",
-    color: "blue-500",
-    lightColor: "blue-50"
-  },
-  {
-    code: "CS 271",
-    name: "Operating Systems",
-    progress: 100,           // 10/10 submitted
-    totalLabs: 2,
-    sections: 2,             // 670001, 670002
-    pendingReviews: 0,
-    status: "0 Pending",
-    color: "emerald-500",
-    lightColor: "emerald-50"
-  }
+const API_BASE = 'https://y0uutvozaa.execute-api.us-east-1.amazonaws.com/dev';
+const LABS_CACHE_KEY = 'labs_cache_v1';
+const LABS_CACHE_TTL = 30000;
+
+async function fetchLabsCached() {
+  try {
+    const raw = sessionStorage.getItem(LABS_CACHE_KEY);
+    if (raw) {
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < LABS_CACHE_TTL) return data;
+    }
+  } catch {}
+  const res = await fetch(`${API_BASE}/labs`);
+  const data = await res.json();
+  try { sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+  return data;
+}
+
+const COLORS = [
+  { color: 'indigo-500',  lightColor: 'indigo-50'  },
+  { color: 'blue-500',    lightColor: 'blue-50'    },
+  { color: 'emerald-500', lightColor: 'emerald-50' },
+  { color: 'violet-500',  lightColor: 'violet-50'  },
 ];
+let courses = [];
+
+async function loadCourses() {
+  try {
+    const data = await fetchLabsCached();
+    if (!data.success) throw new Error(data.error);
+    const map = {};
+    for (const lab of data.labs) {
+      if (!map[lab.subjectId]) map[lab.subjectId] = { labCount: 0, sectionSet: new Set(), labIDs: [] };
+      map[lab.subjectId].labCount++;
+      map[lab.subjectId].labIDs.push(lab.labID);
+      (lab.sections || []).forEach(s => map[lab.subjectId].sectionSet.add(s));
+    }
+
+    const statsBySubject = {};
+    await Promise.all(Object.entries(map).map(async ([subj, info]) => {
+      let total = 0, graded = 0, pending = 0;
+      await Promise.all(info.labIDs.map(async labID => {
+        try {
+          const r = await fetch(`${API_BASE}/submissions?labID=${encodeURIComponent(labID)}`);
+          const d = await r.json();
+          if (d.success && d.stats) {
+            total   += d.stats.total   || 0;
+            graded  += (d.stats.passed || 0) + (d.stats.rejected || 0);
+            pending += d.stats.pending || 0;
+          }
+        } catch { /* skip */ }
+      }));
+      statsBySubject[subj] = {
+        progress: total > 0 ? Math.round((graded / total) * 100) : 0,
+        pendingReviews: pending,
+      };
+    }));
+
+    return Object.entries(map).map(([code, c], i) => {
+      const s = statsBySubject[code] || { progress: 0, pendingReviews: 0 };
+      return {
+        code,
+        name:           code,
+        progress:       s.progress,
+        totalLabs:      c.labCount,
+        sections:       c.sectionSet.size,
+        pendingReviews: s.pendingReviews,
+        status:         `${s.pendingReviews} Pending`,
+        ...COLORS[i % COLORS.length],
+      };
+    });
+  } catch (err) {
+    console.error('loadCourses:', err);
+    return [];
+  }
+}
 
 /* ── Sort state ── */
 let viewFilter = 'done';
@@ -532,7 +571,10 @@ document.getElementById("searchInput").addEventListener("input", e => {
 
 /* ── Init ── */
 updateDashboardFilterButtons();
-renderGrid();
+(async () => {
+  courses = await loadCourses();
+  renderGrid();
+})();
 </script>
 </body>
 </html>

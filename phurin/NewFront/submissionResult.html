@@ -196,12 +196,12 @@
         <i class="ph-fill ph-squares-four text-sm"></i> Overview
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
-      <button type="button" onclick="window.location.href='student_Lablist.html?subjectId=CS%20232'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
-        <i class="ph-fill ph-stack text-sm"></i> CS 232
+      <button type="button" id="breadcrumbSubject" onclick="window.location.href='student_Lablist.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-stack text-sm"></i> <span id="breadcrumbSubjectText">Course</span>
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
-      <button type="button" onclick="window.location.href='submissionPage.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
-        <i class="ph-fill ph-file-text text-sm"></i> Lab 05 - CPU Pipelining
+      <button type="button" id="breadcrumbLab" onclick="window.location.href='submissionPage.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+        <i class="ph-fill ph-file-text text-sm"></i> <span id="breadcrumbLabName">Lab</span>
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
       <span class="flex items-center gap-1 text-brand-800">
@@ -219,7 +219,7 @@
         </div>
         <div>
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Evaluation Status</p>
-          <h1 class="text-[18px] font-bold text-brand-900">Lab 05 - CPU Pipelining</h1>
+          <h1 id="labTitle" class="text-[18px] font-bold text-brand-900">Loading…</h1>
         </div>
       </div>
 
@@ -300,15 +300,84 @@ function getResultState() {
  * เมื่อโหลดหน้ามา ให้เริ่มที่ 'processing'
  * จากนั้นรอฟังผลจาก Backend (เช่น fetch API)
  */
+const API_BASE      = 'https://y0uutvozaa.execute-api.us-east-1.amazonaws.com/dev';
+const POLL_INTERVAL = 5000;
+const MAX_POLLS     = 24; // 2 นาที
+const LABS_CACHE_KEY = 'labs_cache_v1';
+const LABS_CACHE_TTL = 30000;
+
+async function fetchLabsCached() {
+    try {
+        const raw = sessionStorage.getItem(LABS_CACHE_KEY);
+        if (raw) {
+            const { ts, data } = JSON.parse(raw);
+            if (Date.now() - ts < LABS_CACHE_TTL) return data;
+        }
+    } catch {}
+    const res = await fetch(`${API_BASE}/labs`);
+    const data = await res.json();
+    try { sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
+    return data;
+}
+
+async function loadLabHeader(labID) {
+    if (!labID) return;
+    try {
+        const data = await fetchLabsCached();
+        const labs = Array.isArray(data) ? data : (data.labs || []);
+        const lab  = labs.find(l => l.labID === labID);
+        if (!lab) return;
+
+        const title = document.getElementById('labTitle');
+        if (title) title.textContent = lab.labName || labID;
+
+        const subjText = document.getElementById('breadcrumbSubjectText');
+        if (subjText) subjText.textContent = lab.subjectId || 'Course';
+
+        const subjBtn = document.getElementById('breadcrumbSubject');
+        if (subjBtn) subjBtn.onclick = () =>
+            window.location.href = `student_Lablist.html?subjectId=${encodeURIComponent(lab.subjectId || '')}`;
+
+        const labText = document.getElementById('breadcrumbLabName');
+        if (labText) labText.textContent = lab.labName || labID;
+
+        const labBtn = document.getElementById('breadcrumbLab');
+        if (labBtn) labBtn.onclick = () =>
+            window.location.href = `submissionPage.html?lab=${encodeURIComponent(labID)}`;
+    } catch { /* keep defaults */ }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const state = getResultState() || 'processing';
     updateResultView(state);
 
-    if (state === 'processing') {
-        setTimeout(() => {
-            updateResultView('passed');
-        }, 3000);
-    }
+    const email = localStorage.getItem('submission_email');
+    const labID = localStorage.getItem('submission_labID');
+    loadLabHeader(labID);
+
+    if (state !== 'processing') return;
+    if (!email || !labID) return;
+
+    let polls = 0;
+    const interval = setInterval(async () => {
+        polls++;
+        try {
+            const res  = await fetch(`${API_BASE}/result?email=${encodeURIComponent(email)}&labID=${encodeURIComponent(labID)}`);
+            const data = await res.json();
+            if (data.success && data.submission) {
+                const status = data.submission.status;
+                if (status === 'PASSED') {
+                    clearInterval(interval);
+                    updateResultView('passed');
+                } else if (status === 'REJECTED') {
+                    clearInterval(interval);
+                    updateResultView('failed');
+                }
+            }
+        } catch { /* keep polling */ }
+
+        if (polls >= MAX_POLLS) clearInterval(interval);
+    }, POLL_INTERVAL);
 });
 </script>
 </body>

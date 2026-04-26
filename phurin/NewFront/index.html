@@ -23,12 +23,37 @@
             เข้าสู่ระบบ (Login)
         </a>
 
+        <div style="margin-top:24px;padding-top:16px;border-top:1px dashed #cbd5e1">
+            <p style="font-size:12px;color:#64748b;margin:0 0 8px">Dev bypass (no Cognito)</p>
+            <button onclick="devLogin('student')" class="login-btn" style="background:#4f46e5;font-size:14px;padding:8px 16px;margin:4px">Skip → Student</button>
+            <button onclick="devLogin('ta')" class="login-btn" style="background:#0f172a;font-size:14px;padding:8px 16px;margin:4px">Skip → TA</button>
+        </div>
+
         <div id="loadingMessage">กำลังตรวจสอบสิทธิ์และพาคุณเข้าสู่ระบบ... ⏳</div>
     </div>
 
     
 <script>
-    // 1. ฟังก์ชันถอดรหัส Token
+    // 0. Dev bypass — สร้าง token ปลอมแล้วไปต่อโดยไม่ต้อง Cognito
+        function b64url(obj) {
+            return btoa(JSON.stringify(obj)).replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');
+        }
+        function devLogin(role) {
+            const email = role === 'ta' ? 'ta.dev@example.com' : 'student.dev@example.com';
+            const payload = {
+                email,
+                'cognito:username': email,
+                'custom:role': role,
+                sub: 'dev-' + role,
+                exp: Math.floor(Date.now()/1000) + 24*3600,
+            };
+            const fakeToken = b64url({alg:'none',typ:'JWT'}) + '.' + b64url(payload) + '.';
+            localStorage.setItem('cognito_id_token', fakeToken);
+            localStorage.setItem('dev_email', email);
+            routeUser(fakeToken);
+        }
+
+        // 1. ฟังก์ชันถอดรหัส Token
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
