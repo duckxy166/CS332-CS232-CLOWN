@@ -1,10 +1,46 @@
 import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { TextractClient, DetectDocumentTextCommand } from "@aws-sdk/client-textract";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 const db       = new DynamoDBClient({ region: "us-east-1" });
 const textract = new TextractClient({ region: "us-east-1" });
-const SCREENSHOT_BUCKET = "lab-checker-screenshots";
+const s3       = new S3Client({ region: "us-east-1" });
+const SCREENSHOT_BUCKET = "lab-checker-screenshots-65401";
+const REFERENCE_BUCKET  = "lab-checker-reference-49013";
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+async function callLLMWithVision(prompt, imageUrls) {
+  const content = [
+    ...imageUrls.map(url => ({ type: "image_url", image_url: { url } })),
+    { type: "text", text: prompt }
+  ];
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-5.4-nano",
+      messages: [{
+        role: "user",
+        content: content
+      }],
+      response_format: { type: "json_object" },
+      max_completion_tokens: 1024
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`OpenAI API returned ${res.status}: ${errText}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || null;
+}
 
 export const handler = async (event) => {
   for(const record of event.Records){
@@ -18,6 +54,10 @@ export const handler = async (event) => {
         Key: marshall({ labID })
       }));
       const lab = unmarshall(labRes.Item);
+      const enableLLM = lab.enableLLMCheck === true;
+      const labRules      = Array.isArray(lab.rules)      ? lab.rules      : [];
+      const labThresholds = Array.isArray(lab.thresholds) ? lab.thresholds : [];
+      const labImages     = Array.isArray(lab.images)     ? lab.images     : [];
 
       let overallStatus = "PASSED";
       let totalScore    = 0;
@@ -26,8 +66,8 @@ export const handler = async (event) => {
       /* ── check each screenshot against its imgId rules ── */
       for(const shot of screenshots){
 
-        const imgRules     = lab.rules.filter(r => r.imgId === shot.imgId);
-        const imgThreshold = lab.thresholds.find(t => t.imgId === shot.imgId);
+        const imgRules     = labRules.filter(r => r.imgId === shot.imgId);
+        const imgThreshold = labThresholds.find(t => t.imgId === shot.imgId);
 
         /* run Textract on this screenshot */
         const txRes = await textract.send(new DetectDocumentTextCommand({
@@ -44,7 +84,7 @@ export const handler = async (event) => {
             bottom: b.Geometry.BoundingBox.Top  + b.Geometry.BoundingBox.Height
           }));
 
-        /* evaluate rules for this image */
+        /* ── Step 1: Textract keyword check (fast, cheap) ── */
         const ruleResults = [];
         let imgScore      = 0;
         let imgStatus     = "PASSED";
@@ -56,10 +96,8 @@ export const handler = async (event) => {
 
           if(matches.length > 0){
             if(!rule.pos){
-              /* keyword only mode */
               passed = true;
             } else {
-              /* keyword + position mode */
               const tol = { low: 0.30, medium: 0.15, high: 0.05 }[rule.sens || "medium"];
               passed = matches.some(b => {
                 const cx = (b.left + b.right)  / 2;
@@ -74,27 +112,101 @@ export const handler = async (event) => {
           imgScore   += score;
           ruleResults.push({ ruleId: rule.id, keyword: rule.kw, passed, score });
 
-          /* mandatory rule fail → image rejected immediately */
           if(rule.mand && !passed) imgStatus = "REJECTED";
         }
 
-        /* check score threshold for this image */
         if(imgThreshold?.useScore && imgScore < imgThreshold.scoreMin){
           imgStatus = "REJECTED";
         }
 
+        console.log(`imgId ${shot.imgId} [Textract]: ${imgStatus} score: ${imgScore}`);
+
+        /* ── Step 2: LLM deep check (only if Textract PASSED and LLM enabled) ── */
+        let llmResult = null;
+        let llmFeedback = null;
+        let llmCheckSkipped = true;
+        let llmError = null;
+
+        if (imgStatus === "PASSED" && enableLLM) {
+          const imgMeta = labImages.find(i => i.id === shot.imgId);
+          const refS3Key = imgMeta?.refS3Key || null;
+
+          if (refS3Key) {
+            try {
+              const [referenceUrl, studentUrl] = await Promise.all([
+                getSignedUrl(s3, new GetObjectCommand({ Bucket: REFERENCE_BUCKET,  Key: refS3Key     }), { expiresIn: 300 }),
+                getSignedUrl(s3, new GetObjectCommand({ Bucket: SCREENSHOT_BUCKET, Key: shot.s3Key    }), { expiresIn: 300 }),
+              ]);
+
+              const prompt = `You are a lab grader comparing two screenshots:
+- Image 1: Reference (correct submission)
+- Image 2: Student's submission
+
+Rules:
+- Keyword checks are already done separately — do not repeat them
+- Ignore cosmetic differences: theme, window size, account names, timestamps, UI language
+- PASSED if the student completed the same task on the same service in a finished state
+- REJECTED only if: wrong service, wrong action, or clearly incomplete
+- When in doubt, choose PASSED
+
+Reply with JSON only, no other text:
+{
+  "overall": "PASSED",
+  "confidence": 0.95,
+  "reason": "<2-3 sentences: overall verdict, what matches, and any notable differences>"
+}
+
+confidence is a number from 0.0 to 1.0 representing how certain you are about the verdict.`;
+
+              const llmText = await callLLMWithVision(prompt, [referenceUrl, studentUrl]);
+
+              if (llmText) {
+                const jsonMatch = llmText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                  llmResult = JSON.parse(jsonMatch[0]);
+                  llmFeedback = llmResult.reason || null;
+                  llmCheckSkipped = false;
+
+                  /* LLM can only escalate: flip PASSED → REJECTED, never downgrade */
+                  if (llmResult.overall === "REJECTED") {
+                    imgStatus = "REJECTED";
+                    console.log(`imgId ${shot.imgId} [LLM]: overridden to REJECTED`);
+                  } else {
+                    console.log(`imgId ${shot.imgId} [LLM]: confirmed PASSED`);
+                  }
+                } else {
+                  llmError = "could not parse JSON from response";
+                  console.error(`imgId ${shot.imgId} [LLM]: could not parse JSON from response`);
+                }
+              }
+            } catch (llmErr) {
+              llmError = llmErr.message;
+              console.error(`imgId ${shot.imgId} [LLM] error (non-fatal):`, llmErr.message);
+            }
+          } else {
+            console.log(`imgId ${shot.imgId} [LLM]: no reference s3Key on lab — skipping`);
+            llmError = "no reference image stored for this lab (lab was created before reference-image comparison was enabled)";
+          }
+        } else if (imgStatus === "REJECTED") {
+          console.log(`imgId ${shot.imgId} [LLM]: Textract rejected, skipping LLM`);
+        }
+
         totalScore += imgScore;
         imageResults.push({
-          imgId:       shot.imgId,
-          status:      imgStatus,
-          score:       imgScore,
-          ruleResults
+          imgId:          shot.imgId,
+          status:         imgStatus,
+          score:          imgScore,
+          ruleResults,
+          llmResult,
+          llmFeedback,
+          llmConfidence:  llmResult?.confidence ?? null,
+          llmCheckSkipped,
+          llmError
         });
 
-        /* any image fails → overall fails */
         if(imgStatus === "REJECTED") overallStatus = "REJECTED";
 
-        console.log(`imgId ${shot.imgId}: ${imgStatus} score: ${imgScore}`);
+        console.log(`imgId ${shot.imgId} [final]: ${imgStatus} score: ${imgScore}`);
       }
 
       console.log('overall:', overallStatus, 'totalScore:', totalScore);

@@ -18,8 +18,10 @@ export const handler = async (event) => {
     }
 
     console.log('body received:', JSON.stringify(body));
+    console.log('[labConfig] images with llmDescription:', JSON.stringify(body.images?.map(i => ({ id: i.id, hasLLM: !!i.llmDescription }))));
+    console.log('[labConfig] enableLLMCheck:', body.enableLLMCheck);
 
-    const labID = randomUUID();
+    const labID = body.labID || randomUUID();
 
     const item = {
       labID,
@@ -31,6 +33,7 @@ export const handler = async (event) => {
       images:      body.images,
       rules:       body.rules,
       thresholds:  body.thresholds,
+      enableLLMCheck: true,
       createdBy:   body.createdBy || "TA",
       status:      "active",
       createdAt:   new Date().toISOString()

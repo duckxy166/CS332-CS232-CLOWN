@@ -5,7 +5,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 const db = new DynamoDBClient({ region: "us-east-1" });
 const s3 = new S3Client({ region: "us-east-1" });
-const SCREENSHOT_BUCKET = "lab-checker-screenshots";
+const SCREENSHOT_BUCKET = "lab-checker-screenshots-65401";
 const PRESIGN_EXPIRY = 900; // 15 minutes
 
 export const handler = async (event) => {
@@ -111,7 +111,17 @@ export const handler = async (event) => {
       body: JSON.stringify({
         success: true,
         lab: lab
-          ? { labID: lab.labID, labName: lab.labName, subjectId: lab.subjectId, sections: lab.sections }
+          ? {
+              labID:       lab.labID,
+              labName:     lab.labName,
+              subjectId:   lab.subjectId,
+              sections:    lab.sections,
+              deadline:    lab.deadline    || null,
+              description: lab.description || "",
+              rules:       lab.rules       || [],
+              thresholds:  lab.thresholds  || [],
+              images:      lab.images      || [],
+            }
           : null,
         stats,
         submissions,
