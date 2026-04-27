@@ -1,30 +1,67 @@
-// ข้อมูลจำลอง - ในอนาคตก้อนนี้จะถูกดึงมาจาก Database ผ่าน Backend API
-let labs = [
-    { id: 5, title: "Lab 05 - CPU Pipelining", desc: "Upload AWS EC2 instance screenshots", status: "NOT_SUBMITTED", score: null, meta: "DUE TOMORROW, 11:59 PM", metaIcon: "ph-calendar-blank" },
-    { id: 4, title: "Lab 04 - Cache Memory Design", desc: "S3 bucket configuration and deployment", status: "PENDING", score: null, meta: "Submitted Oct 12, 2:30 PM", metaIcon: "ph-clock" },
-    { id: 3, title: "Lab 03 - ALU Logic Verification", desc: "Lambda function trigger validation", status: "FAILED", score: null, meta: "Upload Failed - System Error", metaIcon: "ph-warning-octagon" },
-    { id: 2, title: "Lab 02 - Instruction Set Architecture", desc: "IAM Role policy creation", status: "PASSED", score: 100, meta: "Graded Oct 05, 10:15 AM", metaIcon: "ph-check-circle" },
-    { id: 1, title: "Lab 01 - Intro to Verilog", desc: "Basic cloud environment setup", status: "PASSED", score: 100, meta: "Graded Sep 28, 09:00 AM", metaIcon: "ph-check-circle" }
-];
-
+// Real backend-driven lab list. Fetches /labs (filtered by subjectId) and overlays
+// per-lab submission status via /result?email&labID for the logged-in student.
+let labs = [];
 let currentFilter = 'ALL';
 let searchTerm = '';
-
-const COURSE_META = {
-    'CS 232': { name: 'Computer Architecture', section: '650001' },
-    'CS 251': { name: 'Data Structures', section: '660001' },
-    'CS 271': { name: 'Operating Systems', section: '670001' },
-};
+let pollTimer = null;
+let currentUser = null;
 
 function getCurrentSubjectId() {
-    return new URLSearchParams(window.location.search).get('subjectId') || 'CS 232';
+    return new URLSearchParams(window.location.search).get('subjectId') || '';
+}
+
+function formatDeadlineMeta(iso) {
+    if (!iso) return null;
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return null;
+    const diffMs = date - new Date();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    if (diffDays < 0) return `OVERDUE · ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}`;
+    if (diffDays === 0) return `DUE TODAY, ${time}`;
+    if (diffDays === 1) return `DUE TOMORROW, ${time}`;
+    if (diffDays <= 7) return `DUE IN ${diffDays} DAYS, ${time}`;
+    return `DUE ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}, ${time}`;
+}
+
+function buildLab(lab, submission) {
+    const labID = getLabId(lab);
+    const labName = getLabName(lab);
+    const description = lab?.description || '';
+    const status = normalizeStudentStatus(submission);
+    let meta = null;
+    let metaIcon = null;
+    if (submission?.checkedAt && (status === 'PASSED' || status === 'FAILED')) {
+        meta = `Graded ${formatDateLabel(submission.checkedAt)}`;
+        metaIcon = status === 'PASSED' ? 'ph-check-circle' : 'ph-warning-octagon';
+    } else if (submission?.submittedAt && status === 'PENDING') {
+        meta = `Submitted ${formatDateLabel(submission.submittedAt)}`;
+        metaIcon = 'ph-clock';
+    } else if (lab?.dueDate) {
+        meta = formatDeadlineMeta(lab.dueDate);
+        metaIcon = 'ph-calendar-blank';
+    }
+    return {
+        id: labID,
+        labRaw: lab,
+        title: labName,
+        desc: description,
+        status,
+        score: submission?.totalScore ?? null,
+        meta,
+        metaIcon,
+    };
 }
 
 function updateCourseHeader() {
     const subjectId = getCurrentSubjectId();
-    const meta = COURSE_META[subjectId] || { name: subjectId, section: '650001' };
-    const completedCount = labs.filter(lab => lab.status === 'PASSED' || lab.status === 'FAILED').length;
-    const totalCount = 6;
+    const sectionLabel = (() => {
+        const sections = new Set();
+        labs.forEach(l => getLabSections(l.labRaw).forEach(s => sections.add(s)));
+        return sections.size ? Array.from(sections).join(', ') : '—';
+    })();
+    const completedCount = labs.filter(l => l.status === 'PASSED' || l.status === 'FAILED').length;
+    const totalCount = labs.length;
     const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
 
     const courseCode = document.getElementById('courseCode');
@@ -35,10 +72,10 @@ function updateCourseHeader() {
     const progressFill = document.getElementById('progressFill');
     const labCount = document.getElementById('labCount');
 
-    if (courseCode) courseCode.textContent = subjectId;
-    if (breadcrumbCourse) breadcrumbCourse.textContent = subjectId;
-    if (courseName) courseName.textContent = meta.name;
-    if (courseSection) courseSection.textContent = meta.section;
+    if (courseCode) courseCode.textContent = subjectId || 'All';
+    if (breadcrumbCourse) breadcrumbCourse.textContent = subjectId || 'All Labs';
+    if (courseName) courseName.textContent = getCourseTitle(subjectId);
+    if (courseSection) courseSection.textContent = sectionLabel;
     if (progressText) progressText.textContent = `${completedCount}/${totalCount}`;
     if (progressFill) progressFill.style.width = `${progressPct}%`;
     if (labCount) labCount.textContent = String(totalCount);
@@ -87,9 +124,9 @@ function renderLabs() {
                     <i class="ph-fill ph-file-text"></i>
                 </div>
                 <div>
-                    <h3 class="text-h4 font-bold text-brand-800">${lab.title}</h3>
-                    <p class="text-p2 text-gray-400">${lab.desc}</p>
-                    ${lab.meta ? `<p class="text-p2 ${metaColor} mt-1 flex items-center gap-1 uppercase tracking-wide">${metaIcon} ${lab.meta}</p>` : ''}
+                    <h3 class="text-h4 font-bold text-brand-800">${escapeHtml(lab.title)}</h3>
+                    <p class="text-p2 text-gray-400">${escapeHtml(lab.desc)}</p>
+                    ${lab.meta ? `<p class="text-p2 ${metaColor} mt-1 flex items-center gap-1 uppercase tracking-wide">${metaIcon} ${escapeHtml(lab.meta)}</p>` : ''}
                 </div>
             </div>
             <div class="flex items-center gap-4 w-full md:w-auto justify-end">
@@ -103,34 +140,37 @@ function renderLabs() {
  * จัดการแสดงผลปุ่มและสถานะตามเงื่อนไข (แก้ไขเป็น Pending ตามรูปภาพ)
  */
 function renderStatusUI(lab) {
+    const labParam = encodeURIComponent(lab.id || '');
+    const classParam = encodeURIComponent(lab.labRaw?.classID || getCurrentSubjectId() || '');
     switch (lab.status) {
         case 'PASSED':
             return `
                 <div class="mr-2 whitespace-nowrap">
                     <span class="text-p1 text-gray-500">Score: </span>
-                    <span class="text-status-success font-bold text-p1">${lab.score}</span>
+                    <span class="text-status-success font-bold text-p1">${lab.score ?? '-'}</span>
                 </div>
                 <span class="text-p2 font-bold text-status-success bg-status-successBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Passed</span>
-                <button type="button" onclick="window.location.href='submissionResult.html?state=passed'" class="px-6 py-2 border border-layout-border rounded-lg text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors whitespace-nowrap">View Results</button>
+                <button type="button" onclick="window.location.href='submissionResult.html?labID=${labParam}&classID=${classParam}&state=passed'" class="px-6 py-2 border border-layout-border rounded-lg text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors whitespace-nowrap">View Results</button>
             `;
         case 'FAILED':
             return `
                 <span class="flex items-center gap-1 text-p2 font-bold text-status-error bg-status-errorBg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">
                     <i class="ph-fill ph-warning-octagon text-sm"></i> Failed
                 </span>
-                <button type="button" onclick="window.location.href='submissionResult.html?state=failed'" class="px-6 py-2 border border-red-200 rounded-lg text-btn text-status-error hover:bg-red-50 transition-colors whitespace-nowrap">View Details</button>
+                <button type="button" onclick="window.location.href='submissionResult.html?labID=${labParam}&classID=${classParam}&state=failed'" class="px-6 py-2 border border-red-200 rounded-lg text-btn text-status-error hover:bg-red-50 transition-colors whitespace-nowrap">View Details</button>
+                <button type="button" onclick="window.location.href='submissionPage.html?labID=${labParam}&classID=${classParam}'" class="px-4 py-2 border border-layout-border rounded-lg text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors whitespace-nowrap">Resubmit</button>
             `;
         case 'PENDING':
             return `
                 <span class="text-p2 font-bold text-status-warning bg-status-warningBg px-3 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
                     <i class="ph ph-hourglass text-sm"></i> Pending
                 </span>
-                <button type="button" disabled class="px-6 py-2 bg-layout-bg rounded-lg text-btn text-gray-400 cursor-not-allowed whitespace-nowrap">Processing...</button>
+                <button type="button" onclick="window.location.href='submissionResult.html?labID=${labParam}&classID=${classParam}&state=processing'" class="px-6 py-2 border border-layout-border rounded-lg text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors whitespace-nowrap">View Status</button>
             `;
         default:
             return `
                 <span class="text-p2 font-bold text-gray-400 bg-layout-bg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Not Submitted</span>
-                <button type="button" onclick="window.location.href='submissionPage.html?lab=${lab.id}'" class="px-8 py-2.5 bg-brand-500 text-white rounded-lg text-btn hover:bg-indigo-600 transition-all shadow-sm whitespace-nowrap">Submit Lab</button>
+                <button type="button" onclick="window.location.href='submissionPage.html?labID=${labParam}&classID=${classParam}'" class="px-8 py-2.5 bg-brand-500 text-white rounded-lg text-btn hover:bg-indigo-600 transition-all shadow-sm whitespace-nowrap">Submit Lab</button>
             `;
     }
 }
@@ -156,39 +196,87 @@ function filterLabs(type) {
     renderLabs();
 }
 
-/**
- * ระบบจำลองการตรวจ Lab (Simulation)
- * ค้นหาตัวที่เป็น PENDING และเปลี่ยนสถานะหลังจาก 5 วินาที
- */
-function simulateBackendCheck() {
-    setInterval(() => {
-        let hasChange = false;
-        labs = labs.map(lab => {
-            if (lab.status === 'PENDING') {
-                hasChange = true;
-                const isPassed = Math.random() > 0.2; // โอกาสผ่าน 80%
-                return {
-                    ...lab,
-                    status: isPassed ? 'PASSED' : 'FAILED',
-                    score: isPassed ? Math.floor(Math.random() * (100 - 80 + 1)) + 80 : null
-                };
-            }
-            return lab;
-        });
-
-        if (hasChange) {
-            renderLabs();
-        }
-    }, 5000); 
+async function fetchSubmissionForLab(email, labID) {
+    if (!email || !labID) return null;
+    try {
+        const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.result, { email, labID }));
+        return data?.submission || null;
+    } catch (err) {
+        if (err.status === 404) return null;
+        console.warn('result fetch failed for', labID, err);
+        return null;
+    }
 }
 
-// Event Listeners
+function renderError(message) {
+    const container = document.getElementById('lab-list');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="rounded-xl border border-layout-border bg-layout-surface px-6 py-10 text-center shadow-sm">
+            <div class="flex items-center justify-center gap-2 text-status-error text-p1 font-semibold mb-2">
+                <i class="ph-fill ph-warning-circle text-base"></i>
+                <span>Failed to load labs</span>
+            </div>
+            <div class="text-p2 text-gray-400">${escapeHtml(message)}</div>
+            <button onclick="loadLabs()" class="mt-4 inline-flex items-center gap-2 rounded-lg border border-layout-border bg-layout-surface px-4 py-2 text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors">
+                <i class="ph ph-arrow-counter-clockwise text-sm"></i>
+                Try again
+            </button>
+        </div>`;
+}
+
+async function loadLabs() {
+    if (!currentUser) currentUser = requireAuth('student');
+    if (!currentUser) return;
+    try {
+        const data = await apiFetch(API_ENDPOINTS.labs);
+        if (!data?.success) throw new Error(data?.error || 'Unable to load labs');
+        const subjectId = getCurrentSubjectId();
+        const allLabs = data.labs || [];
+        const filteredByCourse = subjectId ? allLabs.filter(l => getSubjectId(l) === subjectId) : allLabs;
+        const enriched = await Promise.all(filteredByCourse.map(async (lab) => {
+            const submission = await fetchSubmissionForLab(currentUser.email, getLabId(lab));
+            return buildLab(lab, submission);
+        }));
+        labs = enriched;
+        updateCourseHeader();
+        renderLabs();
+    } catch (err) {
+        console.error('Lab list load failed:', err);
+        renderError(err.message || 'Unknown error');
+    }
+}
+
+function startPendingPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+        if (!currentUser) return;
+        const pending = labs.filter(l => l.status === 'PENDING');
+        if (pending.length === 0) return;
+        const updates = await Promise.all(pending.map(async (lab) => {
+            const submission = await fetchSubmissionForLab(currentUser.email, lab.id);
+            return [lab.id, submission];
+        }));
+        let changed = false;
+        updates.forEach(([labID, submission]) => {
+            const idx = labs.findIndex(l => l.id === labID);
+            if (idx === -1) return;
+            const next = buildLab(labs[idx].labRaw, submission);
+            if (next.status !== labs[idx].status) changed = true;
+            labs[idx] = next;
+        });
+        if (changed) {
+            updateCourseHeader();
+            renderLabs();
+        }
+    }, 8000);
+}
+
 document.getElementById('searchInput')?.addEventListener('input', (e) => {
     searchTerm = e.target.value;
     renderLabs();
 });
 
-// เริ่มต้นโปรแกรม
-updateCourseHeader();
-renderLabs();
-simulateBackendCheck();
+document.addEventListener('DOMContentLoaded', () => {
+    loadLabs().then(startPendingPolling);
+});

@@ -703,7 +703,7 @@ function updateStatus() {
 
 /* ── Submit (λ submissionHandler in Mock backend) ── */
 async function handleSubmit() {
-  const slotsWithFile = uploads.slice(0, _slotCount).map((u, i) => ({ slot: i + 1, file: u })).filter(x => x.file);
+  const slotsWithFile = uploads.slice(0, _slotCount).map((u, i) => ({ slot: i + 1, file: u && u.file })).filter(x => x.file);
   if (slotsWithFile.length === 0) {
     toast('Upload at least one screenshot first.', 'error');
     return;

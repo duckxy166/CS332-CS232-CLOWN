@@ -21,6 +21,9 @@ export const handler = async (event) => {
 
     const labID = randomUUID();
 
+    // Strip base64 image data — store only slot/s3Key metadata in DynamoDB
+    const images = (body.images || []).map(({ id, slot, s3Key }) => ({ id, slot, s3Key }));
+
     const item = {
       labID,
       labName:     body.labName,
@@ -28,7 +31,7 @@ export const handler = async (event) => {
       sections:    body.sections,
       description: body.description || "",
       deadline:    body.deadline,
-      images:      body.images,
+      images,
       rules:       body.rules,
       thresholds:  body.thresholds,
       createdBy:   body.createdBy || "TA",
@@ -38,7 +41,7 @@ export const handler = async (event) => {
 
     await db.send(new PutItemCommand({
       TableName: "Labs",
-      Item: marshall(item)
+      Item: marshall(item, { removeUndefinedValues: true })
     }));
 
     return {

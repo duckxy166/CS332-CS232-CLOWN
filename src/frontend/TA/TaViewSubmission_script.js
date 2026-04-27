@@ -4,145 +4,110 @@
    TaDashboard_script.js for consistency.
 ══════════════════════════════════════════════ */
 
-/* ── Lab Meta Catalogue (mock keyed by lab id) ── */
-const LABS = {
-  // CS 232
-  201: { title: "Lab 01 - CPU Registers",    section: "650001", deadline: "10 Apr 2026" },
-  202: { title: "Lab 02 - Pipelining",       section: "650001", deadline: "17 Apr 2026" },
-  203: { title: "Lab 03 - Cache Memory",     section: "650002", deadline: "24 Apr 2026" },
-  // CS 251
-  301: { title: "Lab 01 - Linked List",      section: "660001", deadline: "12 Apr 2026" },
-  302: { title: "Lab 02 - Binary Tree",      section: "660001", deadline: "19 Apr 2026" },
-  // CS 271
-  401: { title: "Lab 01 - Process Scheduling", section: "670001", deadline: "05 Apr 2026" },
-  402: { title: "Lab 02 - Threads & Mutex",    section: "670002", deadline: "12 Apr 2026" },
+/* TA submission viewer — real backend driven */
+let labData = {
+  title: 'Loading…',
+  section: '—',
+  deadline: '—',
+  description: [],
+  rules: [],
 };
+let submissions = [];
+let currentTaUser = null;
+let activeLabID = '';
 
-/* Shared description + rules (same for all mock labs) */
-const DEFAULT_META = {
-  title:    "Cloud Storage Setup",
-  section:  "650001",
-  deadline: "16 Mar 2026",
-  description: [
-    "Configure AWS Lambda to receive S3 events",
-    "Write Node.js code to extract bucketName and validate file extensions (.jpg, .png)",
-    "Ensure correct IAM role permissions are attached to the function",
-  ],
-  rules: [
-    { type: "Text",           requirement: "mandatory", keyword: "Successfully", weight: 40 },
-    { type: "Text + Position",requirement: "optional",  keyword: "Lambda",       weight: 40 },
-    { type: "Text",           requirement: "optional",  keyword: "index",        weight: 20 },
-  ],
-};
-
-/* ── Resolve current lab from ?lab= param ── */
-function resolveLab() {
+function getActiveLabId() {
   const params = new URLSearchParams(window.location.search);
-  const id = params.get('lab');
-  const picked = id && LABS[id] ? LABS[id] : null;
-  return { ...DEFAULT_META, ...(picked || {}) };
+  return params.get('lab') || params.get('labID') || '';
 }
 
-const labData = resolveLab();
+function confidenceLevel(conf) {
+  const v = Number(conf || 0);
+  if (v >= 0.85) return 'High';
+  if (v >= 0.6)  return 'Medium';
+  return 'Low';
+}
 
-/* ── Submissions Data ── */
-const submissions = [
-  {
-    email: "phonpawee.sae@dome.tu.ac.th",
-    status: "passed",
-    score: 100,
-    submittedAt: "26 Mar 2026 · 20:58",
-    checkedAt:   "26 Mar 2026 · 20:58",
-    images: [
-      { label: "Image 1", status: "passed", checks: [
-        { label: "Successfully", ok: true },
-        { label: "Lambda",       ok: true },
-        { label: "index",        ok: true },
-      ], ai: { confidence: 96, level: "High", text: "Confirmation banner is clear and the success state matches the reference behavior." }},
-      { label: "Image 2", status: "passed", checks: [
-        { label: "Buckets", ok: true },
-        { label: "Upload",  ok: true },
-        { label: "Objects", ok: true },
-      ], ai: { confidence: 92, level: "High", text: "All three target objects are present and laid out as in the reference." }},
-    ],
-  },
-  {
-    email: "saharat.udo@dome.tu.ac.th",
-    status: "rejected",
-    score: 60,
-    submittedAt: "26 Mar 2026 · 21:05",
-    checkedAt:   "26 Mar 2026 · 21:05",
-    images: [
-      { label: "Image 1", status: "passed", checks: [
-        { label: "Successfully", ok: true },
-        { label: "Lambda",       ok: true },
-        { label: "index",        ok: true },
-      ], ai: { confidence: 88, level: "Medium", text: "Lambda function output is correct and the index.js handler is referenced as expected." }},
-      { label: "Image 2", status: "rejected", checks: [
-        { label: "Buckets", ok: true },
-        { label: "Upload",  ok: false, note: "Missing" },
-        { label: "Objects", ok: true },
-      ], ai: { confidence: 71, level: "Low", issue: true, text: "Could not find the \"Upload\" intent in the bucket view. The upload action may be hidden behind a menu or scrolled out of frame." }},
-    ],
-  },
-  {
-    email: "paeng.hom@dome.tu.ac.th",
-    status: "passed",
-    score: 100,
-    submittedAt: "26 Mar 2026 · 21:12",
-    checkedAt:   "26 Mar 2026 · 21:12",
-    images: [
-      { label: "Image 1", status: "passed", checks: [
-        { label: "Successfully", ok: true },
-        { label: "Lambda",       ok: true },
-        { label: "index",        ok: true },
-      ], ai: { confidence: 95, level: "High", text: "All required keywords detected with strong layout match against the reference." }},
-      { label: "Image 2", status: "passed", checks: [
-        { label: "Buckets", ok: true },
-        { label: "Upload",  ok: true },
-        { label: "Objects", ok: true },
-      ], ai: { confidence: 94, level: "High", text: "Bucket UI elements visible and aligned with reference positions." }},
-    ],
-  },
-  {
-    email: "nattawut.kri@dome.tu.ac.th",
-    status: "rejected",
-    score: 40,
-    submittedAt: "26 Mar 2026 · 21:30",
-    checkedAt:   "26 Mar 2026 · 21:31",
-    images: [
-      { label: "Image 1", status: "rejected", checks: [
-        { label: "Successfully", ok: false, note: "Missing" },
-        { label: "Lambda",       ok: true },
-        { label: "index",        ok: false, note: "Not found" },
-      ], ai: { confidence: 58, level: "Low", issue: true, text: "Success confirmation is missing and the index handler reference is not visible in the screenshot." }},
-      { label: "Image 2", status: "rejected", checks: [
-        { label: "Buckets", ok: true },
-        { label: "Upload",  ok: false, note: "Missing" },
-        { label: "Objects", ok: false, note: "Missing" },
-      ], ai: { confidence: 52, level: "Low", issue: true, text: "Multiple required intents are missing — only the bucket list is visible; upload and object views were not captured." }},
-    ],
-  },
-  {
-    email: "supalak.wan@dome.tu.ac.th",
-    status: "passed",
-    score: 80,
-    submittedAt: "26 Mar 2026 · 21:44",
-    checkedAt:   "26 Mar 2026 · 21:44",
-    images: [
-      { label: "Image 1", status: "passed", checks: [
-        { label: "Successfully", ok: true },
-        { label: "Lambda",       ok: true },
-        { label: "index",        ok: false, note: "Missing" },
-      ], ai: { confidence: 80, level: "Medium", text: "Core success state is present; index.js reference is faint but acceptable." }},
-      { label: "Image 2", status: "passed", checks: [
-        { label: "Buckets", ok: true },
-        { label: "Upload",  ok: true },
-        { label: "Objects", ok: true },
-      ], ai: { confidence: 90, level: "High", text: "All bucket-related elements visible and recognizable." }},
-    ],
+function mapLabRules(lab) {
+  const rules = Array.isArray(lab?.rules) ? lab.rules : [];
+  return rules.map(r => ({
+    type: r.pos ? 'Text + Position' : 'Text',
+    requirement: r.mand ? 'mandatory' : 'optional',
+    keyword: r.kw || r.keyword || '',
+    weight: r.wt ?? r.weight ?? 0,
+    imgId: r.imgId,
+  }));
+}
+
+function mapLabMeta(lab) {
+  if (!lab) return labData;
+  return {
+    title: getLabName(lab),
+    section: getLabSections(lab).join(', ') || '—',
+    deadline: lab.deadline ? formatDateLabel(lab.deadline) : '—',
+    description: lab.description ? [lab.description] : [],
+    rules: mapLabRules(lab),
+  };
+}
+
+function mapImageResult(scoreItem, screenshot) {
+  const status = normalizeTaStatus(scoreItem?.status);
+  const checks = Array.isArray(scoreItem?.ruleResults)
+    ? scoreItem.ruleResults.map(r => ({
+        label: r.keyword,
+        ok: !!r.passed,
+        note: r.passed ? null : 'Missing',
+      }))
+    : [];
+  let ai = null;
+  if (scoreItem?.llmResult || scoreItem?.llmFeedback) {
+    const conf = scoreItem.llmConfidence ?? scoreItem.llmResult?.confidence ?? 0;
+    const confPct = Math.round(conf * 100);
+    ai = {
+      confidence: confPct,
+      level: confidenceLevel(conf),
+      text: scoreItem.llmFeedback || scoreItem.llmResult?.reason || '',
+      issue: (scoreItem.llmResult?.overall || '').toUpperCase() === 'REJECTED',
+    };
+  } else if (scoreItem?.llmError) {
+    ai = {
+      confidence: 0,
+      level: 'Low',
+      text: `LLM check skipped: ${scoreItem.llmError}`,
+      issue: false,
+    };
   }
-];
+  return {
+    label: `Image ${scoreItem?.imgId ?? screenshot?.imgId ?? '?'}`,
+    status,
+    url: screenshot?.url || null,
+    checks,
+    ai,
+  };
+}
+
+function mapSubmission(raw) {
+  const status = normalizeTaStatus(raw?.status);
+  const screenshotsByImg = (raw?.screenshots || []).reduce((acc, s) => { acc[s.imgId] = s; return acc; }, {});
+  const score = raw?.totalScore ?? 0;
+  const scoreResult = Array.isArray(raw?.scoreResult) ? raw.scoreResult : [];
+  const fallbackImages = (raw?.screenshots || []).map(s => ({ imgId: s.imgId, status: raw?.status, ruleResults: [], llmResult: null }));
+  const sources = scoreResult.length ? scoreResult : fallbackImages;
+  const images = sources.map(item => mapImageResult(item, screenshotsByImg[item.imgId]));
+  return {
+    email: raw?.email || '—',
+    submissionID: raw?.submissionID || null,
+    status,
+    score,
+    submittedAt: raw?.submittedAt ? formatDateLabel(raw.submittedAt) : '—',
+    checkedAt:   raw?.checkedAt   ? formatDateLabel(raw.checkedAt)   : '—',
+    images,
+    raw,
+  };
+}
+
+/* Empty submissions array; populated after fetch. */
+const _legacySubmissionsBootstrap = [];
 
 /* ────────────────────────────────────────
    HELPERS
@@ -249,7 +214,7 @@ function imageCardHTML(img) {
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="text-p1 font-semibold text-brand-800">${img.label}</span>
+            <span class="text-p1 font-medium truncate">${img.label}</span>
             ${statusPill(img.status)}
           </div>
           <ul class="space-y-1">${checksHTML}</ul>
@@ -305,7 +270,9 @@ function renderStats(data) {
 /* ────────────────────────────────────────
    RENDER: Submission Rows
 ──────────────────────────────────────── */
-let expandedRows = new Set([0, 1]); // default: first two expanded
+let expandedRows = new Set(submissions.length ? [0] : []);
+let currentPage = 1;
+let filteredData = [...submissions];
 
 function renderSubmissions(data) {
   const body = document.getElementById('submissionsBody');
@@ -380,8 +347,6 @@ function toggleRow(i) {
    PAGINATION (client-side, simple)
 ──────────────────────────────────────── */
 const PAGE_SIZE = 5;
-let currentPage = 1;
-let filteredData = [...submissions];
 
 function renderPagination() {
   const total = filteredData.length;
@@ -489,13 +454,7 @@ function setSubmissionDecision(idx, decision) {
   const startIdx = (currentPage - 1) * PAGE_SIZE;
   const sub = filteredData[startIdx + idx];
   if (!sub) return;
-  const orig = submissions.find(s => s.email === sub.email);
-  if (!orig) return;
-  if (orig.status === decision) return; // no-op if already in that state
-  orig.status = decision;
-  orig.checkedAt = formatTimestampNow();
-  expandedRows.add(idx);
-  applyPipeline({ preserveState: true });
+  alert('TA override is not yet wired to a backend endpoint. The status from the checker engine is authoritative.');
 }
 
 function updateFilterBadge() {
@@ -661,17 +620,18 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ────────────────────────────────────────
    INIT
 ──────────────────────────────────────── */
-(function init() {
-  // Lab meta
-  document.getElementById('labTitle').textContent    = labData.title;
-  document.getElementById('labSection').textContent  = labData.section;
-  document.getElementById('labDeadline').textContent = labData.deadline;
-
+function renderViewer() {
+  const titleEl = document.getElementById('labTitle');
+  const sectionEl = document.getElementById('labSection');
+  const deadlineEl = document.getElementById('labDeadline');
+  if (titleEl)    titleEl.textContent    = labData.title;
+  if (sectionEl)  sectionEl.textContent  = labData.section;
+  if (deadlineEl) deadlineEl.textContent = labData.deadline;
   document.title = `ValidMate – ${labData.title}`;
 
-  // Pass ?course= to the Lab List breadcrumb so it returns to the right course
-  const courseParam = new URLSearchParams(window.location.search).get('course');
-  if (courseParam) {
+  const params = new URLSearchParams(window.location.search);
+  const subjectId = params.get('subjectId') || params.get('course');
+  if (subjectId) {
     document.querySelectorAll('button[onclick*="TaLablist.html"]').forEach(btn => {
       btn.setAttribute('onclick', `window.location.href='${buildLabListHref()}'`);
     });
@@ -681,7 +641,62 @@ document.addEventListener('DOMContentLoaded', () => {
   renderStats(submissions);
 
   filteredData = [...submissions];
-  const slice  = filteredData.slice(0, PAGE_SIZE);
+  currentPage = 1;
+  expandedRows = new Set(submissions.length ? [0] : []);
+  const slice = filteredData.slice(0, PAGE_SIZE);
   renderSubmissions(slice);
   renderPagination();
-})();
+}
+
+async function loadViewer() {
+  if (!currentTaUser) currentTaUser = requireAuth('ta');
+  if (!currentTaUser) return;
+  activeLabID = getActiveLabId();
+  if (!activeLabID) {
+    console.error('Missing lab id in URL');
+    renderViewer();
+    return;
+  }
+  try {
+    const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.submissions, { labID: activeLabID }));
+    if (!data?.success) throw new Error(data?.error || 'Unable to load submissions');
+    submissions = (data.submissions || []).map(mapSubmission);
+    if (data.lab) {
+      const labMeta = await fetchFullLab(activeLabID);
+      labData = mapLabMeta(labMeta || data.lab);
+    } else {
+      const labMeta = await fetchFullLab(activeLabID);
+      labData = mapLabMeta(labMeta);
+    }
+    renderViewer();
+  } catch (err) {
+    console.error('Submission viewer load failed:', err);
+    const body = document.getElementById('submissionsBody');
+    if (body) {
+      body.innerHTML = `
+        <div class="py-12 flex flex-col items-center justify-center text-gray-400 border-t border-layout-border">
+          <div class="flex items-center gap-2 text-status-error text-p1 font-semibold mb-1">
+            <i class="ph-fill ph-warning-circle"></i>
+            <span>Failed to load submissions</span>
+          </div>
+          <p class="text-p2 text-gray-400">${escapeHtml(err.message || 'Unknown error')}</p>
+          <button onclick="loadViewer()" class="mt-4 inline-flex items-center gap-2 rounded-lg border border-layout-border bg-layout-surface px-4 py-2 text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors">
+            <i class="ph ph-arrow-counter-clockwise text-sm"></i> Try again
+          </button>
+        </div>`;
+    }
+  }
+}
+
+async function fetchFullLab(labID) {
+  try {
+    const data = await apiFetch(API_ENDPOINTS.labs);
+    if (!data?.success) return null;
+    return (data.labs || []).find(l => getLabId(l) === labID) || null;
+  } catch (err) {
+    console.warn('Could not fetch lab list', err);
+    return null;
+  }
+}
+
+loadViewer();

@@ -464,6 +464,92 @@ const Mock = (function () {
         createdAt: new Date(Date.now() - 3 * 86400000).toISOString()
       });
     }
+
+    // Seed sample submissions so TA View Submission has rich data
+    const subs = lsGet('dynamo.Submission', {});
+    if (Object.keys(subs).length === 0) {
+      const seedStudents = [
+        { email: 'student@example.com',  name: 'Saharat Mock',     id: '650001' },
+        { email: 'alice@example.com',    name: 'Alice Johnson',    id: '650002' },
+        { email: 'bob@example.com',      name: 'Bob Williams',     id: '650003' },
+        { email: 'charlie@example.com',  name: 'Charlie Davis',    id: '650004' },
+        { email: 'diana@example.com',    name: 'Diana Martinez',   id: '650005' }
+      ];
+      // tiny 1x1 png base64 placeholder (so S3 store has bytes)
+      const PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+      const subSeeds = [
+        // lab_seed_aws_lambda — mix of passed/rejected/processing
+        { labId: 'lab_seed_aws_lambda', who: 0, status: 'passed',     score: 92, hours: 6,  slots: 2 },
+        { labId: 'lab_seed_aws_lambda', who: 1, status: 'passed',     score: 88, hours: 12, slots: 2 },
+        { labId: 'lab_seed_aws_lambda', who: 2, status: 'rejected',   score: 54, hours: 18, slots: 2, mandatoryFailed: true },
+        { labId: 'lab_seed_aws_lambda', who: 3, status: 'processing', score: null, hours: 1, slots: 2 },
+        { labId: 'lab_seed_aws_lambda', who: 4, status: 'passed',     score: 81, hours: 30, slots: 2 },
+        // lab_seed_dynamodb
+        { labId: 'lab_seed_dynamodb',   who: 1, status: 'passed',     score: 95, hours: 8,  slots: 2 },
+        { labId: 'lab_seed_dynamodb',   who: 2, status: 'passed',     score: 78, hours: 22, slots: 2 },
+        { labId: 'lab_seed_dynamodb',   who: 3, status: 'rejected',   score: 42, hours: 5,  slots: 2 },
+        // lab_seed_linkedlist
+        { labId: 'lab_seed_linkedlist', who: 0, status: 'passed',     score: 100, hours: 48, slots: 1 },
+        { labId: 'lab_seed_linkedlist', who: 4, status: 'rejected',   score: 60,  hours: 26, slots: 1 }
+      ];
+      subSeeds.forEach((s, idx) => {
+        const submissionId = 'sub_seed_' + idx;
+        const stu = seedStudents[s.who];
+        const submittedAt = new Date(Date.now() - s.hours * 3600000).toISOString();
+        const checkedAt = s.status === 'processing' ? null : new Date(Date.now() - (s.hours - 0.1) * 3600000).toISOString();
+        const images = [];
+        for (let i = 1; i <= s.slots; i++) {
+          const key = `${submissionId}/slot${i}.png`;
+          S3.put('StudentImages', key, PIXEL);
+          images.push({ slot: i, s3Key: key });
+        }
+        DB.put('Submission', {
+          id: submissionId,
+          labId: s.labId,
+          studentEmail: stu.email,
+          studentName: stu.name,
+          studentId: stu.id,
+          images,
+          status: s.status,
+          score: s.score,
+          submittedAt,
+          checkedAt
+        });
+        if (s.status !== 'processing') {
+          const lab = DB.get('LabConfig', s.labId);
+          const slotResults = (lab?.slots || []).map((slot, i) => {
+            const passed = s.status === 'passed' || (i === 0 && !s.mandatoryFailed);
+            const ruleResults = (slot.rules || []).map(r => ({
+              keyword: r.keyword,
+              weight: r.weight,
+              mandatory: r.mandatory,
+              matched: passed || !r.mandatory
+            }));
+            const slotScore = ruleResults.reduce((a, r) => a + (r.matched ? r.weight : 0), 0);
+            return {
+              slot: slot.slot,
+              ocrText: passed ? `Detected: ${slot.rules.map(r => r.keyword).join(', ')}` : 'Partial OCR — keyword(s) missing',
+              ruleResults,
+              slotScore,
+              mandatoryFailed: !passed && slot.rules.some(r => r.mandatory)
+            };
+          });
+          DB.put('Score', {
+            id: 'sc_' + submissionId,
+            submissionId,
+            labId: s.labId,
+            score: s.score,
+            status: s.status,
+            slotResults,
+            checkedAt
+          });
+        } else {
+          // enqueue so checker picks it up after boot
+          SQS.send('lab-checker-queue', { submissionId });
+        }
+      });
+      log('seed', 'inserted', subSeeds.length, 'sample submissions');
+    }
   }
 
   // ── helper for relative paths between pages in this folder

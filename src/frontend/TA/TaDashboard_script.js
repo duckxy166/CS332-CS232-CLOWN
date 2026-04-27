@@ -1,39 +1,13 @@
- /* ── Data ── */
-/* ── Synced with TaLablist mock: every lab has total=5, submitted=5 ── */
-const courses = [
-  {
-    code: "CS 232",
-    name: "Computer Architecture",
-    progress: 100,           // 15/15 submitted
-    totalLabs: 3,
-    sections: 2,             // 650001, 650002
-    pendingReviews: 0,
-    status: "0 Pending",
-    color: "indigo-500",
-    lightColor: "indigo-50"
-  },
-  {
-    code: "CS 251",
-    name: "Data Structures",
-    progress: 100,           // 10/10 submitted
-    totalLabs: 2,
-    sections: 1,             // 660001
-    pendingReviews: 0,
-    status: "0 Pending",
-    color: "blue-500",
-    lightColor: "blue-50"
-  },
-  {
-    code: "CS 271",
-    name: "Operating Systems",
-    progress: 100,           // 10/10 submitted
-    totalLabs: 2,
-    sections: 2,             // 670001, 670002
-    pendingReviews: 0,
-    status: "0 Pending",
-    color: "emerald-500",
-    lightColor: "emerald-50"
-  }
+ /* TA dashboard — real backend driven */
+let courses = [];
+let currentTaUser = null;
+
+const COURSE_PALETTE = [
+  { color: 'indigo-500', lightColor: 'indigo-50' },
+  { color: 'blue-500',   lightColor: 'blue-50' },
+  { color: 'emerald-500',lightColor: 'emerald-50' },
+  { color: 'amber-500',  lightColor: 'amber-50' },
+  { color: 'pink-500',   lightColor: 'pink-50' },
 ];
 
 /* ── Sort state ── */
@@ -237,7 +211,7 @@ function renderGrid(filter = "") {
         <div class="border-t border-gray-100 -mx-5"></div>
         
         <!-- Add New Lab Button -->
-        <button class="w-full pt-3 flex items-center justify-center gap-2 text-gray-500 hover:text-brand-800 font-semibold transition-colors text-p1" onclick="event.stopPropagation(); addLab(${i})">
+        <button class="w-full pt-3 flex items-center justify-center gap-2 text-gray-500 hover:text-brand-800 font-semibold transition-colors text-p1" onclick="event.stopPropagation(); addLab('${c.code}')">
             <i class="ph ph-plus-circle text-lg"></i> Add New Lab
         </button>
       </div>
@@ -248,19 +222,115 @@ function renderGrid(filter = "") {
 
 /* ── Open Course (navigate to lab list page) ── */
 function openCourse(code) {
-  window.location.href = `TaLablist.html?course=${encodeURIComponent(code)}`;
+  window.location.href = `TaLablist.html?subjectId=${encodeURIComponent(code)}`;
 }
 
 /* ── Add Lab (navigate to create lab page) ── */
-function addLab(idx) {
-  window.location.href = 'Ta_CreateLab.html';
+function addLab(code) {
+  const params = new URLSearchParams();
+  if (code) params.set('subjectId', code);
+  const query = params.toString();
+  window.location.href = `Ta_CreateLab.html${query ? `?${query}` : ''}`;
+}
+
+async function fetchLabSubmissionStats(labID) {
+  try {
+    const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.submissions, { labID }));
+    if (!data?.success) return { total: 0, passed: 0, rejected: 0, pending: 0 };
+    const stats = data.stats || {};
+    return {
+      total: stats.total ?? (data.submissions?.length || 0),
+      passed: stats.passed ?? 0,
+      rejected: stats.rejected ?? 0,
+      pending: stats.pending ?? 0,
+    };
+  } catch (err) {
+    console.warn('submissions fetch failed for', labID, err);
+    return { total: 0, passed: 0, rejected: 0, pending: 0 };
+  }
+}
+
+function buildCourseSummary(subjectId, labs, statsByLab, paletteIdx) {
+  const totalLabs = labs.length;
+  const sectionSet = new Set();
+  labs.forEach(l => getLabSections(l).forEach(s => sectionSet.add(s)));
+  const totals = labs.reduce((acc, l) => {
+    const s = statsByLab[getLabId(l)] || { total: 0, passed: 0, rejected: 0, pending: 0 };
+    acc.total    += s.total;
+    acc.passed   += s.passed;
+    acc.rejected += s.rejected;
+    acc.pending  += s.pending;
+    return acc;
+  }, { total: 0, passed: 0, rejected: 0, pending: 0 });
+  const completed = totals.passed + totals.rejected;
+  const progress = totals.total ? Math.round((completed / totals.total) * 100) : 0;
+  const palette = COURSE_PALETTE[paletteIdx % COURSE_PALETTE.length];
+  return {
+    code: subjectId,
+    name: getCourseTitle(subjectId),
+    progress,
+    totalLabs,
+    sections: sectionSet.size,
+    pendingReviews: totals.pending,
+    status: `${totals.pending} Pending`,
+    color: palette.color,
+    lightColor: palette.lightColor,
+  };
+}
+
+function renderDashboardError(message) {
+  const grid = document.getElementById('labGrid');
+  if (!grid) return;
+  grid.innerHTML = `
+    <div class="col-span-full py-10 flex flex-col items-center justify-center text-center bg-layout-surface rounded-xl border border-layout-border shadow-sm">
+      <div class="flex items-center gap-2 text-status-error text-p1 font-semibold mb-1">
+        <i class="ph-fill ph-warning-circle"></i>
+        <span>Failed to load classes</span>
+      </div>
+      <p class="text-p2 text-gray-400">${escapeHtml(message)}</p>
+      <button onclick="loadDashboard()" class="mt-4 inline-flex items-center gap-2 rounded-lg border border-layout-border bg-layout-surface px-4 py-2 text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors">
+        <i class="ph ph-arrow-counter-clockwise text-sm"></i> Try again
+      </button>
+    </div>`;
+}
+
+async function loadDashboard() {
+  if (!currentTaUser) currentTaUser = requireAuth('ta');
+  if (!currentTaUser) return;
+  populateNavbarUser(currentTaUser);
+  try {
+    const data = await apiFetch(API_ENDPOINTS.labs);
+    if (!data?.success) throw new Error(data?.error || 'Unable to load labs');
+    const labs = data.labs || [];
+    const grouped = labs.reduce((map, lab) => {
+      const sid = getSubjectId(lab);
+      (map[sid] = map[sid] || []).push(lab);
+      return map;
+    }, {});
+    const statsEntries = await Promise.all(labs.map(async (lab) => {
+      const stats = await fetchLabSubmissionStats(getLabId(lab));
+      return [getLabId(lab), stats];
+    }));
+    const statsByLab = Object.fromEntries(statsEntries);
+    courses = Object.keys(grouped).map((sid, idx) => buildCourseSummary(sid, grouped[sid], statsByLab, idx));
+    renderGrid(document.getElementById('searchInput')?.value || '');
+  } catch (err) {
+    console.error('TA dashboard load failed:', err);
+    renderDashboardError(err.message || 'Unknown error');
+  }
+}
+
+function populateNavbarUser(user) {
+  if (!user) return;
+  const initials = getUserInitials(user);
+  document.querySelectorAll('[data-user-name]').forEach(el => { el.textContent = user.name || user.email || 'TA'; });
+  document.querySelectorAll('[data-user-role]').forEach(el => { el.textContent = user.roleLabel || 'Teaching Assistant'; });
+  document.querySelectorAll('[data-user-initials]').forEach(el => { el.textContent = initials; });
 }
 
 /* ── Search ── */
-document.getElementById("searchInput").addEventListener("input", e => {
-  renderGrid(e.target.value);
-});
+document.getElementById('searchInput')?.addEventListener('input', e => renderGrid(e.target.value));
 
 /* ── Init ── */
 updateDashboardFilterButtons();
-renderGrid();
+loadDashboard();

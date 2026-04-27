@@ -1,44 +1,12 @@
-// Animate progress bars on load
-    window.addEventListener('load', () => {
-      document.querySelectorAll('.progress-fill').forEach(bar => {
-        const target = bar.dataset.width;
-        setTimeout(() => { bar.style.width = target; }, 100);
-      });
-    });
-//----------------------------------------------------------------------
+let dashboardLabs = [];
 
-// TODO: เปลี่ยน URL ตรงนี้เมื่อ deploy API Gateway แล้ว
-const API_BASE_URL = "https://YOUR_API_GATEWAY_URL/prod";
-
-const ENDPOINTS = {
-  labLister: `${API_BASE_URL}/lab-lister`,
-};
-
-// ── MOCK DATA (ใช้เมื่อ API_BASE_URL ยังไม่ได้ตั้งค่า) ────────
-const MOCK_LABS = [
-  { subjectId: "CS 232", labName: "Lab 01 - CPU Registers",       status: "completed", deadline: null },
-  { subjectId: "CS 232", labName: "Lab 02 - Pipelining",          status: "completed", deadline: null },
-  { subjectId: "CS 232", labName: "Lab 03 - Cache Memory",        status: "active",    deadline: new Date(Date.now() + 5*24*60*60*1000).toISOString() },
-  { subjectId: "CS 251", labName: "Lab 01 - Linked List",         status: "completed", deadline: null },
-  { subjectId: "CS 251", labName: "Lab 02 - Binary Tree",         status: "active",    deadline: new Date(Date.now() + 3*24*60*60*1000).toISOString() },
-  { subjectId: "CS 271", labName: "Lab 01 - Process Scheduling",  status: "completed", deadline: null },
-  { subjectId: "CS 271", labName: "Lab 02 - Threads & Mutex",     status: "active",    deadline: new Date(Date.now() + 1*24*60*60*1000).toISOString() },
-];
-
-const SUBJECT_TITLES = {
-  "CS 232": "Computer Architecture",
-  "CS 251": "Data Structures",
-  "CS 271": "Operating Systems",
-};
-
-// ── COLOR PALETTE สำหรับ class card ─────────────────────────
 const CARD_COLORS = ["purple", "blue", "green", "amber", "pink"];
 
 function getCardColor(index) {
   return CARD_COLORS[index % CARD_COLORS.length];
 }
 
-// ── FORMAT วันที่ deadline ───────────────────────────────────
+
 function formatDeadline(isoString) {
   if (!isoString) return "N/A";
   const date = new Date(isoString);
@@ -60,23 +28,24 @@ function isDeadlineSoon(isoString) {
   return diffDays <= 7;
 }
 
-// ── GROUP labs ตาม subjectId ─────────────────────────────────
+
 function groupBySubject(labs) {
   const map = {};
   labs.forEach(lab => {
-    const sid = lab.subjectId || "Unknown";
+    const sid = getSubjectId(lab);
+
     if (!map[sid]) map[sid] = [];
     map[sid].push(lab);
   });
   return map;
 }
 
-// ── คำนวณจำนวน labs ที่ due ภายใน 7 วัน ─────────────────────
+
 function countLabsDueSoon(labs) {
-  return labs.filter(lab => lab.status === "active" && isDeadlineSoon(lab.deadline)).length;
+  return labs.filter(lab => !["PASSED", "FAILED"].includes(lab.studentStatus) && isDeadlineSoon(lab.deadline)).length;
 }
 
-// ── RENDER summary cards (Active Classes + Labs Due) ─────────
+
 function renderSummary(subjectCount, totalLabs, labsDueSoon) {
   const activeEl = document.getElementById("activeClassesValue");
   const totalEl = document.getElementById("totalLabsValue");
@@ -87,7 +56,7 @@ function renderSummary(subjectCount, totalLabs, labsDueSoon) {
   if (dueEl) dueEl.textContent = labsDueSoon;
 }
 
-// ── RENDER class cards ───────────────────────────────────────
+
 function renderClassCards(grouped, allLabs) {
   const grid = document.getElementById("classesGrid");
 
@@ -109,18 +78,19 @@ function renderClassCards(grouped, allLabs) {
   subjects.forEach((subjectId, index) => {
     const labs = grouped[subjectId];
     const totalLabs = labs.length;
-    const activeLabs = labs.filter(l => l.status === "active");
-    const completedLabs = totalLabs - activeLabs.length;
+    const completedLabs = labs.filter(l => ["PASSED", "FAILED"].includes(l.studentStatus)).length;
+    const activeLabs = labs.filter(l => !["PASSED", "FAILED"].includes(l.studentStatus));
+
     const progressPct = totalLabs > 0 ? Math.round((completedLabs / totalLabs) * 100) : 0;
 
-    // หา lab ที่ due เร็วที่สุด
+
     const dueSoonLabs = activeLabs
       .filter(l => l.deadline && isDeadlineSoon(l.deadline))
       .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
     const hasDue = dueSoonLabs.length > 0;
     const color = getCardColor(index);
-    const title = SUBJECT_TITLES[subjectId] || subjectId;
+    const title = getCourseTitle(subjectId);
 
     // Footer status
     let footerHTML;
@@ -149,10 +119,10 @@ function renderClassCards(grouped, allLabs) {
       <div class="card-accent accent-${color}"></div>
       <div class="card-body">
         <div class="card-tag-row">
-          <span class="card-tag tag-${color}">${subjectId}</span>
+          <span class="card-tag tag-${color}">${escapeHtml(subjectId)}</span>
           <div class="card-arrow"><i class="ph ph-arrow-right"></i></div>
         </div>
-        <div class="card-title">${title}</div>
+        <div class="card-title">${escapeHtml(title)}</div>
         <div class="card-sub">${totalLabs} Total Lab${totalLabs !== 1 ? "s" : ""}</div>
         <div class="progress-label">
           <span>Lab Progress</span>
@@ -164,7 +134,7 @@ function renderClassCards(grouped, allLabs) {
       </div>
       <div class="card-footer">${footerHTML}</div>`;
 
-    // Click → ไปหน้า Lablist พร้อม subjectId
+
     card.addEventListener("click", () => {
       window.location.href = `student_Lablist.html?subjectId=${encodeURIComponent(subjectId)}`;
     });
@@ -180,7 +150,7 @@ function renderClassCards(grouped, allLabs) {
   }, 100);
 }
 
-// ── RENDER loading skeleton ──────────────────────────────────
+
 function renderSkeleton() {
   const grid = document.getElementById("classesGrid");
   if (!grid) return;
@@ -198,7 +168,7 @@ function renderSkeleton() {
     </div>`).join("");
 }
 
-// ── RENDER error state ───────────────────────────────────────
+
 function renderError(message) {
   const grid = document.getElementById("classesGrid");
   if (!grid) return;
@@ -209,7 +179,7 @@ function renderError(message) {
         <i class="ph-fill ph-warning-circle text-base"></i>
         <span>Failed to load classes</span>
       </div>
-      <div class="text-p2 text-gray-400">${message}</div>
+      <div class="text-p2 text-gray-400">${escapeHtml(message)}</div>
       <button onclick="loadDashboard()" class="mt-4 inline-flex items-center gap-2 rounded-lg border border-layout-border bg-layout-surface px-4 py-2 text-btn text-brand-800 hover:border-brand-500 hover:text-brand-500 transition-colors">
         <i class="ph ph-arrow-counter-clockwise text-sm"></i>
         Try again
@@ -217,51 +187,58 @@ function renderError(message) {
     </div>`;
 }
 
-// ── MAIN: โหลดข้อมูลจาก backend ─────────────────────────────
-async function loadDashboard() {
-  renderSkeleton();
 
-  // ใช้ mock data เมื่อ API URL ยังไม่ได้ตั้งค่า
-  if (API_BASE_URL.includes("YOUR_API_GATEWAY_URL")) {
-    const grouped = groupBySubject(MOCK_LABS);
-    const labsDueSoon = countLabsDueSoon(MOCK_LABS);
-    renderSummary(Object.keys(grouped).length, MOCK_LABS.length, labsDueSoon);
-    renderClassCards(grouped, MOCK_LABS);
-    return;
-  }
-
+async function getSubmissionForLab(email, labID) {
   try {
-    const res = await fetch(ENDPOINTS.labLister, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-
-    const data = await res.json();
-
-    if (!data.success) throw new Error(data.error || "Unknown error from server");
-
-    const labs = data.labs || [];
-
-    // TODO: filter ด้วย studentId เมื่อมี auth
-    // const studentId = getCurrentUserId();
-    // const myLabs = labs.filter(l => l.sections?.includes(mySection));
-
-    const grouped = groupBySubject(labs);
-    const labsDueSoon = countLabsDueSoon(labs);
-
-    renderSummary(Object.keys(grouped).length, labs.length, labsDueSoon);
-    renderClassCards(grouped, labs);
-
+    const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.result, { email, labID }));
+    return data?.submission || null;
   } catch (err) {
-    console.error("Dashboard load error:", err);
-
-    renderError(err.message);
+    if (err.status === 404) return null;
+    throw err;
   }
 }
 
-// ── SEARCH/FILTER ────────────────────────────────────────────
+async function loadDashboard() {
+  const user = requireAuth("student");
+  if (!user) return;
+
+  populateNavbar(user);
+  renderSkeleton();
+
+  try {
+    const data = await apiFetch(API_ENDPOINTS.labs);
+    if (!data?.success) throw new Error(data?.error || "Unable to load labs");
+    const labs = data.labs || [];
+
+    dashboardLabs = await Promise.all(labs.map(async (lab) => {
+      const labID = getLabId(lab);
+      let submission = null;
+      if (labID && user?.email) {
+        try { submission = await getSubmissionForLab(user.email, labID); }
+        catch (err) { console.warn("result fetch failed for", labID, err); }
+      }
+      return { ...lab, studentStatus: normalizeStudentStatus(submission), submission };
+    }));
+
+    const grouped = groupBySubject(dashboardLabs);
+    const labsDueSoon = countLabsDueSoon(dashboardLabs);
+    renderSummary(Object.keys(grouped).length, dashboardLabs.length, labsDueSoon);
+    renderClassCards(grouped, dashboardLabs);
+  } catch (err) {
+    console.error("Dashboard load error:", err);
+    renderError(err.message || "Failed to load dashboard");
+  }
+}
+
+function populateNavbar(user) {
+  if (!user) return;
+  const initials = getUserInitials(user);
+  document.querySelectorAll("[data-user-name]").forEach(el => { el.textContent = user.name || user.email || "Student"; });
+  document.querySelectorAll("[data-user-role]").forEach(el => { el.textContent = user.roleLabel || "Undergraduate"; });
+  document.querySelectorAll("[data-user-initials]").forEach(el => { el.textContent = initials; });
+}
+
+
 function filterCards() {
   const q = document.getElementById("searchInput")?.value.toLowerCase() || "";
   document.querySelectorAll(".class-card").forEach(card => {
@@ -270,5 +247,5 @@ function filterCards() {
   });
 }
  
-// ── INIT ─────────────────────────────────────────────────────
+
 window.addEventListener("load", loadDashboard);

@@ -5,7 +5,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 const db = new DynamoDBClient({ region: "us-east-1" });
 const s3 = new S3Client({ region: "us-east-1" });
-const SCREENSHOT_BUCKET = "lab-checker-screenshots";
+const SCREENSHOT_BUCKET = "lab-checker-screenshots-duckxy";
 const PRESIGN_EXPIRY = 900; // 15 minutes
 
 export const handler = async (event) => {

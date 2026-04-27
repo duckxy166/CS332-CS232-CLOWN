@@ -1,7 +1,53 @@
-/* studentSubmission_script.js */
+/* studentSubmission_script.js — real backend submission */
 
 const uploads = [null, null, null];
 let activeTab = 0;
+let currentUser = null;
+let activeLab = null;
+
+function getLabIdFromUrl() {
+  const p = new URLSearchParams(window.location.search);
+  return p.get('labID') || p.get('lab') || '';
+}
+
+async function loadLabContext() {
+  currentUser = requireAuth('student');
+  if (!currentUser) return;
+  populateNavbarUser(currentUser);
+  const labID = getLabIdFromUrl();
+  if (!labID) return;
+  try {
+    const data = await apiFetch(API_ENDPOINTS.labs);
+    if (!data?.success) return;
+    activeLab = (data.labs || []).find(l => getLabId(l) === labID) || null;
+    if (activeLab) renderLabHeader(activeLab);
+  } catch (err) {
+    console.warn('Could not load lab metadata:', err);
+  }
+}
+
+function renderLabHeader(lab) {
+  document.querySelectorAll('[data-lab-name]').forEach(el => { el.textContent = getLabName(lab); });
+  document.querySelectorAll('[data-lab-subject]').forEach(el => { el.textContent = getSubjectId(lab); });
+  document.querySelectorAll('[data-lab-deadline]').forEach(el => { el.textContent = formatDateLabel(lab.deadline); });
+  document.querySelectorAll('[data-lab-description]').forEach(el => { el.textContent = lab.description || ''; });
+}
+
+function populateNavbarUser(user) {
+  const initials = getUserInitials(user);
+  document.querySelectorAll('[data-user-name]').forEach(el => { el.textContent = user.name || user.email || 'Student'; });
+  document.querySelectorAll('[data-user-role]').forEach(el => { el.textContent = user.roleLabel || 'Undergraduate'; });
+  document.querySelectorAll('[data-user-initials]').forEach(el => { el.textContent = initials; });
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(stripDataUrl(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 /* ── Tabs ── */
 function switchTab(idx) {
@@ -183,40 +229,71 @@ function updateStatus() {
     card.style.borderLeftColor = '#F59E0B';
     wrap.style.background      = '#FFFBEB';
     icon.style.color           = '#F59E0B';
-    icon.className             = 'ph-fill ph-hourglass-medium';
+    icon.className             = 'ph ph-hourglass-medium';
     label.textContent          = 'Pending Upload';
   } else if (n < 3) {
     card.style.borderLeftColor = '#4F46E5';
     wrap.style.background      = '#EEF2FF';
     icon.style.color           = '#4F46E5';
-    icon.className             = 'ph-fill ph-upload-simple';
+    icon.className             = 'ph ph-upload-simple';
     label.textContent          = n + ' of 3 Uploaded';
   } else {
     card.style.borderLeftColor = '#10B981';
     wrap.style.background      = '#ECFDF5';
     icon.style.color           = '#10B981';
-    icon.className             = 'ph-fill ph-check-circle';
+    icon.className             = 'ph ph-check-circle';
     label.textContent          = 'Ready to Submit';
   }
 }
 
 /* ── Submit ── */
-function handleSubmit() {
-  if (!uploads.filter(Boolean).length) {
+async function handleSubmit() {
+  const filledUploads = uploads.filter(Boolean);
+  if (!filledUploads.length) {
     toast('Upload at least one screenshot first.', 'error');
     return;
   }
+  if (!currentUser) currentUser = requireAuth('student');
+  if (!currentUser) return;
+  const labID = getLabIdFromUrl();
+  if (!labID) {
+    toast('Missing lab id in URL.', 'error');
+    return;
+  }
+
   const btn = document.getElementById('submitBtn');
-  btn.disabled   = true;
-  btn.innerHTML  = '<i class="ph-fill ph-spinner-gap"></i> Submitting…';
-  setTimeout(() => {
+  btn.disabled  = true;
+  btn.innerHTML = '<i class="ph-fill ph-spinner-gap"></i> Submitting…';
+
+  try {
+    const screenshots = await Promise.all(uploads.map(async (slot, idx) => {
+      if (!slot) return null;
+      const imageBase64 = await fileToBase64(slot.file);
+      return { imgId: idx + 1, imageBase64, imageType: slot.file.type || 'image/png' };
+    }));
+    const payload = {
+      email: currentUser.email,
+      labID,
+      screenshots: screenshots.filter(Boolean),
+    };
+    const data = await apiFetch(API_ENDPOINTS.submission, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (!data?.success) throw new Error(data?.error || 'Submission failed');
     btn.style.background = '#10B981';
     btn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Submitted!';
     toast('Lab evidence submitted!', 'success');
     setTimeout(() => {
-      window.location.href = 'submissionResult.html?state=processing';
+      const classID = new URLSearchParams(window.location.search).get('classID') || '';
+      window.location.href = `submissionResult.html?labID=${encodeURIComponent(labID)}&classID=${encodeURIComponent(classID)}&state=processing`;
     }, 600);
-  }, 1500);
+  } catch (err) {
+    console.error('Submit error:', err);
+    toast(err.message || 'Submission failed', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph-bold ph-paper-plane-tilt text-sm"></i> Submit Lab Evidence';
+  }
 }
 
 /* ── Toast ── */
@@ -238,3 +315,4 @@ document.addEventListener('keydown', e => {
 
 /* ── Init ── */
 switchTab(0);
+loadLabContext();

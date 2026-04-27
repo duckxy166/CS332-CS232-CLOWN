@@ -1,14 +1,12 @@
-//  API CONFIG  — เปลี่ยน BASE_URL ให้ตรงกับ API Gateway
-const API_BASE = 'https://YOUR_API_GATEWAY_URL';
-//  ใช้ mock เมื่อ API_BASE ยังเป็น placeholder (โหมด dev)
-const USE_MOCK_API = API_BASE.includes('YOUR_API_GATEWAY_URL');
- 
+// API config is centralized in api-config.js (API_BASE, API_ENDPOINTS, apiFetch).
+let currentTaUser = null;
+
 //  SLOT STATE
 const slotStates = {};
 let activeSlot = 1;
- 
+
 function defaultState() {
-  return { rules: [], minScore: 75, mustPass: false, image: null };
+  return { rules: [], minScore: 75, mustPass: false, image: null, textractBlocks: null };
 }
  
 function captureState(idx) {
@@ -25,7 +23,8 @@ function captureState(idx) {
     rules,
     minScore : Number(document.getElementById('minScoreVal')?.value || 75),
     mustPass : document.getElementById('mustPass')?.checked || false,
-    image    : slotStates[idx]?.image || null
+    image    : slotStates[idx]?.image || null,
+    textractBlocks: slotStates[idx]?.textractBlocks || null
   };
 }
  
@@ -81,6 +80,12 @@ function buildRowHTML(rule) {
         <span class="slider"></span>
       </label>
     </td>
+    <td class="verify-cell text-center">
+      <button type="button" class="verify-btn" title="Run Textract on the reference image and check if this keyword exists">
+        <i class="ph ph-magnifying-glass"></i>
+        <span class="verify-label">Check</span>
+      </button>
+    </td>
     <td class="del-cell text-center">
       <button type="button" class="del-rule-btn"
         style="background:none;border:none;cursor:pointer;color:#94A3B8;padding:4px 6px;border-radius:6px;transition:color .15s,background .15s;"
@@ -96,11 +101,15 @@ function bindRow(tr) {
   tr.querySelectorAll('input[type="number"]').forEach(i =>
     i.addEventListener('input', updateWeight)
   );
-  tr.querySelector('.keyword input')?.addEventListener('input', updateSetupProgress);
+  const kwInput = tr.querySelector('.keyword input');
+  kwInput?.addEventListener('input', updateSetupProgress);
+  // Reset verify badge whenever the keyword changes — old verdict no longer applies.
+  kwInput?.addEventListener('input', () => resetVerifyBtn(tr));
   tr.querySelector('.del-rule-btn')?.addEventListener('click', () => {
     tr.remove();
     distributeWeight();
   });
+  tr.querySelector('.verify-btn')?.addEventListener('click', () => verifyRule(tr));
 }
  
 function renderSlotSelector() {
@@ -188,7 +197,7 @@ function reindexTabs() {
     const man = tr.querySelector('.mand-cell input')?.checked || false;
     rules.push({ keyword: kw, weight: w, mandatory: man });
   });
-  slotStates[1] = { rules, minScore: 75, mustPass: false, image: null };
+  slotStates[1] = { rules, minScore: 75, mustPass: false, image: null, textractBlocks: null };
   document.querySelectorAll('#rulesBody tr').forEach(tr => bindRow(tr));
   updateWeight();
   renderState(1);
@@ -313,6 +322,8 @@ document.getElementById('fileInput').addEventListener('change', function () {
   const reader = new FileReader();
   reader.onload = e => {
     slotStates[activeSlot].image = e.target.result;
+    slotStates[activeSlot].textractBlocks = null; // invalidate any prior Textract cache
+    resetAllVerifyBtns();
     renderImage(e.target.result);
     updateSetupProgress();
   };
@@ -327,6 +338,8 @@ const rmBtn = document.getElementById('removeImgBtn');
 rmBtn.addEventListener('click', e => {
   e.stopPropagation();
   slotStates[activeSlot].image = null;
+  slotStates[activeSlot].textractBlocks = null;
+  resetAllVerifyBtns();
   renderImage(null);
   updateSetupProgress();
 });
@@ -381,7 +394,95 @@ function showToast(msg, type = 'success') {
     setTimeout(() => { toast.style.display = 'none'; }, 300);
   }, 3500);
 }
- 
+
+
+//  VERIFY KEYWORD against Textract output of the slot's reference image
+function resetVerifyBtn(tr) {
+  const btn = tr.querySelector('.verify-btn');
+  if (!btn) return;
+  btn.classList.remove('is-loading', 'is-found', 'is-missing');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ph ph-magnifying-glass"></i><span class="verify-label">Check</span>';
+}
+
+function resetAllVerifyBtns() {
+  document.querySelectorAll('#rulesBody tr').forEach(resetVerifyBtn);
+}
+
+function inferImageType(dataUrl) {
+  const m = /^data:([^;]+);base64,/.exec(String(dataUrl || ''));
+  return m ? m[1] : 'image/png';
+}
+
+async function getOrFetchTextractBlocks(slotId) {
+  const state = slotStates[slotId];
+  if (!state) return null;
+  if (Array.isArray(state.textractBlocks)) return state.textractBlocks;
+  if (!state.image) {
+    const err = new Error('Please upload a reference image for this slot first.');
+    err.code = 'NO_IMAGE';
+    throw err;
+  }
+  // /reference-upload requires a labID — use a temporary preview ID so the lambda
+  // still uploads + Textracts, but the file lives in a "preview-..." key path.
+  const previewLabId = `preview-${slotId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const data = await apiFetch(API_ENDPOINTS.referenceUpload, {
+    method: 'POST',
+    body: JSON.stringify({
+      labID       : previewLabId,
+      imageBase64 : stripDataUrl(state.image),
+      imageType   : inferImageType(state.image),
+    }),
+  });
+  if (!data?.success) throw new Error(data?.error || 'Reference upload failed');
+  state.textractBlocks = Array.isArray(data.blocks) ? data.blocks : [];
+  return state.textractBlocks;
+}
+
+async function verifyRule(tr) {
+  const btn = tr.querySelector('.verify-btn');
+  if (!btn) return;
+  const kwInput = tr.querySelector('.keyword input');
+  const keyword = (kwInput?.value || '').trim();
+  if (!keyword) {
+    showToast('กรุณากรอก Keyword ก่อนกด Verify', 'error');
+    return;
+  }
+  if (!slotStates[activeSlot]?.image) {
+    showToast(`กรุณาอัพโหลดรูป Image ${activeSlot} ก่อน`, 'error');
+    return;
+  }
+
+  btn.classList.remove('is-found', 'is-missing');
+  btn.classList.add('is-loading');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ph ph-circle-notch"></i><span class="verify-label">Checking…</span>';
+
+  try {
+    const blocks = await getOrFetchTextractBlocks(activeSlot);
+    const needle = keyword.toLowerCase();
+    const match  = (blocks || []).find(b => String(b.text || '').toLowerCase().includes(needle));
+
+    btn.classList.remove('is-loading');
+    btn.disabled = false;
+    if (match) {
+      btn.classList.add('is-found');
+      btn.innerHTML = '<i class="ph-fill ph-check-circle"></i><span class="verify-label">Found</span>';
+      showToast(`✓ "${keyword}" found in: "${match.text}"`, 'success');
+    } else {
+      btn.classList.add('is-missing');
+      btn.innerHTML = '<i class="ph-fill ph-x-circle"></i><span class="verify-label">Not found</span>';
+      showToast(`✗ Textract did not detect "${keyword}" in Image ${activeSlot}`, 'error');
+    }
+  } catch (err) {
+    btn.classList.remove('is-loading');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-warning"></i><span class="verify-label">Retry</span>';
+    btn.classList.add('is-missing');
+    showToast(err.message || 'Verify failed', 'error');
+  }
+}
+
 
 //  VALIDATE
 function validateForm() {
@@ -439,38 +540,54 @@ async function handleCreateLab() {
   const selectedSections = [...(tagLists[1]?.querySelectorAll('.tag.selected') || [])]
     .map(t => t.textContent.trim());
  
-  // ── Rules ต่อ slot ──
-  const rules = Object.entries(slotStates).map(([slot, state]) => ({
-    imageSlot : Number(slot),
-    keywords  : state.rules.map(r => ({
-      keyword   : r.keyword,
-      weight    : r.weight,
-      mandatory : r.mandatory
-    }))
-  }));
- 
-  // ── Images (เฉพาะ slot ที่มีรูป) ──
+  // ── Flat rules array compatible with the checker engine (one entry per keyword) ──
+  let ruleSeq = 0;
+  const rules = Object.entries(slotStates).flatMap(([slot, state]) => {
+    const imgId = Number(slot);
+    return (state.rules || [])
+      .filter(r => (r.keyword || '').trim().length)
+      .map(r => ({
+        id   : `r${++ruleSeq}`,
+        imgId,
+        kw   : r.keyword.trim(),
+        wt   : Number(r.weight) || 0,
+        mand : !!r.mandatory,
+        pos  : false,
+      }));
+  });
+
+  // ── Images: only slots with an uploaded reference (base64). ──
   const images = Object.entries(slotStates)
     .filter(([, state]) => state.image)
-    .map(([slot, state]) => ({ slot: Number(slot), data: state.image }));
- 
-  // ── Thresholds ──
-  const thresholds = {
-    minScore          : Number(document.getElementById('minScoreVal')?.value || 75),
-    mustPassMandatory : document.getElementById('mustPass')?.checked || false
-  };
- 
+    .map(([slot, state]) => ({
+      id      : Number(slot),
+      slot    : Number(slot),
+      data    : state.image,
+      dataB64 : stripDataUrl(state.image),
+    }));
+
+  // ── Thresholds: one entry per image slot expected by checker engine. ──
+  const minScore = Number(document.getElementById('minScoreVal')?.value || 75);
+  const mustPassMandatory = document.getElementById('mustPass')?.checked || false;
+  const thresholds = Object.keys(slotStates).map(slot => ({
+    imgId    : Number(slot),
+    useScore : true,
+    scoreMin : minScore,
+    mustPassMandatory,
+  }));
+
   // ── Payload ──
   const payload = {
     labName,
-    subjectId   : selectedClasses[0] || '',
-    sections    : selectedSections,
+    subjectId      : selectedClasses[0] || '',
+    sections       : selectedSections,
     description,
     deadline,
     images,
     rules,
     thresholds,
-    createdBy   : 'TA'
+    enableLLMCheck : false,
+    createdBy      : currentTaUser?.email || 'TA',
   };
  
   // ── Loading state ──
@@ -479,27 +596,15 @@ async function handleCreateLab() {
   btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating...';
  
   try {
-    let data;
-    if (USE_MOCK_API) {
-      // ── MOCK: simulate network delay then succeed ──
-      await new Promise(r => setTimeout(r, 900));
-      const mockId = 'LAB-' + Date.now().toString(36).toUpperCase();
-      data = { success: true, labID: mockId };
-      console.info('[MOCK handleCreateLab] payload:', payload);
-    } else {
-      const res = await fetch(`${API_BASE}/lab-config`, {
-        method  : 'POST',
-        headers : { 'Content-Type': 'application/json' },
-        body    : JSON.stringify(payload)
-      });
-      data = await res.json();
-    }
-
-    if (data.success) {
-      showToast(`✓ สร้าง Lab "${labName}" สำเร็จ! (ID: ${data.labID})`, 'success');
+    const data = await apiFetch(API_ENDPOINTS.labConfig, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (data?.success) {
+      showToast(`✓ Lab "${labName}" created (ID: ${data.labID})`, 'success');
       setTimeout(() => window.location.href = 'Ta_Dashboard.html', 1500);
     } else {
-      showToast(`Error: ${data.error || 'Unknown error'}`, 'error');
+      showToast(`Error: ${data?.error || 'Unknown error'}`, 'error');
     }
   } catch (err) {
     showToast(`Network error: ${err.message}`, 'error');
@@ -516,63 +621,74 @@ document.head.appendChild(_style);
 
 // ════════════════════════════════════════════════════════════
 //  EDIT MODE — prefill form when ?mode=edit&lab=<id>
-//  Mock data keyed by lab id (matches TaViewSubmission LABS map)
+//  Loads the real lab from /labs and applies it to the form.
 // ════════════════════════════════════════════════════════════
-const MOCK_LAB_DETAILS = {
-  201: { name: 'Lab 01 - CPU Registers',     subject: 'CS232', sections: ['1001'],         due: '2026-04-10', time: '23:59', desc: 'Configure registers in Verilog.' },
-  202: { name: 'Lab 02 - Pipelining',        subject: 'CS232', sections: ['1001'],         due: '2026-04-17', time: '23:59', desc: 'Implement 5-stage pipeline.' },
-  203: { name: 'Lab 03 - Cache Memory',      subject: 'CS232', sections: ['1002'],         due: '2026-04-24', time: '23:59', desc: 'Direct-mapped cache simulation.' },
-  301: { name: 'Lab 01 - Linked List',       subject: 'CS232', sections: ['1001', '1002'], due: '2026-04-12', time: '23:59', desc: 'Doubly linked list operations.' },
-  302: { name: 'Lab 02 - Binary Tree',       subject: 'CS232', sections: ['1001'],         due: '2026-04-19', time: '23:59', desc: 'BST insert/delete/search.' },
-  401: { name: 'Lab 01 - Process Scheduling',subject: 'CS232', sections: ['1001'],         due: '2026-04-05', time: '23:59', desc: 'Round-robin scheduler.' },
-  402: { name: 'Lab 02 - Threads & Mutex',   subject: 'CS232', sections: ['1002'],         due: '2026-04-12', time: '23:59', desc: 'Mutex-protected counter.' },
-};
-
-(function applyEditMode() {
+async function applyEditMode() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') !== 'edit') return;
   const labId = params.get('lab');
-  const data = MOCK_LAB_DETAILS[labId];
-  if (!data) return;
+  if (!labId) return;
 
-  // Header / breadcrumb
-  document.title = `ValidMate - Edit ${data.name}`;
+  let lab = null;
+  try {
+    const data = await apiFetch(API_ENDPOINTS.labs);
+    if (data?.success) {
+      lab = (data.labs || []).find(l => getLabId(l) === labId) || null;
+    }
+  } catch (err) {
+    console.warn('Edit mode failed to load lab metadata:', err);
+    return;
+  }
+  if (!lab) return;
+
+  const labName = getLabName(lab);
+  document.title = `ValidMate - Edit ${labName}`;
   const headerTitle = document.querySelector('h1.text-h3');
   if (headerTitle) headerTitle.textContent = 'Edit Lab';
   const headerSub = headerTitle?.nextElementSibling;
-  if (headerSub) headerSub.textContent = `Update details for ${data.name}`;
+  if (headerSub) headerSub.textContent = `Update details for ${labName}`;
   const breadcrumb = document.querySelector('.text-brand-800 .ph-file-code')?.parentElement;
   if (breadcrumb) breadcrumb.lastChild.textContent = ' Edit Lab';
 
-  // Lab Name
   const nameInput = document.querySelector('input[placeholder="e.g., Lab 03: CPU Registers"]');
-  if (nameInput) nameInput.value = data.name;
+  if (nameInput) nameInput.value = labName;
 
-  // Class tags — select matching subject
+  const subjectId = getSubjectId(lab);
   document.querySelectorAll('.tag-list')[0]?.querySelectorAll('.tag').forEach(t => {
-    if (t.textContent.trim() === data.subject) t.classList.add('selected');
-    else t.classList.remove('selected');
+    t.classList.toggle('selected', t.textContent.trim() === subjectId);
   });
 
-  // Section tags
+  const sections = getLabSections(lab);
   document.querySelectorAll('.tag-list')[1]?.querySelectorAll('.tag').forEach(t => {
-    if (data.sections.includes(t.textContent.trim())) t.classList.add('selected');
-    else t.classList.remove('selected');
+    t.classList.toggle('selected', sections.includes(t.textContent.trim()));
   });
 
-  // Due date / time
-  const dateEl = document.querySelector('input[type="date"]');
-  if (dateEl) dateEl.value = data.due;
-  const timeEl = document.querySelector('input[type="time"]');
-  if (timeEl) timeEl.value = data.time;
+  if (lab.deadline) {
+    const date = new Date(lab.deadline);
+    if (!Number.isNaN(date.getTime())) {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const dateEl = document.querySelector('input[type="date"]');
+      if (dateEl) dateEl.value = `${yyyy}-${mm}-${dd}`;
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mn = String(date.getMinutes()).padStart(2, '0');
+      const timeEl = document.querySelector('input[type="time"]');
+      if (timeEl) timeEl.value = `${hh}:${mn}`;
+    }
+  }
 
-  // Description
   const descEl = document.querySelector('textarea');
-  if (descEl) descEl.value = data.desc;
+  if (descEl) descEl.value = lab.description || '';
 
-  // Update Create button → Update Lab
   const createBtn = document.getElementById('createLabBtn');
   if (createBtn) createBtn.innerHTML = '<i class="ph-bold ph-floppy-disk text-sm"></i> Update Lab';
 
   updateSetupProgress();
-})();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  currentTaUser = requireAuth('ta');
+  if (!currentTaUser) return;
+  applyEditMode();
+});

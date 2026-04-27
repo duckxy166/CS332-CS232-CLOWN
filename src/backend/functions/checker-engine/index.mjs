@@ -4,7 +4,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 const db       = new DynamoDBClient({ region: "us-east-1" });
 const textract = new TextractClient({ region: "us-east-1" });
-const SCREENSHOT_BUCKET = "lab-checker-screenshots";
+const SCREENSHOT_BUCKET = "lab-checker-screenshots-duckxy";
 
 export const handler = async (event) => {
   for(const record of event.Records){

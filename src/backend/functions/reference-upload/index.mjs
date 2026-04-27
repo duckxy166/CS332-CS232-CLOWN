@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 
 const s3       = new S3Client({ region: "us-east-1" });
 const textract = new TextractClient({ region: "us-east-1" });
-const BUCKET   = "lab-checker-reference";
+const BUCKET   = "lab-checker-reference-duckxy";
 
 export const handler = async (event) => {
   try {

@@ -12,24 +12,93 @@ function updateResultView(state) {
     }
 }
 
-function getResultState() {
+function getLabIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
-    const state = params.get('state');
-    return ['processing', 'passed', 'failed'].includes(state) ? state : null;
+    return params.get('lab') || params.get('labID') || '';
 }
 
-/**
- * ตัวอย่างการใช้งาน:
- * เมื่อโหลดหน้ามา ให้เริ่มที่ 'processing'
- * จากนั้นรอฟังผลจาก Backend (เช่น fetch API)
- */
-window.addEventListener('DOMContentLoaded', () => {
-    const state = getResultState() || 'processing';
-    updateResultView(state);
+function statusToView(status) {
+    const raw = String(status || '').toUpperCase();
+    if (raw === 'PASSED') return 'passed';
+    if (raw === 'REJECTED' || raw === 'FAILED') return 'failed';
+    return 'processing';
+}
 
-    if (state === 'processing') {
-        setTimeout(() => {
-            updateResultView('passed');
-        }, 3000);
+function applySubmissionToView(submission, lab) {
+    const view = statusToView(submission?.status);
+    updateResultView(view);
+    if (lab) {
+        document.querySelectorAll('[data-lab-name]').forEach(el => { el.textContent = getLabName(lab); });
+        document.querySelectorAll('[data-lab-subject]').forEach(el => { el.textContent = getSubjectId(lab); });
     }
+    if (submission) {
+        document.querySelectorAll('[data-submission-score]').forEach(el => {
+            el.textContent = submission.totalScore != null ? `${submission.totalScore}%` : '—';
+        });
+        document.querySelectorAll('[data-submission-checked]').forEach(el => {
+            el.textContent = submission.checkedAt ? formatDateLabel(submission.checkedAt) : '—';
+        });
+    }
+}
+
+async function fetchSubmission() {
+    if (!activeUser?.email || !activeLabID) return null;
+    try {
+        const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.result, { email: activeUser.email, labID: activeLabID }));
+        return data?.submission || null;
+    } catch (err) {
+        if (err.status === 404) return null;
+        throw err;
+    }
+}
+
+async function fetchLabMeta(labID) {
+    try {
+        const data = await apiFetch(API_ENDPOINTS.labs);
+        if (!data?.success) return null;
+        return (data.labs || []).find(l => getLabId(l) === labID) || null;
+    } catch (err) {
+        console.warn('Could not load lab meta', err);
+        return null;
+    }
+}
+
+async function pollOnce(lab) {
+    pollAttempts += 1;
+    let submission = null;
+    try {
+        submission = await fetchSubmission();
+    } catch (err) {
+        console.error('result fetch error', err);
+    }
+    applySubmissionToView(submission, lab);
+    const view = statusToView(submission?.status);
+    if (view !== 'processing') {
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        return;
+    }
+    if (pollAttempts >= MAX_POLL_ATTEMPTS) {
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+}
+
+const POLL_INTERVAL_MS = 4000;
+const MAX_POLL_ATTEMPTS = 90; // ~6 minutes
+let pollAttempts = 0;
+let pollTimer = null;
+let activeUser = null;
+let activeLabID = '';
+
+window.addEventListener('DOMContentLoaded', async () => {
+    activeUser = requireAuth('student');
+    if (!activeUser) return;
+    activeLabID = getLabIdFromUrl();
+    updateResultView('processing');
+    if (!activeLabID) {
+        console.warn('Missing lab id in URL');
+        return;
+    }
+    const lab = await fetchLabMeta(activeLabID);
+    await pollOnce(lab);
+    pollTimer = setInterval(() => pollOnce(lab), POLL_INTERVAL_MS);
 });
