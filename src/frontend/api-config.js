@@ -13,6 +13,27 @@ const API_ENDPOINTS = {
 // ── helper: เรียก API พร้อมแนบ Cognito token อัตโนมัติ ─────────
 const AUTH_TOKEN_KEY = "cognito_id_token";
 
+// ── Account roster (mirrors accounts.csv) ─────────────────────
+// Cognito JWT only carries email; we look up the student/TA's UserID
+// (รหัสนักศึกษา) and class/section from this static roster.
+const ACCOUNT_ROSTER = [
+  { userId: "6709650193", role: "Student", email: "charatrawee.w@dome.tu.ac.th", classId: "CS232", section: "1" },
+  { userId: "6709650490", role: "Student", email: "pornpawee.s@dome.tu.ac.th",   classId: "CS232", section: "1" },
+  { userId: "6709650532", role: "Student", email: "phakhwan.j@dome.tu.ac.th",    classId: "CS232", section: "1" },
+  { userId: "6709650573", role: "Student", email: "phurin.k@dome.tu.ac.th",      classId: "CS232", section: "1" },
+  { userId: "6709650631", role: "Student", email: "sirimongkol.d@dome.tu.ac.th", classId: "CS232", section: "1" },
+  { userId: "6709650680", role: "Student", email: "saharat.u@dome.tu.ac.th",     classId: "CS232", section: "1" },
+  { userId: "6709650151", role: "Student", email: "kantaphat.c@dome.tu.ac.th",   classId: "CS232", section: "1" },
+  { userId: "",           role: "TA",      email: "ta.clown01@dome.tu.ac.th",    classId: "CS232", section: "1" },
+  { userId: "",           role: "TA",      email: "ta.clown02@dome.tu.ac.th",    classId: "CS232", section: "1" },
+];
+
+function findRosterEntry(email) {
+  if (!email) return null;
+  const norm = String(email).trim().toLowerCase();
+  return ACCOUNT_ROSTER.find(e => e.email.toLowerCase() === norm) || null;
+}
+
 function parseJwt(token) {
   try {
     const base64Url = token.split(".")[1];
@@ -30,11 +51,19 @@ function getCurrentUser() {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
   const payload = token ? parseJwt(token) : null;
   if (!payload) return null;
+  const email = (payload.email || payload["cognito:username"] || "").toLowerCase();
+  const roster = findRosterEntry(email);
+  const cognitoRole = payload["custom:role"] || payload.role || "";
+  const role = String(cognitoRole || roster?.role || "").toLowerCase();
   return {
     token,
-    email: payload.email || payload["cognito:username"] || "",
-    name: payload.name || payload.email || payload["cognito:username"] || "User",
-    role: payload["custom:role"] || payload.role || "",
+    email,
+    name: payload.name || email || "User",
+    role,
+    studentId: roster?.userId || "",
+    classId:   roster?.classId || "",
+    section:   roster?.section || "",
+    roleLabel: role === "ta" ? "TA" : "Undergraduate",
     raw: payload,
   };
 }
@@ -55,15 +84,33 @@ function requireAuth(expectedRole) {
 function getUserInitials(input) {
   let source = input;
   if (input && typeof input === "object") {
-    source = input.name || input.email || input.username || "";
+    source = input.studentId || input.name || input.email || input.username || "";
   }
-  return String(source || "U")
-    .split("@")[0]
+  const s = String(source || "U").trim();
+  // Numeric-only input (e.g. student ID 6709650680) → first 2 digits.
+  if (/^\d+$/.test(s)) return s.slice(0, 2);
+  return s.split("@")[0]
     .split(/[.\s_-]+/)
     .filter(Boolean)
     .slice(0, 2)
     .map(part => part[0]?.toUpperCase() || "")
     .join("") || "U";
+}
+
+// ── Shared navbar populator: replaces hardcoded "Alex Student" / "John Doe"
+//    placeholders across student/TA pages with the real logged-in user.
+//    Students → student ID (รหัสนักศึกษา) + "Undergraduate".
+//    TAs       → email username (e.g. ta.clown01) + "TA".
+function populateNavbarUser(user) {
+  if (!user) return;
+  const isTa = String(user.role || "").toLowerCase() === "ta";
+  const emailLocal = String(user.email || "").split("@")[0];
+  const display = user.studentId || (isTa ? (emailLocal || "TA") : (user.name || emailLocal || "User"));
+  const role = user.roleLabel || (isTa ? "TA" : "Undergraduate");
+  const initials = getUserInitials(user);
+  document.querySelectorAll("[data-user-name]").forEach(el => { el.textContent = display; });
+  document.querySelectorAll("[data-user-role]").forEach(el => { el.textContent = role; });
+  document.querySelectorAll("[data-user-initials]").forEach(el => { el.textContent = initials; });
 }
 
 function stripDataUrl(dataUrl) {

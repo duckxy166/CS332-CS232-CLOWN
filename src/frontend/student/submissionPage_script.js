@@ -33,13 +33,6 @@ function renderLabHeader(lab) {
   document.querySelectorAll('[data-lab-description]').forEach(el => { el.textContent = lab.description || ''; });
 }
 
-function populateNavbarUser(user) {
-  const initials = getUserInitials(user);
-  document.querySelectorAll('[data-user-name]').forEach(el => { el.textContent = user.name || user.email || 'Student'; });
-  document.querySelectorAll('[data-user-role]').forEach(el => { el.textContent = user.roleLabel || 'Undergraduate'; });
-  document.querySelectorAll('[data-user-initials]').forEach(el => { el.textContent = initials; });
-}
-
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

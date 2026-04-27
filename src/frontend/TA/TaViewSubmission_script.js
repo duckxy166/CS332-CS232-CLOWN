@@ -651,6 +651,7 @@ function renderViewer() {
 async function loadViewer() {
   if (!currentTaUser) currentTaUser = requireAuth('ta');
   if (!currentTaUser) return;
+  populateNavbarUser(currentTaUser);
   activeLabID = getActiveLabId();
   if (!activeLabID) {
     console.error('Missing lab id in URL');

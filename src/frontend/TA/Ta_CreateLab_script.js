@@ -690,5 +690,6 @@ async function applyEditMode() {
 document.addEventListener('DOMContentLoaded', () => {
   currentTaUser = requireAuth('ta');
   if (!currentTaUser) return;
+  populateNavbarUser(currentTaUser);
   applyEditMode();
 });

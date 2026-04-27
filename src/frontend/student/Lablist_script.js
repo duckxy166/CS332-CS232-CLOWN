@@ -228,6 +228,7 @@ function renderError(message) {
 async function loadLabs() {
     if (!currentUser) currentUser = requireAuth('student');
     if (!currentUser) return;
+    populateNavbarUser(currentUser);
     try {
         const data = await apiFetch(API_ENDPOINTS.labs);
         if (!data?.success) throw new Error(data?.error || 'Unable to load labs');

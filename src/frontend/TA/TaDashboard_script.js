@@ -320,7 +320,7 @@ async function loadDashboard() {
   }
 }
 
-function populateNavbarUser(user) {
+function _legacy_populateNavbarUser_unused(user) {
   if (!user) return;
   const initials = getUserInitials(user);
   document.querySelectorAll('[data-user-name]').forEach(el => { el.textContent = user.name || user.email || 'TA'; });

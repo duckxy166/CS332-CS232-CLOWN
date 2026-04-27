@@ -80,20 +80,20 @@
     <button id="profileBtn" type="button" onclick="toggleProfileMenu(event)"
       class="flex items-center gap-3 border-l border-brand-800 pl-6 pr-2 h-full hover:bg-brand-800/40 transition-colors cursor-pointer">
       <div class="text-right">
-        <div class="text-p1 font-semibold leading-none">John Doe</div>
-        <div class="text-p2 text-gray-400 leading-none mt-1">Head TA</div>
+        <div class="text-p1 font-semibold leading-none"><span data-user-name>John Doe</span></div>
+        <div class="text-p2 text-gray-400 leading-none mt-1"><span data-user-role>Head TA</span></div>
       </div>
       <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
-        JD
+        <span data-user-initials>JD</span>
       </div>
       <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
     </button>
     <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
       <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
-        <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">JD</div>
+        <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100"><span data-user-initials>JD</span></div>
         <div>
-          <div class="text-p1 font-bold text-brand-900 leading-tight">John Doe</div>
-          <div class="text-p2 text-gray-500 leading-tight mt-0.5">Head TA</div>
+          <div class="text-p1 font-bold text-brand-900 leading-tight"><span data-user-name>John Doe</span></div>
+          <div class="text-p2 text-gray-500 leading-tight mt-0.5"><span data-user-role>Head TA</span></div>
         </div>
       </div>
       <button type="button" onclick="handleLogout()"

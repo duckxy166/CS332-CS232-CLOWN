@@ -92,6 +92,7 @@ let activeLabID = '';
 window.addEventListener('DOMContentLoaded', async () => {
     activeUser = requireAuth('student');
     if (!activeUser) return;
+    populateNavbarUser(activeUser);
     activeLabID = getLabIdFromUrl();
     updateResultView('processing');
     if (!activeLabID) {

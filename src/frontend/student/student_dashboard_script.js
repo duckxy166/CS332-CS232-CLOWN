@@ -202,7 +202,7 @@ async function loadDashboard() {
   const user = requireAuth("student");
   if (!user) return;
 
-  populateNavbar(user);
+  populateNavbarUser(user);
   renderSkeleton();
 
   try {
@@ -229,15 +229,6 @@ async function loadDashboard() {
     renderError(err.message || "Failed to load dashboard");
   }
 }
-
-function populateNavbar(user) {
-  if (!user) return;
-  const initials = getUserInitials(user);
-  document.querySelectorAll("[data-user-name]").forEach(el => { el.textContent = user.name || user.email || "Student"; });
-  document.querySelectorAll("[data-user-role]").forEach(el => { el.textContent = user.roleLabel || "Undergraduate"; });
-  document.querySelectorAll("[data-user-initials]").forEach(el => { el.textContent = initials; });
-}
-
 
 function filterCards() {
   const q = document.getElementById("searchInput")?.value.toLowerCase() || "";
