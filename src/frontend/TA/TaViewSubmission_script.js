@@ -81,6 +81,7 @@ function mapImageResult(scoreItem, screenshot) {
     label: `Image ${scoreItem?.imgId ?? screenshot?.imgId ?? '?'}`,
     status,
     url: screenshot?.url || null,
+    refUrl: screenshot?.refUrl || null,
     checks,
     ai,
   };
@@ -206,13 +207,24 @@ function imageCardHTML(img) {
     </li>
   `).join('');
 
+  const thumbStyle = 'width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:zoom-in;flex-shrink:0;border:1px solid #E2E8F0;';
+  const studentThumb = img.url
+    ? `<img src="${img.url}" alt="${img.label} (student)" title="Click to view student submission" style="${thumbStyle}" onclick="event.stopPropagation(); openLightbox('${img.url}', 'Student — ${img.label.replace(/'/g, "\\'")}')" />`
+    : `<div class="thumb-placeholder"><i class="ph ph-image"></i></div>`;
+  const refThumb = img.refUrl
+    ? `<img src="${img.refUrl}" alt="${img.label} (reference)" title="Click to view reference image" style="${thumbStyle}" onclick="event.stopPropagation(); openLightbox('${img.refUrl}', 'Reference — ${img.label.replace(/'/g, "\\'")}')" />`
+    : '';
+  const refBadge = img.refUrl
+    ? `<span class="text-p2 text-gray-400 font-semibold mt-1" style="font-size:10px;">REF</span>`
+    : '';
+
   return `
     <div class="validation-card ${cardClass}">
       <div class="flex items-start gap-3 mb-3">
-        ${img.url
-          ? `<img src="${img.url}" alt="${img.label}" class="thumb-placeholder" style="object-fit:cover;border-radius:8px;" />`
-          : `<div class="thumb-placeholder"><i class="ph ph-image"></i></div>`
-        }
+        <div class="flex flex-col items-center gap-1">
+          ${studentThumb}
+          ${img.refUrl ? `<div class="flex flex-col items-center gap-0.5">${refThumb}${refBadge}</div>` : ''}
+        </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between gap-2 mb-2">
             <span class="text-p1 font-medium truncate">${img.label}</span>
@@ -225,6 +237,37 @@ function imageCardHTML(img) {
     </div>
   `;
 }
+
+/* ────────────────────────────────────────
+   LIGHTBOX (image preview)
+──────────────────────────────────────── */
+function openLightbox(url, caption) {
+  let lb = document.getElementById('taImageLightbox');
+  if (!lb) {
+    lb = document.createElement('div');
+    lb.id = 'taImageLightbox';
+    lb.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+    lb.onclick = closeLightbox;
+    lb.innerHTML = `
+      <button onclick="event.stopPropagation();closeLightbox()" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer;line-height:1;"><i class="ph ph-x-circle"></i></button>
+      <img id="taLightboxImg" src="" onclick="event.stopPropagation()" style="max-width:90vw;max-height:80vh;border-radius:12px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.5);" />
+      <p id="taLightboxCaption" style="color:#fff;font-size:14px;font-weight:600;"></p>
+    `;
+    document.body.appendChild(lb);
+  }
+  document.getElementById('taLightboxImg').src = url;
+  document.getElementById('taLightboxCaption').textContent = caption || '';
+  lb.style.display = 'flex';
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('taImageLightbox');
+  if (lb) lb.style.display = 'none';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
 
 /* ────────────────────────────────────────
    RENDER: Rules Table

@@ -6,6 +6,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 const db = new DynamoDBClient({ region: "us-east-1" });
 const s3 = new S3Client({ region: "us-east-1" });
 const SCREENSHOT_BUCKET = "lab-checker-screenshots-duckxy";
+const REFERENCE_BUCKET = "lab-checker-reference-duckxy";
 const PRESIGN_EXPIRY = 900; // 15 minutes
 
 export const handler = async (event) => {
@@ -45,6 +46,25 @@ export const handler = async (event) => {
     );
     const lab = labRes.Item ? unmarshall(labRes.Item) : null;
 
+    /* ── presign reference images keyed by imgId ── */
+    const refUrlByImgId = {};
+    const refKeyByImgId = {};
+    for (const im of (lab?.images || [])) {
+      const imgId = Number(im.id ?? im.imgId ?? im.slot);
+      const refKey = im.refS3Key || im.s3Key;
+      if (!refKey || Number.isNaN(imgId)) continue;
+      refKeyByImgId[imgId] = refKey;
+      try {
+        refUrlByImgId[imgId] = await getSignedUrl(
+          s3,
+          new GetObjectCommand({ Bucket: REFERENCE_BUCKET, Key: refKey }),
+          { expiresIn: PRESIGN_EXPIRY }
+        );
+      } catch (e) {
+        console.warn("presign ref failed for", refKey, e.message);
+      }
+    }
+
     /* ── scan submissions filtered by labID ── */
     let allItems = [];
     let lastKey = undefined;
@@ -80,7 +100,14 @@ export const handler = async (event) => {
             } catch (e) {
               console.warn("presign failed for", shot.s3Key, e.message);
             }
-            return { imgId: shot.imgId, s3Key: shot.s3Key, url };
+            const imgIdNum = Number(shot.imgId);
+            return {
+              imgId: shot.imgId,
+              s3Key: shot.s3Key,
+              url,
+              refS3Key: refKeyByImgId[imgIdNum] || null,
+              refUrl:   refUrlByImgId[imgIdNum] || null,
+            };
           })
         );
 
