@@ -17,26 +17,40 @@ export const handler = async (event) => {
       body = event;
     }
 
-    console.log('body received:', JSON.stringify(body));
+    console.log('body received:', JSON.stringify({
+      labID: body.labID,
+      enableLLMCheck: body.enableLLMCheck,
+      imageCount: body.images?.length,
+    }));
+    console.log('[labConfig] images with llmDescription:', JSON.stringify(
+      body.images?.map(i => ({ id: i.id, hasLLM: !!i.llmDescription }))
+    ));
 
-    const labID = randomUUID();
+    const labID = body.labID || randomUUID();
 
-    // Strip base64 image data — store only slot/s3Key metadata in DynamoDB
-    const images = (body.images || []).map(({ id, slot, s3Key }) => ({ id, slot, s3Key }));
+    // Strip base64 image data — store only slot/s3Key metadata + AI fields in DynamoDB
+    const images = (body.images || []).map(({ id, slot, s3Key, refS3Key, llmDescription }) => ({
+      id,
+      slot,
+      s3Key,
+      refS3Key: refS3Key || s3Key || null,
+      llmDescription: llmDescription || null,
+    }));
 
     const item = {
       labID,
-      labName:     body.labName,
-      subjectId:   body.subjectId,
-      sections:    body.sections,
-      description: body.description || "",
-      deadline:    body.deadline,
+      labName:        body.labName,
+      subjectId:      body.subjectId,
+      sections:       body.sections,
+      description:    body.description || "",
+      deadline:       body.deadline,
       images,
-      rules:       body.rules,
-      thresholds:  body.thresholds,
-      createdBy:   body.createdBy || "TA",
-      status:      "active",
-      createdAt:   new Date().toISOString()
+      rules:          body.rules,
+      thresholds:     body.thresholds,
+      enableLLMCheck: body.enableLLMCheck === true,
+      createdBy:      body.createdBy || "TA",
+      status:         "active",
+      createdAt:      new Date().toISOString()
     };
 
     await db.send(new PutItemCommand({

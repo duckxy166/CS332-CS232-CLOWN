@@ -556,16 +556,6 @@ async function handleCreateLab() {
       }));
   });
 
-  // ── Images: only slots with an uploaded reference (base64). ──
-  const images = Object.entries(slotStates)
-    .filter(([, state]) => state.image)
-    .map(([slot, state]) => ({
-      id      : Number(slot),
-      slot    : Number(slot),
-      data    : state.image,
-      dataB64 : stripDataUrl(state.image),
-    }));
-
   // ── Thresholds: one entry per image slot expected by checker engine. ──
   const minScore = Number(document.getElementById('minScoreVal')?.value || 75);
   const mustPassMandatory = document.getElementById('mustPass')?.checked || false;
@@ -576,26 +566,64 @@ async function handleCreateLab() {
     mustPassMandatory,
   }));
 
-  // ── Payload ──
-  const payload = {
-    labName,
-    subjectId      : selectedClasses[0] || '',
-    sections       : selectedSections,
-    description,
-    deadline,
-    images,
-    rules,
-    thresholds,
-    enableLLMCheck : false,
-    createdBy      : currentTaUser?.email || 'TA',
-  };
- 
+  // ── AI toggle (Ta_CreateLab.html#aiGradingToggle) ──
+  const enableLLM = document.getElementById('aiGradingToggle')?.checked === true;
+
+  // Pre-generate labID so reference uploads land under the real lab's S3 prefix
+  // and the lab-config record matches the keys saved by reference-upload.
+  const labID = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+    ? crypto.randomUUID()
+    : `lab-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
   // ── Loading state ──
   const btn = document.getElementById('createLabBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating...';
- 
+
   try {
+    // ── Upload each reference image; capture s3Key + optional llmDescription ──
+    const slotEntries = Object.entries(slotStates).filter(([, state]) => state.image);
+    const images = [];
+    for (let i = 0; i < slotEntries.length; i++) {
+      const [slot, state] = slotEntries[i];
+      const imgId = Number(slot);
+      btn.innerHTML = `<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Uploading reference ${i + 1}/${slotEntries.length}${enableLLM ? ' (AI analyzing…)' : ''}`;
+      const refData = await apiFetch(API_ENDPOINTS.referenceUpload, {
+        method: 'POST',
+        body: JSON.stringify({
+          labID,
+          imageBase64: stripDataUrl(state.image),
+          imageType:   inferImageType(state.image) || 'image/png',
+          enableLLM,
+        }),
+      });
+      if (!refData?.success) {
+        throw new Error(`Image ${imgId} upload failed: ${refData?.error || 'unknown error'}`);
+      }
+      images.push({
+        id:             imgId,
+        slot:           imgId,
+        s3Key:          refData.s3Key,
+        refS3Key:       refData.s3Key,
+        llmDescription: refData.llmDescription || null,
+      });
+    }
+
+    // ── Payload (no base64 — backend already has the images on S3) ──
+    const payload = {
+      labID,
+      labName,
+      subjectId      : selectedClasses[0] || '',
+      sections       : selectedSections,
+      description,
+      deadline,
+      images,
+      rules,
+      thresholds,
+      enableLLMCheck : enableLLM,
+      createdBy      : currentTaUser?.email || 'TA',
+    };
+
+    btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin .8s linear infinite;"></i> Creating...';
     const data = await apiFetch(API_ENDPOINTS.labConfig, {
       method: 'POST',
       body: JSON.stringify(payload),
