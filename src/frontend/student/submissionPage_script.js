@@ -31,6 +31,9 @@ function renderLabHeader(lab) {
   document.querySelectorAll('[data-lab-subject]').forEach(el => { el.textContent = getSubjectId(lab); });
   document.querySelectorAll('[data-lab-deadline]').forEach(el => { el.textContent = formatDateLabel(lab.deadline); });
   document.querySelectorAll('[data-lab-description]').forEach(el => { el.textContent = lab.description || ''; });
+  document.title = `ValidMate – ${getLabName(lab)}`;
+  const subjectBtn = document.getElementById('breadcrumbSubjectBtn');
+  if (subjectBtn) subjectBtn.onclick = () => window.location.href = `student_Lablist.html?subjectId=${encodeURIComponent(getSubjectId(lab))}`;
 }
 
 function fileToBase64(file) {

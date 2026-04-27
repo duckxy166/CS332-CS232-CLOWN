@@ -209,9 +209,10 @@ function imageCardHTML(img) {
   return `
     <div class="validation-card ${cardClass}">
       <div class="flex items-start gap-3 mb-3">
-        <div class="thumb-placeholder">
-          <i class="ph ph-image"></i>
-        </div>
+        ${img.url
+          ? `<img src="${img.url}" alt="${img.label}" class="thumb-placeholder" style="object-fit:cover;border-radius:8px;" />`
+          : `<div class="thumb-placeholder"><i class="ph ph-image"></i></div>`
+        }
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between gap-2 mb-2">
             <span class="text-p1 font-medium truncate">${img.label}</span>
@@ -628,6 +629,8 @@ function renderViewer() {
   if (sectionEl)  sectionEl.textContent  = labData.section;
   if (deadlineEl) deadlineEl.textContent = labData.deadline;
   document.title = `ValidMate – ${labData.title}`;
+  const descEl = document.getElementById('labDescription');
+  if (descEl) descEl.textContent = labData.description?.[0] || '—';
 
   const params = new URLSearchParams(window.location.search);
   const subjectId = params.get('subjectId') || params.get('course');

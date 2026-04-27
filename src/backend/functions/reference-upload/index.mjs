@@ -68,7 +68,7 @@ export const handler = async (event) => {
     }));
 
     /* ── extract text blocks with position ── */
-    const blocks = txRes.Blocks
+    const blocks = (txRes.Blocks || [])
       .filter(b => b.BlockType === "LINE")
       .map(b => ({
         text:   b.Text,

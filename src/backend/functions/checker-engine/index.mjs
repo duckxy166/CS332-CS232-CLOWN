@@ -50,6 +50,10 @@ export const handler = async (event) => {
         TableName: "Labs",
         Key: marshall({ labID })
       }));
+      if (!labRes.Item) {
+        console.error(`lab not found: ${labID}`);
+        continue;
+      }
       const lab = unmarshall(labRes.Item);
       const enableLLM     = lab.enableLLMCheck === true;
       const labRules      = Array.isArray(lab.rules)      ? lab.rules      : [];
@@ -61,17 +65,18 @@ export const handler = async (event) => {
       const imageResults = [];
 
       /* ── check each screenshot against its imgId rules ── */
-      for(const shot of screenshots){
+      for(const shot of screenshots || []){
 
-        const imgRules     = labRules.filter(r => r.imgId === shot.imgId);
-        const imgThreshold = labThresholds.find(t => t.imgId === shot.imgId);
+        const shotImgId    = Number(shot.imgId);
+        const imgRules     = labRules.filter(r => Number(r.imgId) === shotImgId);
+        const imgThreshold = labThresholds.find(t => Number(t.imgId) === shotImgId);
 
         /* run Textract on this screenshot */
         const txRes = await textract.send(new DetectDocumentTextCommand({
           Document: { S3Object: { Bucket: SCREENSHOT_BUCKET, Name: shot.s3Key } }
         }));
 
-        const blocks = txRes.Blocks
+        const blocks = (txRes.Blocks || [])
           .filter(b => b.BlockType === "LINE")
           .map(b => ({
             text:   b.Text.toLowerCase(),
@@ -87,7 +92,8 @@ export const handler = async (event) => {
         let imgStatus     = "PASSED";
 
         for(const rule of imgRules){
-          const kw      = rule.kw.toLowerCase();
+          const kw      = (rule.kw || '').toLowerCase();
+          if (!kw) continue;
           const matches = blocks.filter(b => b.text.includes(kw));
           let   passed  = false;
 
@@ -130,7 +136,7 @@ export const handler = async (event) => {
         let llmError        = null;
 
         if (imgStatus === "PASSED" && enableLLM) {
-          const imgMeta  = labImages.find(i => i.id === shot.imgId);
+          const imgMeta  = labImages.find(i => Number(i.id ?? i.imgId ?? i.slot) === shotImgId);
           const refS3Key = imgMeta?.refS3Key || imgMeta?.s3Key || null;
 
           if (refS3Key) {
