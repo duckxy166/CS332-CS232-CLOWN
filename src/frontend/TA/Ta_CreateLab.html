@@ -199,10 +199,8 @@
               <input type="text" placeholder="Search class (e.g. CS232)"
                 class="w-full pl-9 pr-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
             </div>
-            <div class="tag-list flex flex-wrap gap-2 mt-2.5">
-              <span class="tag" onclick="toggleTag(this)">CS301</span>
-              <span class="tag" onclick="toggleTag(this)">CS232</span>
-              <span class="tag" onclick="toggleTag(this)">CS261</span>
+            <div class="tag-list flex flex-wrap gap-2 mt-2.5" id="classTagList">
+              <!-- ดึงรายชื่อ class จาก API อัตโนมัติ — ไม่ hardcode อีกต่อไป -->
             </div>
           </div>
 
@@ -214,10 +212,8 @@
               <input type="text" placeholder="Search section (e.g. 1001)"
                 class="w-full pl-9 pr-3 py-2.5 rounded-md border border-layout-border bg-layout-surface text-p1 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
             </div>
-            <div class="tag-list flex flex-wrap gap-2 mt-2.5">
-              <span class="tag" onclick="toggleTag(this)">1001</span>
-              <span class="tag" onclick="toggleTag(this)">1002</span>
-              <span class="tag" onclick="toggleTag(this)">1003</span>
+            <div class="tag-list flex flex-wrap gap-2 mt-2.5" id="sectionTagList">
+              <!-- ดึงรายชื่อ section จาก API อัตโนมัติ — ไม่ hardcode อีกต่อไป -->
             </div>
           </div>
         </div>

@@ -27,10 +27,36 @@ function statusToView(status) {
 function applySubmissionToView(submission, lab) {
     const view = statusToView(submission?.status);
     updateResultView(view);
+
+    // อัพเดท breadcrumb + header จากข้อมูล lab จริง — ไม่ใช้ค่า hardcode อีกต่อไป
     if (lab) {
-        document.querySelectorAll('[data-lab-name]').forEach(el => { el.textContent = getLabName(lab); });
-        document.querySelectorAll('[data-lab-subject]').forEach(el => { el.textContent = getSubjectId(lab); });
+        const labName = getLabName(lab);
+        const subjectId = getSubjectId(lab);
+        const classID = new URLSearchParams(window.location.search).get('classID') || subjectId;
+
+        // ชื่อ lab ในหน้า
+        document.querySelectorAll('[data-lab-name]').forEach(el => { el.textContent = labName; });
+        document.querySelectorAll('[data-lab-subject]').forEach(el => { el.textContent = subjectId; });
+
+        // breadcrumb — ชื่อวิชา + ลิงก์กลับ
+        const courseNameEl = document.getElementById('breadcrumbCourseName');
+        const courseBtn = document.getElementById('breadcrumbCourseBtn');
+        if (courseNameEl) courseNameEl.textContent = subjectId || '—';
+        if (courseBtn) courseBtn.onclick = () => window.location.href = `student_Lablist.html?subjectId=${encodeURIComponent(classID)}`;
+
+        // breadcrumb — ชื่อ lab + ลิงก์กลับ submission page
+        const labNameEl = document.getElementById('breadcrumbLabName');
+        const labBtn = document.getElementById('breadcrumbLabBtn');
+        if (labNameEl) labNameEl.textContent = labName || '—';
+        if (labBtn) labBtn.onclick = () => window.location.href = `submissionPage.html?labID=${encodeURIComponent(activeLabID)}&classID=${encodeURIComponent(classID)}`;
+
+        // header card title
+        const titleEl = document.getElementById('resultLabTitle');
+        if (titleEl) titleEl.textContent = labName;
+
+        document.title = `ValidMate – ${labName} Result`;
     }
+
     if (submission) {
         document.querySelectorAll('[data-submission-score]').forEach(el => {
             el.textContent = submission.totalScore != null ? `${submission.totalScore}%` : '—';
@@ -90,7 +116,7 @@ let activeUser = null;
 let activeLabID = '';
 
 window.addEventListener('DOMContentLoaded', async () => {
-    activeUser = requireAuth('student');
+    activeUser = await requireAuth('student');
     if (!activeUser) return;
     populateNavbarUser(activeUser);
     activeLabID = getLabIdFromUrl();

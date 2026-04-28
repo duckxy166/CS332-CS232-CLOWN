@@ -715,9 +715,69 @@ async function applyEditMode() {
   updateSetupProgress();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  currentTaUser = requireAuth('ta');
+document.addEventListener('DOMContentLoaded', async () => {
+  currentTaUser = await requireAuth('ta');
   if (!currentTaUser) return;
   populateNavbarUser(currentTaUser);
+
+  // เอา class/section จาก labs ที่มีอยู่แล้วมาสร้างปุ่ม tag อัตโนมัติ
+  await populateClassAndSectionTags();
+
   applyEditMode();
 });
+
+// ดึงรายชื่อ class กับ section จาก API แทนที่จะ hardcode ใน HTML
+async function populateClassAndSectionTags() {
+  const classTagList = document.getElementById('classTagList');
+  const sectionTagList = document.getElementById('sectionTagList');
+  if (!classTagList && !sectionTagList) return;
+
+  try {
+    const data = await apiFetch(API_ENDPOINTS.labs);
+    if (!data?.success) return;
+    const labs = data.labs || [];
+
+    // รวบรวม class IDs และ sections ที่ไม่ซ้ำ
+    const classIds = new Set();
+    const sections = new Set();
+    labs.forEach(lab => {
+      const sid = getSubjectId(lab);
+      if (sid) classIds.add(sid);
+      getLabSections(lab).forEach(s => sections.add(s));
+    });
+
+    // fallback ถ้าไม่เจอ lab เลย ใส่ค่า default ไว้ให้ TA พิมพ์เองได้
+    if (classIds.size === 0) {
+      Object.keys(_COURSE_TITLES).forEach(id => classIds.add(id));
+    }
+
+    // สร้างปุ่ม tag ลงใน container
+    if (classTagList) {
+      // เอาเฉพาะชื่อที่ไม่มีช่องว่าง (CS232 แทนที่จะเป็น CS 232) เพื่อไม่ให้ซ้ำ
+      const uniqueClasses = [...classIds].reduce((acc, id) => {
+        const normalized = id.replace(/\s+/g, '');
+        if (!acc.has(normalized)) acc.set(normalized, id);
+        return acc;
+      }, new Map());
+      [...uniqueClasses.values()].sort().forEach(cls => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = cls;
+        span.onclick = () => toggleTag(span);
+        classTagList.appendChild(span);
+      });
+    }
+
+    if (sectionTagList) {
+      [...sections].sort().forEach(sec => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = sec;
+        span.onclick = () => toggleTag(span);
+        sectionTagList.appendChild(span);
+      });
+    }
+  } catch (err) {
+    console.warn('Could not load class/section tags from API:', err);
+  }
+}

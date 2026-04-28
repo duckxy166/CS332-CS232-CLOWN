@@ -226,7 +226,7 @@ function renderError(message) {
 }
 
 async function loadLabs() {
-    if (!currentUser) currentUser = requireAuth('student');
+    if (!currentUser) currentUser = await requireAuth('student');
     if (!currentUser) return;
     populateNavbarUser(currentUser);
     try {

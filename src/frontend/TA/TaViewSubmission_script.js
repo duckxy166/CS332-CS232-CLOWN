@@ -207,23 +207,26 @@ function imageCardHTML(img) {
     </li>
   `).join('');
 
-  const thumbStyle = 'width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:zoom-in;flex-shrink:0;border:1px solid #E2E8F0;';
+  const thumbStyle = 'width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:zoom-in;flex-shrink:0;border:1px solid #E2E8F0;';
+  const safeLabel = img.label.replace(/'/g, "\\'");
   const studentThumb = img.url
-    ? `<img src="${img.url}" alt="${img.label} (student)" title="Click to view student submission" style="${thumbStyle}" onclick="event.stopPropagation(); openLightbox('${img.url}', 'Student — ${img.label.replace(/'/g, "\\'")}')" />`
+    ? `<img src="${img.url}" alt="${img.label}" title="Click to view full size" style="${thumbStyle}" onclick="event.stopPropagation(); openLightbox('${img.url}', 'Student — ${safeLabel}')" />`
     : `<div class="thumb-placeholder"><i class="ph ph-image"></i></div>`;
-  const refThumb = img.refUrl
-    ? `<img src="${img.refUrl}" alt="${img.label} (reference)" title="Click to view reference image" style="${thumbStyle}" onclick="event.stopPropagation(); openLightbox('${img.refUrl}', 'Reference — ${img.label.replace(/'/g, "\\'")}')" />`
-    : '';
-  const refBadge = img.refUrl
-    ? `<span class="text-p2 text-gray-400 font-semibold mt-1" style="font-size:10px;">REF</span>`
+  const refBtn = img.refUrl
+    ? `<button type="button"
+         onclick="event.stopPropagation(); openLightbox('${img.refUrl}', 'Reference — ${safeLabel}')"
+         class="flex items-center justify-center gap-1 mt-1.5 px-2 py-1 rounded-md border border-layout-border bg-layout-surface hover:bg-brand-50 hover:border-brand-500 hover:text-brand-500 text-gray-500 transition-colors"
+         style="width:72px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">
+         <i class="ph ph-eye text-xs"></i> Ref
+       </button>`
     : '';
 
   return `
     <div class="validation-card ${cardClass}">
       <div class="flex items-start gap-3 mb-3">
-        <div class="flex flex-col items-center gap-1">
+        <div class="flex flex-col items-center">
           ${studentThumb}
-          ${img.refUrl ? `<div class="flex flex-col items-center gap-0.5">${refThumb}${refBadge}</div>` : ''}
+          ${refBtn}
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between gap-2 mb-2">
@@ -686,6 +689,16 @@ function renderViewer() {
   renderRules();
   renderStats(submissions);
 
+  // อัพเดท pass criteria badge จากข้อมูล lab จริง แทนการ hardcode 75%
+  const passEl = document.getElementById('passCriteriaBadge');
+  if (passEl) {
+    // ลองดูว่า lab มี pass threshold กำหนดไว้ไหม ถ้าไม่มีก็ fallback 75%
+    const threshold = labData.rules.length > 0
+      ? labData.rules.filter(r => r.requirement === 'mandatory').reduce((sum, r) => sum + r.weight, 0) || 75
+      : 75;
+    passEl.textContent = `≥ ${threshold}%`;
+  }
+
   filteredData = [...submissions];
   currentPage = 1;
   expandedRows = new Set(submissions.length ? [0] : []);
@@ -695,7 +708,7 @@ function renderViewer() {
 }
 
 async function loadViewer() {
-  if (!currentTaUser) currentTaUser = requireAuth('ta');
+  if (!currentTaUser) currentTaUser = await requireAuth('ta');
   if (!currentTaUser) return;
   populateNavbarUser(currentTaUser);
   activeLabID = getActiveLabId();

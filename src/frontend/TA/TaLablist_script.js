@@ -160,7 +160,7 @@ function updateCourseHeader() {
 }
 
 async function loadTaLabList() {
-    if (!currentTaUser) currentTaUser = requireAuth('ta');
+    if (!currentTaUser) currentTaUser = await requireAuth('ta');
     if (!currentTaUser) return;
     populateNavbarUser(currentTaUser);
     currentSubjectId = getCurrentSubjectId();

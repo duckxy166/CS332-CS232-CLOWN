@@ -78,8 +78,7 @@ export const handler = async (event) => {
                     Username: rawUserID, 
                     UserAttributes: [
                         { Name: "email", Value: userEmail },
-                        { Name: "email_verified", Value: "true" }, //เสกให้ verify มาแล้ว
-                        { Name: "custom:role", Value: userRole }
+                        { Name: "email_verified", Value: "true" }
                     ],
                     TemporaryPassword: `Test1234!`, // ตั้งรหัสผ่านแรกเข้า 
                     MessageAction: "SUPPRESS" 

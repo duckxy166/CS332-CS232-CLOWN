@@ -199,7 +199,7 @@ async function getSubmissionForLab(email, labID) {
 }
 
 async function loadDashboard() {
-  const user = requireAuth("student");
+  const user = await requireAuth("student");
   if (!user) return;
 
   populateNavbarUser(user);

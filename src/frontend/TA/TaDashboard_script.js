@@ -278,6 +278,27 @@ function buildCourseSummary(subjectId, labs, statsByLab, paletteIdx) {
   };
 }
 
+// เอาข้อมูลจริงจาก courses array ไปใส่ summary cards ด้านบน
+function renderSummaryCards() {
+  const classCount = courses.length;
+  const totalLabs = courses.reduce((sum, c) => sum + c.totalLabs, 0);
+  const totalPending = courses.reduce((sum, c) => sum + c.pendingReviews, 0);
+
+  const classEl = document.getElementById('summaryClassCount');
+  const classSub = document.getElementById('summaryClassSub');
+  const labEl = document.getElementById('summaryLabCount');
+  const labSub = document.getElementById('summaryLabSub');
+  const pendEl = document.getElementById('summaryPendingCount');
+  const pendSub = document.getElementById('summaryPendingSub');
+
+  if (classEl) classEl.textContent = classCount;
+  if (classSub) classSub.textContent = `Managing ${courses.reduce((s, c) => s + c.sections, 0)} section${courses.reduce((s, c) => s + c.sections, 0) !== 1 ? 's' : ''}`;
+  if (labEl) labEl.textContent = totalLabs;
+  if (labSub) labSub.textContent = totalPending > 0 ? `${totalPending} pending review${totalPending !== 1 ? 's' : ''}` : 'All caught up';
+  if (pendEl) pendEl.textContent = totalPending;
+  if (pendSub) pendSub.textContent = totalPending > 0 ? 'Ready for review →' : 'No action needed';
+}
+
 function renderDashboardError(message) {
   const grid = document.getElementById('labGrid');
   if (!grid) return;
@@ -295,7 +316,7 @@ function renderDashboardError(message) {
 }
 
 async function loadDashboard() {
-  if (!currentTaUser) currentTaUser = requireAuth('ta');
+  if (!currentTaUser) currentTaUser = await requireAuth('ta');
   if (!currentTaUser) return;
   populateNavbarUser(currentTaUser);
   try {
@@ -313,6 +334,7 @@ async function loadDashboard() {
     }));
     const statsByLab = Object.fromEntries(statsEntries);
     courses = Object.keys(grouped).map((sid, idx) => buildCourseSummary(sid, grouped[sid], statsByLab, idx));
+    renderSummaryCards();
     renderGrid(document.getElementById('searchInput')?.value || '');
   } catch (err) {
     console.error('TA dashboard load failed:', err);

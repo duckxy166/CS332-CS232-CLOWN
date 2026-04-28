@@ -1,6 +1,13 @@
 // ── LabProject-API (HTTP API, $default stage) ─────────────────
 const API_BASE = "https://0hzxan306l.execute-api.us-east-1.amazonaws.com";
 
+// ── Cognito hosted UI login — ใช้ตัวนี้แทนการฝัง URL ตรงใน HTML ─────────
+const COGNITO_LOGIN_URL = "https://us-east-10rm49jitg.auth.us-east-1.amazoncognito.com/login"
+  + "?client_id=4dfs5v1qsv50r1vsev1hontv9f"
+  + "&response_type=token"
+  + "&scope=email+openid"
+  + "&redirect_uri=https://duckxy166.github.io/CS332-CS232-CLOWN/index.html";
+
 const API_ENDPOINTS = {
   labConfig:        `${API_BASE}/lab-config`,        // POST  → lab-config Lambda
   labs:             `${API_BASE}/labs`,              // GET   → lab-lister Lambda
@@ -13,25 +20,45 @@ const API_ENDPOINTS = {
 // ── helper: เรียก API พร้อมแนบ Cognito token อัตโนมัติ ─────────
 const AUTH_TOKEN_KEY = "cognito_id_token";
 
-// ── Account roster (mirrors accounts.csv) ─────────────────────
-// Cognito JWT only carries email; we look up the student/TA's UserID
-// (รหัสนักศึกษา) and class/section from this static roster.
-const ACCOUNT_ROSTER = [
-  { userId: "6709650193", role: "Student", email: "charatrawee.w@dome.tu.ac.th", classId: "CS232", section: "1" },
-  { userId: "6709650490", role: "Student", email: "pornpawee.s@dome.tu.ac.th",   classId: "CS232", section: "1" },
-  { userId: "6709650532", role: "Student", email: "phakhwan.j@dome.tu.ac.th",    classId: "CS232", section: "1" },
-  { userId: "6709650573", role: "Student", email: "phurin.k@dome.tu.ac.th",      classId: "CS232", section: "1" },
-  { userId: "6709650631", role: "Student", email: "sirimongkol.d@dome.tu.ac.th", classId: "CS232", section: "1" },
-  { userId: "6709650680", role: "Student", email: "saharat.u@dome.tu.ac.th",     classId: "CS232", section: "1" },
-  { userId: "6709650151", role: "Student", email: "kantaphat.c@dome.tu.ac.th",   classId: "CS232", section: "1" },
-  { userId: "",           role: "TA",      email: "ta.clown01@dome.tu.ac.th",    classId: "CS232", section: "1" },
-  { userId: "",           role: "TA",      email: "ta.clown02@dome.tu.ac.th",    classId: "CS232", section: "1" },
-];
+// ── Account roster — ดึงจาก roster.json แทนการฝังใน code ────────
+// เพิ่ม/ลบ user แค่แก้ไฟล์ JSON ไม่ต้องแตะ JavaScript อีกต่อไป
+let _rosterCache = null;
+let _rosterPromise = null;
+
+// โหลด roster จากไฟล์ JSON (fetch ครั้งเดียว แล้ว cache ไว้)
+function loadRoster() {
+  if (_rosterPromise) return _rosterPromise;
+
+  // หา path ของ roster.json จากตำแหน่งของ api-config.js เอง
+  // เพราะหน้าใน TA/ หรือ student/ จะ fetch ไป path ผิดถ้าใช้ relative ตรงๆ
+  const scriptEl = document.querySelector('script[src$="api-config.js"]');
+  const configDir = scriptEl ? scriptEl.src.replace(/[^/]*$/, '') : '';
+  const rosterUrl = configDir ? configDir + 'roster.json' : 'roster.json';
+
+  _rosterPromise = fetch(rosterUrl)
+    .then(res => {
+      if (!res.ok) throw new Error(`roster.json: ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      _rosterCache = Array.isArray(data) ? data : [];
+      return _rosterCache;
+    })
+    .catch(err => {
+      console.warn('Could not load roster.json, falling back to empty roster:', err);
+      _rosterCache = [];
+      return _rosterCache;
+    });
+  return _rosterPromise;
+}
+
+// เริ่มโหลดทันทีที่ script ถูก load — ไม่ต้องรอ DOMContentLoaded
+loadRoster();
 
 function findRosterEntry(email) {
-  if (!email) return null;
+  if (!email || !_rosterCache) return null;
   const norm = String(email).trim().toLowerCase();
-  return ACCOUNT_ROSTER.find(e => e.email.toLowerCase() === norm) || null;
+  return _rosterCache.find(e => e.email.toLowerCase() === norm) || null;
 }
 
 function parseJwt(token) {
@@ -68,7 +95,15 @@ function getCurrentUser() {
   };
 }
 
-function requireAuth(expectedRole) {
+// รอให้ roster โหลดเสร็จก่อนเรียก getCurrentUser — ป้องกัน race condition
+async function ensureRosterLoaded() {
+  if (!_rosterCache) await loadRoster();
+}
+
+async function requireAuth(expectedRole) {
+  // รอ roster โหลดก่อน เพื่อให้ได้ role/studentId ครบ
+  await ensureRosterLoaded();
+
   const user = getCurrentUser();
   if (!user) {
     window.location.href = "../index.html";
@@ -158,20 +193,24 @@ function getLabSections(lab) {
   return [];
 }
 
-function getCourseTitle(subjectId) {
-  const titles = {
-    "CS 232": "Computer Architecture",
-    "CS232": "Computer Architecture",
-    "CS 251": "Data Structures",
-    "CS251": "Data Structures",
-    "CS 261": "Software Engineering",
-    "CS261": "Software Engineering",
-    "CS 271": "Operating Systems",
-    "CS271": "Operating Systems",
-    "CS 301": "Cloud Computing",
-    "CS301": "Cloud Computing",
-  };
-  return titles[subjectId] || subjectId || "Unknown Course";
+// ── Map ของชื่อวิชา — เพิ่มได้เรื่อยๆ ไม่ต้องแก้ function ──
+const _COURSE_TITLES = {
+  "CS 232": "Computer Architecture",
+  "CS232":  "Computer Architecture",
+  "CS 251": "Data Structures",
+  "CS251":  "Data Structures",
+  "CS 261": "Software Engineering",
+  "CS261":  "Software Engineering",
+  "CS 271": "Operating Systems",
+  "CS271":  "Operating Systems",
+  "CS 301": "Cloud Computing",
+  "CS301":  "Cloud Computing",
+};
+
+// เรียกได้ปกติ หรือจะส่ง override map จาก API ก็ได้
+function getCourseTitle(subjectId, extraMap) {
+  const merged = extraMap ? { ..._COURSE_TITLES, ...extraMap } : _COURSE_TITLES;
+  return merged[subjectId] || subjectId || "Unknown Course";
 }
 
 function normalizeStudentStatus(submission) {

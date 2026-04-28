@@ -11,7 +11,7 @@ function getLabIdFromUrl() {
 }
 
 async function loadLabContext() {
-  currentUser = requireAuth('student');
+  currentUser = await requireAuth('student');
   if (!currentUser) return;
   populateNavbarUser(currentUser);
   const labID = getLabIdFromUrl();
@@ -249,7 +249,7 @@ async function handleSubmit() {
     toast('Upload at least one screenshot first.', 'error');
     return;
   }
-  if (!currentUser) currentUser = requireAuth('student');
+  if (!currentUser) currentUser = await requireAuth('student');
   if (!currentUser) return;
   const labID = getLabIdFromUrl();
   if (!labID) {

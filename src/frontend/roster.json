@@ -1,0 +1,11 @@
+[
+  { "userId": "6709650193", "role": "Student", "email": "charatrawee.w@dome.tu.ac.th", "classId": "CS232", "section": "1" },
+  { "userId": "6709650490", "role": "Student", "email": "pornpawee.s@dome.tu.ac.th",   "classId": "CS232", "section": "1" },
+  { "userId": "6709650532", "role": "Student", "email": "phakhwan.j@dome.tu.ac.th",    "classId": "CS232", "section": "1" },
+  { "userId": "6709650573", "role": "Student", "email": "phurin.k@dome.tu.ac.th",      "classId": "CS232", "section": "1" },
+  { "userId": "6709650631", "role": "Student", "email": "sirimongkol.d@dome.tu.ac.th", "classId": "CS232", "section": "1" },
+  { "userId": "6709650680", "role": "Student", "email": "saharat.u@dome.tu.ac.th",     "classId": "CS232", "section": "1" },
+  { "userId": "6709650151", "role": "Student", "email": "kantaphat.c@dome.tu.ac.th",   "classId": "CS232", "section": "1" },
+  { "userId": "",           "role": "TA",      "email": "ta.clown01@dome.tu.ac.th",    "classId": "CS232", "section": "1" },
+  { "userId": "",           "role": "TA",      "email": "ta.clown02@dome.tu.ac.th",    "classId": "CS232", "section": "1" }
+]
