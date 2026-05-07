@@ -155,7 +155,7 @@ function updateCourseHeader() {
     const codeEl = document.getElementById('courseCode');
     const nameEl = document.getElementById('courseName');
     if (codeEl) codeEl.innerText = currentSubjectId || 'All Labs';
-    if (nameEl) nameEl.innerText = getCourseTitle(currentSubjectId);
+    if (nameEl) nameEl.innerText = currentSubjectId ? getCourseTitle(currentSubjectId) : 'All Courses';
     document.title = `ValidMate - ${currentSubjectId || 'All'} Lab List`;
 }
 

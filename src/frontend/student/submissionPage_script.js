@@ -1,9 +1,10 @@
 /* studentSubmission_script.js — real backend submission */
 
-const uploads = [null, null, null];
+let uploads = [null];
 let activeTab = 0;
 let currentUser = null;
 let activeLab = null;
+let numImagesRequired = 1;
 
 function getLabIdFromUrl() {
   const p = new URLSearchParams(window.location.search);
@@ -20,10 +21,40 @@ async function loadLabContext() {
     const data = await apiFetch(API_ENDPOINTS.labs);
     if (!data?.success) return;
     activeLab = (data.labs || []).find(l => getLabId(l) === labID) || null;
-    if (activeLab) renderLabHeader(activeLab);
+    if (activeLab) {
+      renderLabHeader(activeLab);
+      setupDynamicTabs(activeLab);
+    }
   } catch (err) {
     console.warn('Could not load lab metadata:', err);
   }
+}
+
+function setupDynamicTabs(lab) {
+  numImagesRequired = 1;
+  if (lab.thresholds && Array.isArray(lab.thresholds)) {
+    numImagesRequired = Math.max(1, lab.thresholds.length);
+  } else if (lab.images && Array.isArray(lab.images)) {
+    numImagesRequired = Math.max(1, lab.images.length);
+  }
+
+  uploads = Array(numImagesRequired).fill(null);
+
+  const tabsContainer = document.getElementById('tabsContainer');
+  if (tabsContainer) {
+    tabsContainer.innerHTML = '';
+    for (let i = 0; i < numImagesRequired; i++) {
+      const btn = document.createElement('button');
+      btn.id = 'tab-' + i;
+      btn.onclick = () => switchTab(i);
+      btn.className = 'text-p1 font-medium text-gray-400 bg-transparent border-0 border-b-2 border-transparent pb-2 cursor-pointer';
+      btn.textContent = 'Picture ' + (i + 1);
+      tabsContainer.appendChild(btn);
+    }
+  }
+
+  switchTab(0);
+  updateStatus();
 }
 
 function renderLabHeader(lab) {
@@ -48,8 +79,9 @@ function fileToBase64(file) {
 /* ── Tabs ── */
 function switchTab(idx) {
   activeTab = idx;
-  [0,1,2].forEach(i => {
+  for (let i = 0; i < numImagesRequired; i++) {
     const b = document.getElementById('tab-'+i);
+    if (!b) continue;
     if (i === idx) {
       b.style.color       = '#4F46E5';
       b.style.fontWeight  = '700';
@@ -59,7 +91,7 @@ function switchTab(idx) {
       b.style.fontWeight  = '500';
       b.style.borderBottom = '2px solid transparent';
     }
-  });
+  }
   renderZone();
 }
 
@@ -259,12 +291,12 @@ function updateStatus() {
     icon.style.color           = '#F59E0B';
     icon.className             = 'ph ph-hourglass-medium';
     label.textContent          = 'Pending Upload';
-  } else if (n < 3) {
+  } else if (n < numImagesRequired) {
     card.style.borderLeftColor = '#4F46E5';
     wrap.style.background      = '#EEF2FF';
     icon.style.color           = '#4F46E5';
     icon.className             = 'ph ph-upload-simple';
-    label.textContent          = n + ' of 3 Uploaded';
+    label.textContent          = n + ' of ' + numImagesRequired + ' Uploaded';
   } else {
     card.style.borderLeftColor = '#10B981';
     wrap.style.background      = '#ECFDF5';
@@ -277,8 +309,8 @@ function updateStatus() {
 /* ── Submit ── */
 async function handleSubmit() {
   const filledUploads = uploads.filter(Boolean);
-  if (!filledUploads.length) {
-    toast('Upload at least one screenshot first.', 'error');
+  if (filledUploads.length < numImagesRequired) {
+    toast(`Please upload all ${numImagesRequired} screenshot(s) first.`, 'error');
     return;
   }
   if (!currentUser) currentUser = await requireAuth('student');

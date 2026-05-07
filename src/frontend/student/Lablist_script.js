@@ -74,7 +74,7 @@ function updateCourseHeader() {
 
     if (courseCode) courseCode.textContent = subjectId || 'All';
     if (breadcrumbCourse) breadcrumbCourse.textContent = subjectId || 'All Labs';
-    if (courseName) courseName.textContent = getCourseTitle(subjectId);
+    if (courseName) courseName.textContent = subjectId ? getCourseTitle(subjectId) : 'All Courses';
     if (courseSection) courseSection.textContent = sectionLabel;
     if (progressText) progressText.textContent = `${completedCount}/${totalCount}`;
     if (progressFill) progressFill.style.width = `${progressPct}%`;
