@@ -15,6 +15,7 @@ const API_ENDPOINTS = {
   result:           `${API_BASE}/result`,            // GET   → result-reader Lambda
   submission:       `${API_BASE}/submission`,        // POST  → submission-handler Lambda
   submissions:      `${API_BASE}/submissions`,       // GET   → submission-viewer Lambda
+  classRoster:      `${API_BASE}/class-roster`,      // GET   → class-roster Lambda (scan ClassRoaster table)
 };
 
 // ── helper: เรียก API พร้อมแนบ Cognito token อัตโนมัติ ─────────

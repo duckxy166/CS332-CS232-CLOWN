@@ -726,30 +726,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   applyEditMode();
 });
 
-// ดึงรายชื่อ class กับ section จาก API แทนที่จะ hardcode ใน HTML
+// ดึงรายชื่อ class กับ section จาก ClassRoaster (DynamoDB) ผ่าน API
+// ก่อนหน้านี้ดึงจาก /labs ทำให้ class/section ใหม่ที่ยังไม่เคยมี lab จะไม่โผล่
 async function populateClassAndSectionTags() {
   const classTagList = document.getElementById('classTagList');
   const sectionTagList = document.getElementById('sectionTagList');
   if (!classTagList && !sectionTagList) return;
 
   try {
-    const data = await apiFetch(API_ENDPOINTS.labs);
+    const data = await apiFetch(API_ENDPOINTS.classRoster);
     if (!data?.success) return;
-    const labs = data.labs || [];
+    const roster = data.roster || [];
 
-    // รวบรวม class IDs และ sections ที่ไม่ซ้ำ
+    // รวบรวม classID และ section ที่ไม่ซ้ำจากตาราง ClassRoaster โดยตรง
     const classIds = new Set();
     const sections = new Set();
-    labs.forEach(lab => {
-      const sid = getSubjectId(lab);
-      if (sid) classIds.add(sid);
-      getLabSections(lab).forEach(s => sections.add(s));
+    roster.forEach(entry => {
+      const cid = entry.classID || entry.classId;
+      const sec = entry.section;
+      if (cid) classIds.add(String(cid).trim());
+      if (sec !== undefined && sec !== null && String(sec).trim() !== '') {
+        sections.add(String(sec).trim());
+      }
     });
-
-    // fallback ถ้าไม่เจอ lab เลย ใส่ค่า default ไว้ให้ TA พิมพ์เองได้
-    if (classIds.size === 0) {
-      Object.keys(_COURSE_TITLES).forEach(id => classIds.add(id));
-    }
 
     // สร้างปุ่ม tag ลงใน container
     if (classTagList) {
@@ -769,15 +768,22 @@ async function populateClassAndSectionTags() {
     }
 
     if (sectionTagList) {
-      [...sections].sort().forEach(sec => {
-        const span = document.createElement('span');
-        span.className = 'tag';
-        span.textContent = sec;
-        span.onclick = () => toggleTag(span);
-        sectionTagList.appendChild(span);
-      });
+      // เรียง section แบบเลข (1, 2, 10, ...) แทน lexicographic
+      [...sections]
+        .sort((a, b) => {
+          const na = Number(a), nb = Number(b);
+          if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+          return String(a).localeCompare(String(b));
+        })
+        .forEach(sec => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.textContent = sec;
+          span.onclick = () => toggleTag(span);
+          sectionTagList.appendChild(span);
+        });
     }
   } catch (err) {
-    console.warn('Could not load class/section tags from API:', err);
+    console.warn('Could not load class/section tags from ClassRoaster API:', err);
   }
 }
