@@ -82,35 +82,67 @@ function renderZone() {
 }
 
 /* ── OpenCV Blur Detection ── */
-const BLUR_THRESHOLD = 100;
+// ค่า THRESHOLD ให้ผ่าน
+const BLUR_THRESHOLD = 40;
 
 function computeBlurScore(imageMat) {
-  var resized = new cv.Mat();
-  var targetWidth = 600;
-  if (imageMat.cols > targetWidth) {
-    var scale = targetWidth / imageMat.cols;
-    var targetHeight = Math.round(imageMat.rows * scale);
-    cv.resize(imageMat, resized, new cv.Size(targetWidth, targetHeight), 0, 0, cv.INTER_LINEAR);
-  } else {
-    imageMat.copyTo(resized);
-  }
-  var gray = new cv.Mat();
-  cv.cvtColor(resized, gray, cv.COLOR_RGBA2GRAY);
-  var gradX = new cv.Mat();
-  var gradY = new cv.Mat();
-  cv.Sobel(gray, gradX, cv.CV_64F, 1, 0, 3, 1, 0, cv.BORDER_DEFAULT);
-  cv.Sobel(gray, gradY, cv.CV_64F, 0, 1, 3, 1, 0, cv.BORDER_DEFAULT);
-  var meanX = new cv.Mat(), stdX = new cv.Mat();
-  var meanY = new cv.Mat(), stdY = new cv.Mat();
-  cv.meanStdDev(gradX, meanX, stdX);
-  cv.meanStdDev(gradY, meanY, stdY);
-  var varX = stdX.data64F[0] * stdX.data64F[0];
-  var varY = stdY.data64F[0] * stdY.data64F[0];
-  var score = Math.min(varX, varY) / 10;
-  resized.delete(); gray.delete();
-  gradX.delete(); gradY.delete();
-  meanX.delete(); stdX.delete(); meanY.delete(); stdY.delete();
-  return score;
+    let resized = new cv.Mat();
+    
+    // 1. แปลงเป็นขาวดำ
+    cv.cvtColor(imageMat, resized, cv.COLOR_RGBA2GRAY);
+
+    // 2. ปรับขนาดมาตรฐาน (สำคัญมากเพื่อให้เกณฑ์เสถียร)
+    let targetHeight = 800;
+    let scale = targetHeight / resized.rows;
+    let targetWidth = Math.round(resized.cols * scale);
+    
+    let finalGray = new cv.Mat();
+    cv.resize(resized, finalGray, new cv.Size(targetWidth, targetHeight), 0, 0, cv.INTER_LINEAR);
+
+    // ส่วนที่ 1: Canny Sharpness Ratio (ดูความคมของเส้นหลัก)
+    let edgesAll = new cv.Mat();
+    let edgesStrong = new cv.Mat();
+    
+    // ตั้งค่าให้กว้างขึ้นนิดนึง
+    cv.Canny(finalGray, edgesAll, 10, 50, 3, false);
+    // ตั้งค่าให้แคบลง
+    cv.Canny(finalGray, edgesStrong, 180, 255, 3, false);
+
+    let countAll = cv.countNonZero(edgesAll);
+    let countStrong = cv.countNonZero(edgesStrong);
+
+    let cannyScore = 0;
+    if (countAll > 0) {
+        cannyScore = (countStrong / countAll) * 100;
+    }
+
+    //Laplacian Texture 
+    // ทำ Blur เบาๆ 1 รอบเพื่อลบ Noise จากการบีบอัด JPEG 
+    let blurredGray = new cv.Mat();
+    cv.GaussianBlur(finalGray, blurredGray, new cv.Size(3, 3), 0, 0, cv.BORDER_DEFAULT);
+
+    let laplacian = new cv.Mat();
+    cv.Laplacian(blurredGray, laplacian, cv.CV_64F, 3, 1, 0, cv.BORDER_DEFAULT);
+
+    let mean = new cv.Mat();
+    let stddev = new cv.Mat();
+    cv.meanStdDev(laplacian, mean, stddev);
+
+    // เอาแค่ค่าเบี่ยงเบนมาตรฐานตรงๆ (ตัวเลขมักจะอยู่แถวๆ 10 - 80)
+    let laplacianScore = stddev.data64F[0];
+
+    // สรุปผล: รวมพลัง 2 ค่าย
+    // เอามารวมกัน (อาจจะถ่วงน้ำหนักตามความเหมาะสม ตอนนี้ให้ 50/50)
+    // ถ้ารูปเบลอ Canny จะตก (เพราะขอบฟุ้ง) และ Laplacian จะตก (เพราะโดน GaussianBlur ลบ Noise หมดแล้ว)
+    let finalScore = (cannyScore * 0.5) + (laplacianScore * 0.5);
+
+    // คืนค่า Memory
+    resized.delete(); finalGray.delete(); 
+    edgesAll.delete(); edgesStrong.delete();
+    blurredGray.delete(); laplacian.delete();
+    mean.delete(); stddev.delete();
+
+    return finalScore;
 }
 
 async function checkImageBlur(file) {
