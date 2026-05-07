@@ -8,8 +8,8 @@ const db  = new DynamoDBClient({ region: "us-east-1" });
 const s3  = new S3Client({ region: "us-east-1" });
 const sqs = new SQSClient({ region: "us-east-1" });
 
-const SCREENSHOT_BUCKET = "lab-checker-screenshots-65401";
-const QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/564553699632/lab-checker-queue";
+const SCREENSHOT_BUCKET = process.env.SCREENSHOT_BUCKET || "lab-checker-screenshots-65401";
+const QUEUE_URL = process.env.QUEUE_URL || "https://sqs.us-east-1.amazonaws.com/483018956721/lab-checker-queue";
 
 export const handler = async (event) => {
   try {
