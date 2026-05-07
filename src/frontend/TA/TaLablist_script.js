@@ -111,8 +111,26 @@ function toggleMenu(e, id) {
     menu.classList.toggle('hidden');
 }
 
-function removeLab(id) {
-    alert('Lab deletion is not yet wired to the backend. Please remove labs via the AWS console or extend the lab-config Lambda.');
+async function removeLab(id) {
+    if (!confirm('Are you sure you want to delete this lab?')) return;
+    try {
+        const data = await apiFetch(`${API_ENDPOINTS.labConfig}?labID=${encodeURIComponent(id)}`, {
+            method: 'DELETE'
+        });
+        if (data?.success) {
+            labs = labs.filter(l => l.id !== id);
+            renderLabs();
+            updateCourseHeader();
+            
+            // Re-render count
+            const count = document.getElementById('count-num');
+            if (count) count.innerText = labs.length;
+        } else {
+            alert('Failed to delete lab: ' + (data?.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+    }
 }
 
 function searchLabs() {

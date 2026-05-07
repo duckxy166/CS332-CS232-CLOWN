@@ -1,4 +1,4 @@
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { randomUUID } from "crypto";
 
@@ -10,11 +10,29 @@ export const handler = async (event) => {
     /* ── parse body ── */
     let body;
     if (typeof event.body === 'string') {
-      body = JSON.parse(event.body);
+      try { body = JSON.parse(event.body); } catch(e) { body = {}; }
     } else if (event.body !== undefined) {
       body = event.body;
     } else {
-      body = event;
+      body = event || {};
+    }
+
+    const method = event.httpMethod || event.requestContext?.http?.method || 'POST';
+
+    if (method === 'DELETE') {
+      const deleteLabID = event.queryStringParameters?.labID || body.labID;
+      if (!deleteLabID) {
+        throw new Error('Missing labID for deletion');
+      }
+      await db.send(new DeleteItemCommand({
+        TableName: "Labs",
+        Key: marshall({ labID: deleteLabID })
+      }));
+      return {
+        statusCode: 200,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({ success: true, deleted: true, labID: deleteLabID })
+      };
     }
 
     console.log('body received:', JSON.stringify({
