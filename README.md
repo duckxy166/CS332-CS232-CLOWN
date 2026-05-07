@@ -2,7 +2,7 @@
 
 ระบบจัดการแลปสำหรับวิชา CS332/CS232 — นักศึกษาส่งงานเป็นรูป screenshot ระบบตรวจอัตโนมัติด้วย **AWS Textract OCR + กฎที่ TA ตั้งไว้** ผ่าน pipeline แบบ asynchronous (SQS → Lambda checker)
 
-**Frontend:** https://incredible-sprinkles-0d48b2.netlify.app/
+**Link Web:** (https://duckxy166.github.io/CS332-CS232-CLOWN/)
 
 ## สถาปัตยกรรม (3 Flows)
 
