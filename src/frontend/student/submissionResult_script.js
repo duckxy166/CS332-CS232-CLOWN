@@ -47,8 +47,12 @@ function applySubmissionToView(submission, lab) {
         // breadcrumb — ชื่อ lab + ลิงก์กลับ submission page
         const labNameEl = document.getElementById('breadcrumbLabName');
         const labBtn = document.getElementById('breadcrumbLabBtn');
+        const submissionUrl = `submissionPage.html?labID=${encodeURIComponent(activeLabID)}&classID=${encodeURIComponent(classID)}`;
         if (labNameEl) labNameEl.textContent = labName || '—';
-        if (labBtn) labBtn.onclick = () => window.location.href = `submissionPage.html?labID=${encodeURIComponent(activeLabID)}&classID=${encodeURIComponent(classID)}`;
+        if (labBtn) labBtn.onclick = () => window.location.href = submissionUrl;
+
+        const tryAgainBtn = document.getElementById('tryAgainBtn');
+        if (tryAgainBtn) tryAgainBtn.onclick = () => window.location.href = submissionUrl;
 
         // header card title
         const titleEl = document.getElementById('resultLabTitle');
