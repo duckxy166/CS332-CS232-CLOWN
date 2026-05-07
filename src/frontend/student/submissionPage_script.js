@@ -83,7 +83,7 @@ function renderZone() {
 
 /* ── OpenCV Blur Detection ── */
 // ค่า THRESHOLD ให้ผ่าน
-const BLUR_THRESHOLD = 60;
+const BLUR_THRESHOLD = 40;
 
 function computeBlurScore(imageMat) {
     let resized = new cv.Mat();
