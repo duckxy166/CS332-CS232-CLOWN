@@ -19,7 +19,7 @@ export const handler = async (event) => {
 
     const method = event.httpMethod || event.requestContext?.http?.method || 'POST';
 
-    if (method === 'DELETE') {
+    if (method === 'DELETE' || body.action === 'DELETE') {
       const deleteLabID = event.queryStringParameters?.labID || body.labID;
       if (!deleteLabID) {
         throw new Error('Missing labID for deletion');

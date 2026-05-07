@@ -114,8 +114,9 @@ function toggleMenu(e, id) {
 async function removeLab(id) {
     if (!confirm('Are you sure you want to delete this lab?')) return;
     try {
-        const data = await apiFetch(`${API_ENDPOINTS.labConfig}?labID=${encodeURIComponent(id)}`, {
-            method: 'DELETE'
+        const data = await apiFetch(`${API_ENDPOINTS.labConfig}`, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'DELETE', labID: id })
         });
         if (data?.success) {
             labs = labs.filter(l => l.id !== id);
