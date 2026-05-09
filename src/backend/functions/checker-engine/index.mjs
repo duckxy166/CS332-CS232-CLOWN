@@ -13,6 +13,28 @@ const REFERENCE_BUCKET  = "lab-checker-reference-duckxy";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const LLM_MODEL      = process.env.LLM_MODEL    || "gpt-4o-2024-11-20";
 const LLM_MAX_TOKENS = Number(process.env.LLM_MAX_TOKENS || 1500);
+const LLM_MAX_RETRIES = Number(process.env.LLM_MAX_RETRIES || 6);
+const LLM_MIN_BACKOFF = Number(process.env.LLM_MIN_BACKOFF_MS || 5000);
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* Parse OpenAI's "Please try again in 1.149s" / "in 890ms" hint, falling back
+   to the Retry-After header. Returns ms (clamped to 30s).
+   NOTE: OpenAI's hint is the ABSOLUTE minimum — when the bucket is fully
+   exhausted, waiting only the hinted duration almost always 429's again.
+   The caller floors this with LLM_MIN_BACKOFF and grows on each retry. */
+function parseRetryDelayMs(headers, errText) {
+  const retryAfter = headers?.get?.("retry-after");
+  if (retryAfter) {
+    const n = Number(retryAfter);
+    if (Number.isFinite(n)) return Math.min(n * 1000, 60_000);
+  }
+  const mSec = errText && errText.match(/try again in ([\d.]+)\s*s/i);
+  if (mSec) return Math.min(parseFloat(mSec[1]) * 1000, 60_000);
+  const mMs  = errText && errText.match(/try again in ([\d.]+)\s*ms/i);
+  if (mMs)  return Math.min(parseFloat(mMs[1]), 60_000);
+  return null;
+}
 
 async function callLLMWithVision(prompt, imageUrls) {
   const content = [
@@ -23,28 +45,56 @@ async function callLLMWithVision(prompt, imageUrls) {
     { type: "text", text: prompt }
   ];
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: LLM_MODEL,
-      messages: [{ role: "user", content }],
-      response_format: { type: "json_object" },
-      max_tokens: LLM_MAX_TOKENS,
-      temperature: 0,
-      top_p: 1,
-      seed: 42
-    })
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`OpenAI API returned ${res.status}: ${errText}`);
+  /* OpenAI's reasoning-class models (o1/o3/gpt-5*) reject `max_tokens`,
+     `temperature`, `top_p`, and `seed` — they expect `max_completion_tokens`
+     and ignore sampling controls. Detect and adapt at request time so the
+     model name can be flipped via env var without code changes. */
+  const isReasoningModel = /^(o[13]|gpt-5)/i.test(LLM_MODEL);
+  const body = {
+    model: LLM_MODEL,
+    messages: [{ role: "user", content }],
+    response_format: { type: "json_object" },
+  };
+  if (isReasoningModel) {
+    body.max_completion_tokens = LLM_MAX_TOKENS;
+  } else {
+    body.max_tokens  = LLM_MAX_TOKENS;
+    body.temperature = 0;
+    body.top_p       = 1;
+    body.seed        = 42;
   }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || null;
+
+  for (let attempt = 0; attempt <= LLM_MAX_RETRIES; attempt++) {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || null;
+    }
+    const errText = await res.text();
+    /* Retry on rate-limit and transient 5xx; honour OpenAI's hint when given. */
+    const retriable = res.status === 429 || (res.status >= 500 && res.status < 600);
+    if (!retriable || attempt === LLM_MAX_RETRIES) {
+      throw new Error(`OpenAI API returned ${res.status}: ${errText}`);
+    }
+    const hinted = parseRetryDelayMs(res.headers, errText);
+    /* Floor every wait at LLM_MIN_BACKOFF (default 5s) and grow it each
+       attempt — the rolling-token-window may need many seconds to drain
+       enough room for a 3.8k-token request even after the hinted "try in
+       1.149s". Cap any single wait at 60s. */
+    const grow = LLM_MIN_BACKOFF * Math.pow(1.5, attempt);
+    const jitter = Math.random() * 500;
+    const wait = Math.min(60_000, Math.max(hinted ?? 0, grow) + jitter);
+    console.log(`OpenAI ${res.status} on attempt ${attempt + 1}/${LLM_MAX_RETRIES + 1}; hint=${hinted}ms; sleeping ${Math.round(wait)}ms`);
+    await sleep(wait);
+  }
+  throw new Error("OpenAI retries exhausted");
 }
 
 export const handler = async (event) => {
