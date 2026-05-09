@@ -344,7 +344,7 @@ function renderSubmissions(data) {
         <!-- Main row -->
         <div class="submission-row-grid px-4 py-3.5 cursor-pointer transition-colors ${rowAccent(s.status)}"
              onclick="toggleRow(${i})">
-          <span class="text-p2 text-gray-400 font-semibold">${i + 1}</span>
+          <span class="text-p2 text-gray-400 font-semibold">${(currentPage - 1) * PAGE_SIZE + i + 1}</span>
           <span class="text-p1 font-medium truncate">${s.email}</span>
           <span class="text-center">${statusPill(s.status)}</span>
           <span class="text-center font-bold text-p1 ${s.status === 'passed' ? 'text-status-success' : s.status === 'rejected' ? 'text-status-error' : 'text-status-warning'}">${s.score}%</span>
