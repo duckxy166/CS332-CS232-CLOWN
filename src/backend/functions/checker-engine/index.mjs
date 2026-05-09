@@ -146,22 +146,24 @@ export const handler = async (event) => {
                 getSignedUrl(s3, new GetObjectCommand({ Bucket: SCREENSHOT_BUCKET, Key: shot.s3Key }), { expiresIn: 300 }),
               ]);
 
+              const labDesc = (lab.description || "").trim();
               const prompt = `You are a lab grader comparing two screenshots:
 - Image 1: Reference (correct submission)
 - Image 2: Student's submission
-
+${labDesc ? `\nLab requirements (from instructor — enforce these strictly):\n${labDesc}\n` : ""}
 Rules:
 - Keyword checks are already done separately — do not repeat them
-- Ignore cosmetic differences: theme, window size, account names, timestamps, UI language
-- PASSED if the student completed the same task on the same service in a finished state
-- REJECTED only if: wrong service, wrong action, or clearly incomplete
-- When in doubt, choose PASSED
+- Ignore cosmetic differences: theme, window size, timestamps, UI language
+- If the lab requirements above specify constraints (e.g. allowed email domain, required service, required region) and the student's submission clearly violates them → REJECTED
+- PASSED if the student completed the same task on the same service in a finished state and meets all lab requirements
+- REJECTED if: wrong service, wrong action, clearly incomplete, or violates an explicit lab requirement
+- When in doubt about cosmetic differences, choose PASSED; when in doubt about a requirement violation, choose REJECTED
 
 Reply with JSON only, no other text:
 {
   "overall": "PASSED",
   "confidence": 0.95,
-  "reason": "<2-3 sentences: overall verdict, what matches, and any notable differences>"
+  "reason": "<2-3 sentences: overall verdict, what matches, and any notable differences or requirement violations>"
 }
 
 confidence is a number from 0.0 to 1.0 representing how certain you are about the verdict.`;
