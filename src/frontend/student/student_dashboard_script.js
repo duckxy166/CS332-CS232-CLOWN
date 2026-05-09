@@ -188,13 +188,17 @@ function renderError(message) {
 }
 
 
-async function getSubmissionForLab(email, labID) {
+/* One Query (by email partition key) returns every submission this student
+   has made — replaces the per-lab GET /result?labID= fan-out. */
+async function fetchAllMySubmissions(email) {
+  if (!email) return {};
   try {
-    const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.result, { email, labID }));
-    return data?.submission || null;
+    const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.result, { mode: "mine", email }));
+    if (!data?.success) return {};
+    return data.submissionsByLab || {};
   } catch (err) {
-    if (err.status === 404) return null;
-    throw err;
+    console.warn("mine fetch failed", err);
+    return {};
   }
 }
 
@@ -206,19 +210,17 @@ async function loadDashboard() {
   renderSkeleton();
 
   try {
-    const data = await apiFetch(API_ENDPOINTS.labs);
-    if (!data?.success) throw new Error(data?.error || "Unable to load labs");
-    const labs = data.labs || [];
+    const [labsData, submissionsByLab] = await Promise.all([
+      apiFetch(API_ENDPOINTS.labs),
+      fetchAllMySubmissions(user.email),
+    ]);
+    if (!labsData?.success) throw new Error(labsData?.error || "Unable to load labs");
+    const labs = labsData.labs || [];
 
-    dashboardLabs = await Promise.all(labs.map(async (lab) => {
-      const labID = getLabId(lab);
-      let submission = null;
-      if (labID && user?.email) {
-        try { submission = await getSubmissionForLab(user.email, labID); }
-        catch (err) { console.warn("result fetch failed for", labID, err); }
-      }
+    dashboardLabs = labs.map(lab => {
+      const submission = submissionsByLab[getLabId(lab)] || null;
       return { ...lab, studentStatus: normalizeStudentStatus(submission), submission };
-    }));
+    });
 
     const grouped = groupBySubject(dashboardLabs);
     const labsDueSoon = countLabsDueSoon(dashboardLabs);

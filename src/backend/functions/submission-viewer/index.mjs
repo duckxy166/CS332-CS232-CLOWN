@@ -24,11 +24,45 @@ export const handler = async (event) => {
       };
     }
 
-    /* ── read labID from query string ── */
-    const labID = event.queryStringParameters?.labID 
+    /* ── read params ── */
+    const labID = event.queryStringParameters?.labID
            || event.labID
            || (event.body ? JSON.parse(event.body).labID : null);
-           
+    const mode  = event.queryStringParameters?.mode || event.mode || null;
+
+    /* ── mode=stats: ONE Scan, return per-lab stats map for the whole table.
+         Used by TA dashboard / lab list to avoid the N+1 fan-out of one
+         /submissions call per lab. ── */
+    if (mode === "stats") {
+      const statsByLab = {};
+      let lastKey;
+      do {
+        const r = await db.send(new ScanCommand({
+          TableName: "Submissions",
+          ProjectionExpression: "labID, #st",
+          ExpressionAttributeNames: { "#st": "status" },
+          ExclusiveStartKey: lastKey,
+        }));
+        for (const item of r.Items || []) {
+          const u = unmarshall(item);
+          const id = u.labID;
+          if (!id) continue;
+          const s = statsByLab[id] || (statsByLab[id] = { total: 0, passed: 0, rejected: 0, pending: 0 });
+          s.total++;
+          if (u.status === "PASSED")   s.passed++;
+          else if (u.status === "REJECTED") s.rejected++;
+          else                              s.pending++;
+        }
+        lastKey = r.LastEvaluatedKey;
+      } while (lastKey);
+
+      return {
+        statusCode: 200,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({ success: true, statsByLab }),
+      };
+    }
+
     if (!labID) {
       return {
         statusCode: 400,
@@ -137,9 +171,10 @@ export const handler = async (event) => {
       headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({
         success: true,
-        lab: lab
-          ? { labID: lab.labID, labName: lab.labName, subjectId: lab.subjectId, sections: lab.sections }
-          : null,
+        /* return the full lab object — TaViewSubmission needs description,
+           rules, deadline, etc. and was previously fetching /labs again
+           (full Scan) just to get them. */
+        lab: lab || null,
         stats,
         submissions,
       }),

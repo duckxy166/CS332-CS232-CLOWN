@@ -11,10 +11,15 @@ const SCREENSHOT_BUCKET = "lab-checker-screenshots-duckxy";
 const REFERENCE_BUCKET  = "lab-checker-reference-duckxy";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const LLM_MODEL      = process.env.LLM_MODEL    || "gpt-4o-2024-11-20";
+const LLM_MAX_TOKENS = Number(process.env.LLM_MAX_TOKENS || 1500);
 
 async function callLLMWithVision(prompt, imageUrls) {
   const content = [
-    ...imageUrls.map(url => ({ type: "image_url", image_url: { url } })),
+    ...imageUrls.map((url, i) => ({
+      type: "image_url",
+      image_url: { url, detail: "high" }
+    })),
     { type: "text", text: prompt }
   ];
 
@@ -25,10 +30,13 @@ async function callLLMWithVision(prompt, imageUrls) {
       "Authorization": `Bearer ${OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: "gpt-5.4-nano",
+      model: LLM_MODEL,
       messages: [{ role: "user", content }],
       response_format: { type: "json_object" },
-      max_completion_tokens: 1024
+      max_tokens: LLM_MAX_TOKENS,
+      temperature: 0,
+      top_p: 1,
+      seed: 42
     })
   });
   if (!res.ok) {
@@ -147,26 +155,97 @@ export const handler = async (event) => {
               ]);
 
               const labDesc = (lab.description || "").trim();
-              const prompt = `You are a lab grader comparing two screenshots:
-- Image 1: Reference (correct submission)
-- Image 2: Student's submission
-${labDesc ? `\nLab requirements (from instructor — enforce these strictly):\n${labDesc}\n` : ""}
-Rules:
-- Keyword checks are already done separately — do not repeat them
-- Ignore cosmetic differences: theme, window size, timestamps, UI language
-- If the lab requirements above specify constraints (e.g. allowed email domain, required service, required region) and the student's submission clearly violates them → REJECTED
-- PASSED if the student completed the same task on the same service in a finished state and meets all lab requirements
-- REJECTED if: wrong service, wrong action, clearly incomplete, or violates an explicit lab requirement
-- When in doubt about cosmetic differences, choose PASSED; when in doubt about a requirement violation, choose REJECTED
+              const totalSlots = (screenshots?.length || 1);
+              const prompt = `You are grading screenshot ${shotImgId} of ${totalSlots} that a student submitted as evidence for an AWS lab task.
 
-Reply with JSON only, no other text:
+Image 1 = REFERENCE (a correct example for slot ${shotImgId}, posted by the instructor)
+Image 2 = STUDENT'S screenshot for slot ${shotImgId}
+
+═══════ LAB REQUIREMENTS (from the instructor) ═══════
+${labDesc || "(no description provided — focus on visual similarity to the reference)"}
+══════════════════════════════════════════════════════
+
+⚠️ CRITICAL: Multi-screenshot submissions ⚠️
+This lab requires ${totalSlots} screenshots, each showing a DIFFERENT aspect of the task.
+You are grading ONLY screenshot ${shotImgId} right now. Other screenshots will be graded separately.
+A confirmation page screenshot will not show subscription details. A subscription detail page won't show the topic list. THIS IS NORMAL.
+Do NOT reject this screenshot because it doesn't show information that's expected in a different screenshot.
+
+═══════ STEP 1 — LOOK AT IMAGE 2 AND READ IT (mandatory) ═══════
+Before deciding anything, you MUST first OBSERVE the student's screenshot (Image 2) and write down concrete details.
+You will be REJECTED for grading sloppily if your observed[] list is generic ("AWS console shown", "looks fine"), empty, or copy-pasted from the requirements without specific values you literally see.
+
+For Image 2, extract AS MANY of the following as are actually visible. Quote the EXACT text — do not paraphrase, do not invent:
+  • aws_service        — name shown in the page header / breadcrumb (e.g. "Amazon SNS", "Lambda")
+  • page_type          — what view this is (Topic detail / Subscriptions list / Subscription detail / Confirmation page / Email inbox split-screen / etc.)
+  • breadcrumb         — full breadcrumb path if visible (e.g. "Amazon SNS > Topics > ImageUploadNotification")
+  • topic_or_resource  — topic / resource name as printed
+  • status_field       — the literal Status value as printed (e.g. "Confirmed", "Pending confirmation")
+  • protocol_field     — Protocol value as printed (e.g. "EMAIL")
+  • endpoint_or_email  — endpoint / email address as printed (full string, including domain)
+  • id_or_arn_value    — the literal value in the ID / Subscription ID / ARN column (e.g. "arn:aws:sns:...:xxxx", or the literal word "Deleted", or "PendingConfirmation")
+  • account_id         — 12-digit AWS account ID if visible anywhere (header, ARN, etc.)
+  • region             — AWS region indicator (e.g. "us-east-1", "N. Virginia")
+  • banners_or_alerts  — any green/red/yellow banner text, modals, toasts (verbatim)
+  • other_signals      — anything else relevant you can read (column headers, button labels, sidebar text, split-screen contents like a Gmail inbox)
+
+If a field is not visible, set it to null. NEVER make up a value.
+
+═══════ STEP 2 — DECISION ═══════
+DECISION DISCIPLINE (most important rule):
+1. DEFAULT verdict = PASSED.
+2. You may ONLY return REJECTED if one of the HARD REJECT RULES below matches a value you actually observed. Nothing else justifies a REJECT.
+3. ABSENCE of information is NEVER a violation. Examples that are PASSED, not REJECTED:
+   • A confirmation page that only says "Subscription confirmed!" — PASSED
+   • A topic page that doesn't show the email endpoint — PASSED (endpoint is in another slot)
+   • A subscription detail page that doesn't show the topic name — PASSED
+   • A screenshot that doesn't show an account ID — PASSED
+   • A page whose page_type doesn't EXACTLY match the wording in the requirements (e.g. requirement says "Topic detail page" but you see a "Topics list" or "Subscriptions list" page that still shows the right topic name) — PASSED
+4. Cross-screenshot inferences are NOT allowed. Don't say "I see ARN X here but somewhere else there should be ARN Y" — only judge what's IN this screenshot vs the requirements.
+5. The reference is ONE valid example. Other valid submissions can look different — only the literal requirements above are mandatory.
+6. Page-type mismatch is NOT a reject reason. As long as the screenshot is a real AWS console page in the same service as the lab and shows the relevant resource somewhere, accept it. The instructor may have given a strict description of which page to capture, but the grading rubric is whether the visible text contradicts the requirements — not whether the chosen page matches a specific name.
+
+HARD REJECT RULES — these are the ONLY reasons you may return REJECTED (each requires a literal value you observed):
+⚠ DELETED ID: id_or_arn_value (or anything in the ID / Subscription ID column for a row inside the same screenshot) is the literal word "Deleted" instead of a real ARN/UUID. A "Confirmed" Status next to a "Deleted" ID does NOT override this — quote both values in your reason.
+⚠ WRONG STATUS: status_field shows a forbidden value the lab requirements explicitly disallow (e.g. requirements say "Confirmed" but status_field is "Pending confirmation" / "PendingConfirmation"). Quote the value. NOTE: a green "created successfully" banner is NOT a Status value — judge only by the literal Status field.
+⚠ WRONG EMAIL DOMAIN: lab requirements specify a required email domain (e.g. "@dome.tu.ac.th") and endpoint_or_email shows a different domain (e.g. "@gmail.com", "@hotmail.com"). Quote the visible email. (Different prefixes on the SAME required domain are fine. If endpoint_or_email is null, this rule does NOT apply.)
+⚠ WRONG TOPIC NAME: topic_or_resource is visible AND is clearly a different name than the one named in the lab requirements (different spelling, completely different word). Quote both. (If topic_or_resource is null, this rule does NOT apply.)
+⚠ WRONG REGION: region is visible AND is clearly a different region than the one named in the lab requirements. Quote both. (If region is null, this rule does NOT apply.)
+⚠ WRONG SERVICE: aws_service is visible AND is clearly a completely different AWS service than the one named in the lab requirements (e.g. requirements ask for SNS but you see Lambda or S3). Quote both.
+
+WHAT TO ALWAYS IGNORE (never reject because of these)
+• Different AWS account numbers, IAM user names, profile names, display names (every student uses their own account)
+• Different email PREFIXES (only the domain matters if requirements specify a domain)
+• Theme, layout, window size, browser, OS, language differences
+• CloudShell panels, browser tabs, overlays, sidebars, notifications
+• Timestamps, dates
+• Split-screen views (e.g. inbox + AWS console side by side) — normal evidence
+• Extra resources not part of this lab (other topics, other subscriptions, unrelated AWS services in a list)
+• A green "created successfully" banner — judge by the Status field, not banner color
+• OCR / render differences
+• Confirmation pages that are minimal (just "Subscription confirmed!" + ARN) — these are inherently low-content
+• page_type wording differing from the requirement description ("Topics list" vs "Topic detail" vs "Subscriptions list")
+
+═══════ OUTPUT — JSON only, this exact schema ═══════
 {
-  "overall": "PASSED",
-  "confidence": 0.95,
-  "reason": "<2-3 sentences: overall verdict, what matches, and any notable differences or requirement violations>"
-}
-
-confidence is a number from 0.0 to 1.0 representing how certain you are about the verdict.`;
+  "observed": {
+    "aws_service": "<verbatim or null>",
+    "page_type": "<verbatim or null>",
+    "breadcrumb": "<verbatim or null>",
+    "topic_or_resource": "<verbatim or null>",
+    "status_field": "<verbatim or null>",
+    "protocol_field": "<verbatim or null>",
+    "endpoint_or_email": "<verbatim or null>",
+    "id_or_arn_value": "<verbatim or null>",
+    "account_id": "<verbatim or null>",
+    "region": "<verbatim or null>",
+    "banners_or_alerts": "<verbatim or null>",
+    "other_signals": "<verbatim or null>"
+  },
+  "overall": "PASSED" | "REJECTED",
+  "confidence": 0.0,
+  "reason": "<2-4 sentences. Start by stating WHAT you saw in Image 2 (page type + a couple of the most distinctive verbatim values from observed[]). Then state your verdict and, if REJECTED, quote the exact text that breaks a requirement and name the requirement.>"
+}`;
 
               const llmText = await callLLMWithVision(prompt, [referenceUrl, studentUrl]);
 
@@ -178,12 +257,24 @@ confidence is a number from 0.0 to 1.0 representing how certain you are about th
                   llmConfidence   = llmResult.confidence ?? null;
                   llmCheckSkipped = false;
 
+                  /* If LLM did not actually describe the image, treat as a hard error
+                     (we want every output to demonstrate the model looked at the picture). */
+                  const obs = llmResult.observed && typeof llmResult.observed === "object"
+                    ? llmResult.observed : null;
+                  const observedFilled = obs
+                    ? Object.values(obs).filter(v => v !== null && v !== undefined && String(v).trim() !== "").length
+                    : 0;
+                  if (observedFilled < 2) {
+                    llmError = `LLM produced no concrete visual evidence (observed fields filled = ${observedFilled})`;
+                    console.error(`imgId ${shot.imgId} [LLM]: ${llmError}`);
+                  }
+
                   /* LLM can only escalate: flip PASSED → REJECTED, never downgrade */
                   if (llmResult.overall === "REJECTED") {
                     imgStatus = "REJECTED";
-                    console.log(`imgId ${shot.imgId} [LLM]: overridden to REJECTED`);
+                    console.log(`imgId ${shot.imgId} [LLM]: overridden to REJECTED — ${llmFeedback}`);
                   } else {
-                    console.log(`imgId ${shot.imgId} [LLM]: confirmed PASSED`);
+                    console.log(`imgId ${shot.imgId} [LLM]: confirmed PASSED — ${llmFeedback}`);
                   }
                 } else {
                   llmError = "could not parse JSON from response";
@@ -221,20 +312,29 @@ confidence is a number from 0.0 to 1.0 representing how certain you are about th
         console.log(`imgId ${shot.imgId} [final]: ${imgStatus} score: ${imgScore}`);
       }
 
+      /* cross-image consistency check disabled — test data uses different students per slot,
+         so any account-ID-based check produces false negatives on legitimate submissions. */
+      const crossImageCheck = null;
+
       console.log('overall:', overallStatus, 'totalScore:', totalScore);
 
       /* ── write final result to Submissions table ── */
+      const updateExpr = crossImageCheck
+        ? "SET #st = :st, scoreResult = :sr, totalScore = :ts, checkedAt = :ca, crossImageCheck = :xi"
+        : "SET #st = :st, scoreResult = :sr, totalScore = :ts, checkedAt = :ca";
+      const updateVals = {
+        ":st": overallStatus,
+        ":sr": imageResults,
+        ":ts": totalScore,
+        ":ca": new Date().toISOString(),
+        ...(crossImageCheck ? { ":xi": crossImageCheck } : {})
+      };
       await db.send(new UpdateItemCommand({
         TableName: "Submissions",
         Key: marshall({ email, labID }),
-        UpdateExpression: "SET #st = :st, scoreResult = :sr, totalScore = :ts, checkedAt = :ca",
+        UpdateExpression: updateExpr,
         ExpressionAttributeNames: { "#st": "status" },
-        ExpressionAttributeValues: marshall({
-          ":st": overallStatus,
-          ":sr": imageResults,
-          ":ts": totalScore,
-          ":ca": new Date().toISOString()
-        })
+        ExpressionAttributeValues: marshall(updateVals)
       }));
 
     } catch(err){

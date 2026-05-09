@@ -25,21 +25,16 @@ function normaliseLab(lab, stats) {
     };
 }
 
-async function fetchStats(labID) {
-    if (!labID) return { total: 0, passed: 0, rejected: 0, pending: 0 };
+/* One Scan returns the stats map for every lab in the table — replaces the
+   per-lab /submissions call that was running a full Submissions Scan each. */
+async function fetchAllStatsByLab() {
     try {
-        const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.submissions, { labID }));
-        if (!data?.success) return { total: 0, passed: 0, rejected: 0, pending: 0 };
-        const stats = data.stats || {};
-        return {
-            total: stats.total ?? (data.submissions?.length || 0),
-            passed: stats.passed ?? 0,
-            rejected: stats.rejected ?? 0,
-            pending: stats.pending ?? 0,
-        };
+        const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.submissions, { mode: 'stats' }));
+        if (!data?.success) return {};
+        return data.statsByLab || {};
     } catch (err) {
-        console.warn('submissions fetch failed for', labID, err);
-        return { total: 0, passed: 0, rejected: 0, pending: 0 };
+        console.warn('stats fetch failed', err);
+        return {};
     }
 }
 
@@ -185,15 +180,17 @@ async function loadTaLabList() {
     currentSubjectId = getCurrentSubjectId();
     updateCourseHeader();
     try {
-        const data = await apiFetch(API_ENDPOINTS.labs);
+        const [data, statsByLab] = await Promise.all([
+            apiFetch(API_ENDPOINTS.labs),
+            fetchAllStatsByLab(),
+        ]);
         if (!data?.success) throw new Error(data?.error || 'Unable to load labs');
         const all = data.labs || [];
         const filtered = currentSubjectId ? all.filter(l => getSubjectId(l) === currentSubjectId) : all;
-        const enriched = await Promise.all(filtered.map(async (lab) => {
-            const stats = await fetchStats(getLabId(lab));
+        labs = filtered.map(lab => {
+            const stats = statsByLab[getLabId(lab)] || { total: 0, passed: 0, rejected: 0, pending: 0 };
             return normaliseLab(lab, stats);
-        }));
-        labs = enriched;
+        });
         renderLabs();
     } catch (err) {
         console.error('TA lab list load failed:', err);

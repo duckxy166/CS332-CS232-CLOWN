@@ -233,20 +233,17 @@ function addLab(code) {
   window.location.href = `Ta_CreateLab.html${query ? `?${query}` : ''}`;
 }
 
-async function fetchLabSubmissionStats(labID) {
+/* One Scan fetches stats for ALL labs at once. The previous implementation
+   did one /submissions?labID=X round-trip per lab, each of which performed a
+   full Submissions Scan + Filter — quadratically expensive. */
+async function fetchAllSubmissionStats() {
   try {
-    const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.submissions, { labID }));
-    if (!data?.success) return { total: 0, passed: 0, rejected: 0, pending: 0 };
-    const stats = data.stats || {};
-    return {
-      total: stats.total ?? (data.submissions?.length || 0),
-      passed: stats.passed ?? 0,
-      rejected: stats.rejected ?? 0,
-      pending: stats.pending ?? 0,
-    };
+    const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.submissions, { mode: 'stats' }));
+    if (!data?.success) return {};
+    return data.statsByLab || {};
   } catch (err) {
-    console.warn('submissions fetch failed for', labID, err);
-    return { total: 0, passed: 0, rejected: 0, pending: 0 };
+    console.warn('stats fetch failed', err);
+    return {};
   }
 }
 
@@ -320,19 +317,22 @@ async function loadDashboard() {
   if (!currentTaUser) return;
   populateNavbarUser(currentTaUser);
   try {
-    const data = await apiFetch(API_ENDPOINTS.labs);
-    if (!data?.success) throw new Error(data?.error || 'Unable to load labs');
-    const labs = data.labs || [];
+    const [labsData, rawStatsByLab] = await Promise.all([
+      apiFetch(API_ENDPOINTS.labs),
+      fetchAllSubmissionStats(),
+    ]);
+    if (!labsData?.success) throw new Error(labsData?.error || 'Unable to load labs');
+    const labs = labsData.labs || [];
     const grouped = labs.reduce((map, lab) => {
       const sid = getSubjectId(lab);
       (map[sid] = map[sid] || []).push(lab);
       return map;
     }, {});
-    const statsEntries = await Promise.all(labs.map(async (lab) => {
-      const stats = await fetchLabSubmissionStats(getLabId(lab));
-      return [getLabId(lab), stats];
-    }));
-    const statsByLab = Object.fromEntries(statsEntries);
+    const statsByLab = labs.reduce((acc, lab) => {
+      const id = getLabId(lab);
+      acc[id] = rawStatsByLab[id] || { total: 0, passed: 0, rejected: 0, pending: 0 };
+      return acc;
+    }, {});
     courses = Object.keys(grouped).map((sid, idx) => buildCourseSummary(sid, grouped[sid], statsByLab, idx));
     renderSummaryCards();
     renderGrid(document.getElementById('searchInput')?.value || '');
