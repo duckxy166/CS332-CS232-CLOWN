@@ -4,6 +4,8 @@ let currentTaUser = null;
 //  SLOT STATE
 const slotStates = {};
 let activeSlot = 1;
+// GLOBAL LAB SETTING — applies across all image slots
+let labAiGrading = true;
 
 function defaultState() {
   return { rules: [], minScore: 75, mustPass: false, image: null, textractBlocks: null };
@@ -21,9 +23,9 @@ function captureState(idx) {
   });
   slotStates[idx] = {
     rules,
-    minScore : Number(document.getElementById('minScoreVal')?.value || 75),
-    mustPass : document.getElementById('mustPass')?.checked || false,
-    image    : slotStates[idx]?.image || null,
+    minScore    : Number(document.getElementById('minScoreVal')?.value || 75),
+    mustPass    : document.getElementById('mustPass')?.checked || false,
+    image       : slotStates[idx]?.image || null,
     textractBlocks: slotStates[idx]?.textractBlocks || null
   };
 }
@@ -38,11 +40,14 @@ function renderState(idx) {
     tbody.appendChild(tr);
     bindRow(tr);
   });
-  document.getElementById('minScoreVal').value  = state.minScore;
-  document.getElementById('mustPass').checked   = state.mustPass;
+  document.getElementById('minScoreVal').value = state.minScore;
+  document.getElementById('mustPass').checked  = state.mustPass;
+  // AI grading toggle is global — do NOT restore from slot state
   updateWeight();
   renderSlotSelector();
   renderImage(state.image);
+  // Refresh logic chips to reflect the newly loaded slot's values
+  if (typeof updateDynamicPreview === 'function') updateDynamicPreview();
 }
  
 function renderImage(src) {
@@ -65,8 +70,7 @@ function buildRowHTML(rule) {
     <td class="keyword">
       <input type="text" value="${rule.keyword.replace(/"/g,'&quot;')}"  
         placeholder="Enter keyword..."
-        style="width:100%;border:none;background:transparent;outline:none;
-               font-family:monospace;font-size:12.5px;color:#0f172a;"/>
+        class="keyword-input" />
     </td>
     <td class="weight-cell text-center">
       <div class="weight-input-wrap">
@@ -197,7 +201,7 @@ function reindexTabs() {
     const man = tr.querySelector('.mand-cell input')?.checked || false;
     rules.push({ keyword: kw, weight: w, mandatory: man });
   });
-  slotStates[1] = { rules, minScore: 75, mustPass: false, image: null, textractBlocks: null };
+  slotStates[1] = { rules, minScore: 75, mustPass: false, aiGrading: true, image: null, textractBlocks: null };
   document.querySelectorAll('#rulesBody tr').forEach(tr => bindRow(tr));
   updateWeight();
   renderState(1);

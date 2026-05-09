@@ -241,4 +241,27 @@
 }
 .toggle input:checked + .slider { background: var(--success); }
 .toggle input:checked + .slider::before { transform: translateX(16px); }
-.toggle.mandatory input:checked + .slider { background: var(--brand); }
+.toggle.toggle-indigo input:checked + .slider { background: #4f46e5; }
+.toggle.mandatory input:checked + .slider { background: #EF4444; }
+
+/* ── KEYWORD INPUT — underline only ── */
+.keyword-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid #D1D5DB;
+  border-radius: 0;
+  padding: 8px 4px;
+  font-size: 14px;
+  color: #1F2937;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.keyword-input:focus {
+  border-bottom: 2px solid #4f46e5;
+}
+.keyword-input::placeholder {
+  color: #9CA3AF;
+  font-style: normal;
+}
+

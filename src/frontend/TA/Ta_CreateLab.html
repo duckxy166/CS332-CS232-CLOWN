@@ -62,17 +62,16 @@
 ════════════════════════════════ -->
 <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
   <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
-    <i class="ph ph-cloud-check text-xl text-brand-500"></i>
-    <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+    <img src="../assets/ValidMate-logo-dark-navbar (1).svg" alt="ValidMate" class="h-7 w-auto" />
   </div>
 
   <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
     <button onclick="window.location.href='Ta_Dashboard.html'"
-      class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
-      <i class="ph ph-squares-four text-sm"></i> Dashboard
+      class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 mt-1.5 text-base font-medium">
+      <i class="ph ph-squares-four text-base"></i> Dashboard
     </button>
-    <button onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
-      <i class="ph ph-users text-sm"></i> Students
+    <button onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 mt-1.5 text-base font-medium">
+      <i class="ph ph-users text-base"></i> Students
     </button>
   </div>
 
@@ -328,74 +327,131 @@
       </div>
 
       <!-- Pass Criteria -->
-      <div class="mt-4 px-5 py-4 bg-layout-bg border border-layout-border rounded-xl grid grid-cols-1 gap-4">
-        <div class="flex items-center gap-1.5 text-p2 font-bold uppercase tracking-wider text-gray-600">
-          <i class="ph-fill ph-star text-brand-500 text-base"></i> Pass Criteria
-        </div>
+      <div class="mt-4 bg-white border border-[#E5E7EB] border-l-[3px] border-l-[#4f46e5] rounded-xl overflow-hidden" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);">
+        <!-- White body section -->
+        <div class="px-5 pt-4 pb-0">
+          <!-- Box Title -->
+          <div class="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-[#4f46e5] mb-2">
+            <i class="ph-fill ph-flag-checkered text-[#4f46e5]" style="font-size: 16px;"></i> Pass Criteria
+          </div>
 
-        <!-- AI-Powered Grading card -->
-        <div class="flex items-center justify-between gap-4 px-4 py-3.5 bg-layout-surface border border-layout-border rounded-xl hover:border-brand-500/40 transition-colors">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center flex-shrink-0 border border-brand-100">
-              <i class="ph-fill ph-robot text-lg"></i>
-            </div>
+          <!-- Row 1: AI Grading -->
+          <div class="flex items-center justify-between w-full py-3">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-p1 font-bold text-brand-900">AI-Powered Grading</span>
-                <span class="text-[10px] font-bold tracking-wider text-brand-500 bg-brand-50 border border-brand-100 rounded px-1.5 py-0.5 uppercase">Beta</span>
+                <span class="text-sm font-semibold text-[#1F2937]">AI-Powered Grading</span>
+                <span class="text-[10px] font-bold tracking-wider text-blue-500 bg-blue-50 border border-blue-100 rounded px-1.5 py-0.5 uppercase">Beta</span>
               </div>
-              <div id="aiGradingStatus" class="text-p2 text-gray-500 mt-0.5">
-                <span class="text-status-success font-semibold">On</span> — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.
+              <div class="inline-flex items-center gap-[6px] mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 17px; height: 17px; color: #6B7280; flex-shrink:0;">
+                  <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/>
+                </svg>
+                <span class="text-xs text-gray-500 font-medium">GPT-4o mini</span>
               </div>
             </div>
+            <label class="toggle inline-flex items-center cursor-pointer flex-shrink-0"
+              title="Applies to all images in this lab">
+              <input type="checkbox" id="aiGradingToggle" checked
+                onchange="if(typeof labAiGrading!=='undefined'){labAiGrading=this.checked;} if(typeof updateDynamicPreview==='function') updateDynamicPreview();" />
+              <span class="slider"></span>
+            </label>
           </div>
-          <label class="toggle mandatory inline-flex items-center cursor-pointer flex-shrink-0">
-            <input type="checkbox" id="aiGradingToggle" checked />
-            <span class="slider"></span>
-          </label>
+
+          <hr class="border-[#E5E7EB] opacity-60 m-0" />
+
+          <!-- Row 2: Min Score -->
+          <div class="flex items-center justify-between w-full py-4">
+            <label for="minScoreVal" class="text-sm font-semibold text-[#1F2937]">Minimum Passing Score</label>
+            <div class="flex items-center justify-end bg-white border-[1.5px] border-[#D1D5DB] rounded-lg px-4 py-2 w-[84px] transition-all duration-150 ease-in hover:border-[#9CA3AF] focus-within:border-[#4f46e5] focus-within:ring-0" style="box-shadow: 0 1px 2px rgba(0,0,0,0.05);" id="minScoreWrapper" onmouseenter="this.style.borderColor='#9CA3AF'" onmouseleave="document.activeElement && this.contains(document.activeElement) ? null : (this.style.borderColor='#D1D5DB')" onfocusin="this.style.borderColor='#4f46e5'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,0.15), 0 1px 2px rgba(0,0,0,0.05)'" onfocusout="this.style.borderColor='#D1D5DB'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.05)'">
+              <input type="number" id="minScoreVal" value="75" min="0" max="100"
+                class="w-full bg-transparent text-[18px] font-semibold text-[#4f46e5] text-right focus:outline-none p-0 border-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              <span class="text-[18px] font-semibold text-[#4f46e5] ml-0.5">%</span>
+              <input type="checkbox" id="minScore" checked class="hidden" />
+            </div>
+          </div>
+
+          <hr class="border-[#E5E7EB] opacity-60 m-0" />
+
+          <!-- Row 3: Mandatory Rules -->
+          <div class="flex items-center justify-between w-full py-4">
+            <label for="mustPass" class="text-sm font-semibold text-[#1F2937] cursor-pointer">Must pass all Mandatory Rules</label>
+            <label class="toggle inline-flex items-center cursor-pointer flex-shrink-0">
+              <input type="checkbox" id="mustPass" />
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
-          <div class="flex items-center gap-2 text-p1 text-gray-700">
-            <input type="checkbox" id="minScore" checked class="w-4 h-4 accent-brand-500 cursor-pointer" />
-            <label for="minScore" class="cursor-pointer">Min. Score:</label>
-            <div class="flex items-center gap-1.5">
-              <input type="number" id="minScoreVal" value="75" min="0" max="100"
-                class="w-14 text-center px-2 py-1 rounded-md border border-layout-border bg-layout-surface text-p1 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent" />
-              <span class="text-p1 text-gray-500">%</span>
-            </div>
+        <!-- Dynamic Preview Chips (lavender footer) -->
+        <div class="bg-[#EDE9FE] px-4 py-3">
+          <div class="flex items-center gap-2 flex-wrap" id="dynamicPreview">
+            <span id="previewAi"></span>
+            <span id="previewMin"></span>
+            <span id="previewReq"></span>
           </div>
-          <div class="flex items-center gap-2 text-p1 text-gray-700">
-            <input type="checkbox" id="mustPass" class="w-4 h-4 accent-brand-500 cursor-pointer" />
-            <label for="mustPass" class="cursor-pointer">Must pass all Mandatory Rules</label>
-          </div>
+          <div id="lowScoreWarning" class="text-xs text-orange-500 mt-2 hidden">⚠ Low passing threshold</div>
         </div>
       </div>
 
       <script>
-        (function(){
-          const t = document.getElementById('aiGradingToggle');
-          const s = document.getElementById('aiGradingStatus');
-          if (!t || !s) return;
-          t.addEventListener('change', () => {
-            s.innerHTML = t.checked
-              ? '<span class="text-status-success font-semibold">On</span> — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.'
-              : '<span class="text-gray-500 font-semibold">Off</span> — Strict keyword matching only.';
-          });
-        })();
-      </script>
-
-      <script>
-        (function(){
-          const t = document.getElementById('aiGradingToggle');
-          const s = document.getElementById('aiGradingStatus');
-          if (!t || !s) return;
-          t.addEventListener('change', () => {
-            s.textContent = t.checked
-              ? 'On — AI judges submissions by intent. Tolerates paraphrasing, typos, and order.'
-              : 'Off — Strict keyword matching only.';
-          });
-        })();
+        function updateDynamicPreview() {
+          // AI grading is a GLOBAL lab setting — read from labAiGrading, not the slot state
+          const ai = (typeof labAiGrading !== 'undefined') ? labAiGrading : document.getElementById('aiGradingToggle')?.checked;
+          const min = Number(document.getElementById('minScoreVal')?.value || 0);
+          const req = document.getElementById('mustPass')?.checked;
+          
+          const baseClasses = 'bg-white rounded-full px-[14px] py-[6px] inline-flex items-center gap-[6px] text-[13px] font-medium';
+          const shadowStyle = 'box-shadow: 0 1px 3px rgba(109, 40, 217, 0.15), 0 1px 2px rgba(0, 0, 0, 0.08);';
+          
+          const previewAi = document.getElementById('previewAi');
+          if (previewAi) {
+            previewAi.className = `${baseClasses} text-[#4f46e5]`;
+            previewAi.setAttribute('style', shadowStyle);
+            previewAi.innerHTML = ai 
+              ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px; display:inline-block; vertical-align:middle;"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg> AI-Judged' 
+              : '<i class="ph-fill ph-scales text-[14px]"></i> Exact Keyword Match';
+          }
+          
+          const previewMin = document.getElementById('previewMin');
+          const warning = document.getElementById('lowScoreWarning');
+          if (previewMin) {
+            if (min < 50) {
+              previewMin.className = 'bg-orange-100 border border-orange-200 text-orange-600 rounded-full px-[14px] py-[6px] inline-flex items-center gap-[6px] text-[13px] font-medium';
+              previewMin.setAttribute('style', shadowStyle);
+              previewMin.innerHTML = `<i class="ph-fill ph-warning text-[14px]"></i> ${min}% Min.`;
+              if (warning) warning.classList.remove('hidden');
+            } else {
+              previewMin.className = `${baseClasses} text-[#2563EB]`;
+              previewMin.setAttribute('style', shadowStyle);
+              previewMin.innerHTML = `<i class="ph-fill ph-target text-[14px]"></i> ${min}% Min.`;
+              if (warning) warning.classList.add('hidden');
+            }
+          }
+          
+          const previewReq = document.getElementById('previewReq');
+          if (previewReq) {
+            if (req) {
+              previewReq.className = `${baseClasses} text-[#16A34A]`;
+              previewReq.setAttribute('style', shadowStyle);
+              previewReq.innerHTML = '<i class="ph-fill ph-shield-check text-[14px]"></i> Mandatory Rules';
+            } else {
+              previewReq.className = 'bg-white border border-[#E5E7EB] text-[#9CA3AF] rounded-full px-[14px] py-[6px] inline-flex items-center gap-[6px] text-[13px] font-medium';
+              previewReq.setAttribute('style', '');
+              previewReq.innerHTML = '<i class="ph-fill ph-shield text-[14px]"></i> Optional Rules';
+            }
+          }
+        }
+        
+        ['aiGradingToggle', 'minScoreVal', 'mustPass'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('change', updateDynamicPreview);
+            el.addEventListener('input', updateDynamicPreview);
+          }
+        });
+        
+        // Initial setup
+        setTimeout(updateDynamicPreview, 50);
       </script>
     </section>
 
