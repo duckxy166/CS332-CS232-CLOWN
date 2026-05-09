@@ -721,13 +721,9 @@ async function loadViewer() {
     const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.submissions, { labID: activeLabID }));
     if (!data?.success) throw new Error(data?.error || 'Unable to load submissions');
     submissions = (data.submissions || []).map(mapSubmission);
-    if (data.lab) {
-      const labMeta = await fetchFullLab(activeLabID);
-      labData = mapLabMeta(labMeta || data.lab);
-    } else {
-      const labMeta = await fetchFullLab(activeLabID);
-      labData = mapLabMeta(labMeta);
-    }
+    /* Backend now returns the full lab object — no need for a second
+       /labs round-trip (which used to do a full Scan). */
+    labData = mapLabMeta(data.lab || null);
     renderViewer();
   } catch (err) {
     console.error('Submission viewer load failed:', err);
@@ -745,17 +741,6 @@ async function loadViewer() {
           </button>
         </div>`;
     }
-  }
-}
-
-async function fetchFullLab(labID) {
-  try {
-    const data = await apiFetch(API_ENDPOINTS.labs);
-    if (!data?.success) return null;
-    return (data.labs || []).find(l => getLabId(l) === labID) || null;
-  } catch (err) {
-    console.warn('Could not fetch lab list', err);
-    return null;
   }
 }
 

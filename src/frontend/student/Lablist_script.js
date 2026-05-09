@@ -196,15 +196,17 @@ function filterLabs(type) {
     renderLabs();
 }
 
-async function fetchSubmissionForLab(email, labID) {
-    if (!email || !labID) return null;
+/* One Query returns the student's whole submission map — used both on initial
+   load and by the polling loop below, replacing the per-lab fan-out. */
+async function fetchAllMySubmissions(email) {
+    if (!email) return {};
     try {
-        const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.result, { email, labID }));
-        return data?.submission || null;
+        const data = await apiFetch(buildQueryUrl(API_ENDPOINTS.result, { mode: 'mine', email }));
+        if (!data?.success) return {};
+        return data.submissionsByLab || {};
     } catch (err) {
-        if (err.status === 404) return null;
-        console.warn('result fetch failed for', labID, err);
-        return null;
+        console.warn('mine fetch failed', err);
+        return {};
     }
 }
 
@@ -230,16 +232,15 @@ async function loadLabs() {
     if (!currentUser) return;
     populateNavbarUser(currentUser);
     try {
-        const data = await apiFetch(API_ENDPOINTS.labs);
+        const [data, submissionsByLab] = await Promise.all([
+            apiFetch(API_ENDPOINTS.labs),
+            fetchAllMySubmissions(currentUser.email),
+        ]);
         if (!data?.success) throw new Error(data?.error || 'Unable to load labs');
         const subjectId = getCurrentSubjectId();
         const allLabs = data.labs || [];
         const filteredByCourse = subjectId ? allLabs.filter(l => getSubjectId(l) === subjectId) : allLabs;
-        const enriched = await Promise.all(filteredByCourse.map(async (lab) => {
-            const submission = await fetchSubmissionForLab(currentUser.email, getLabId(lab));
-            return buildLab(lab, submission);
-        }));
-        labs = enriched;
+        labs = filteredByCourse.map(lab => buildLab(lab, submissionsByLab[getLabId(lab)] || null));
         updateCourseHeader();
         renderLabs();
     } catch (err) {
@@ -254,16 +255,13 @@ function startPendingPolling() {
         if (!currentUser) return;
         const pending = labs.filter(l => l.status === 'PENDING');
         if (pending.length === 0) return;
-        const updates = await Promise.all(pending.map(async (lab) => {
-            const submission = await fetchSubmissionForLab(currentUser.email, lab.id);
-            return [lab.id, submission];
-        }));
+        /* One Query for the whole student instead of one /result per pending lab. */
+        const submissionsByLab = await fetchAllMySubmissions(currentUser.email);
         let changed = false;
-        updates.forEach(([labID, submission]) => {
-            const idx = labs.findIndex(l => l.id === labID);
-            if (idx === -1) return;
-            const next = buildLab(labs[idx].labRaw, submission);
-            if (next.status !== labs[idx].status) changed = true;
+        labs.forEach((lab, idx) => {
+            if (lab.status !== 'PENDING') return;
+            const next = buildLab(lab.labRaw, submissionsByLab[lab.id] || null);
+            if (next.status !== lab.status) changed = true;
             labs[idx] = next;
         });
         if (changed) {
