@@ -24,7 +24,7 @@
                         'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
                     },
                     colors: {
-                        brand: { 50: '#F0F4FA', 100: '#E0E9F4', 500: '#4F46E5', 800: '#1E293B', 900: '#0F172A' },
+                        brand: { 50: '#F0F4FA', 100: '#E0E9F4', 500: '#3b82f6', 800: '#1E293B', 900: '#0F172A' },
                         layout: { bg: '#F8FAFC', surface: '#FFFFFF', border: '#E2E8F0' },
                         status: { success: '#10B981', successBg: '#ECFDF5', error: '#EF4444', errorBg: '#FEF2F2', warning: '#F59E0B', warningBg: '#FFFBEB' }
                     }
@@ -41,6 +41,15 @@
             background-color: #0F172A; /* brand-900 */
             color: white;
         }
+
+        .btn-primary-gradient {
+            background: linear-gradient(180deg, #60a5fa 0%, #2562eb 100%) !important;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+            color: #fff !important;
+        }
+        .btn-primary-gradient:hover {
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+        }
     </style>
 </head>
 <body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
@@ -49,15 +58,14 @@
     <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
         <!-- Logo -->
         <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='student_dashboard.html'">
-            <i class="ph ph-cloud-check text-xl text-brand-500"></i>
-            <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+            <img src="../assets/ValidMate-logo-dark-navbar (1).svg" alt="ValidMate" class="h-7 w-auto" />
         </div>
 
         <!-- Nav Links -->
         <div class="grid grid-cols-[auto_1fr] gap-2 items-center h-full">
             <button onclick="window.location.href='student_dashboard.html'"
-                class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
-                <i class="ph ph-squares-four text-sm"></i> Dashboard
+                class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 mt-1.5 text-base font-medium">
+                <i class="ph ph-squares-four text-base"></i> Dashboard
             </button>
         </div>
 
@@ -141,7 +149,7 @@
             <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-center">
                 <div>
                     <div class="flex items-center gap-3 mb-3">
-                        <span id="courseCode" class="inline-block bg-indigo-50 text-brand-500 text-p2 font-bold px-3 py-1 rounded-md">—</span>
+                        <span id="courseCode" class="inline-block bg-blue-50 text-brand-500 text-p2 font-bold px-3 py-1 rounded-md">—</span>
                         <span id="courseSemester" class="text-p1 text-gray-400">—</span>
                     </div>
                     <h1 id="courseName" class="text-h3 font-bold text-brand-900 leading-tight mb-2">—</h1>
@@ -153,7 +161,7 @@
                         <span id="progressText" class="text-2xl font-bold text-brand-900">0/0</span>
                     </div>
                     <div class="w-full bg-layout-border h-2 rounded-full overflow-hidden">
-                        <div id="progressFill" class="bg-brand-500 h-full transition-all duration-700" style="width:0%"></div>
+                        <div id="progressFill" class="bg-gradient-to-r from-[#60a5fa] to-[#2562eb] h-full transition-all duration-700" style="width:0%"></div>
                     </div>
                 </div>
             </div>

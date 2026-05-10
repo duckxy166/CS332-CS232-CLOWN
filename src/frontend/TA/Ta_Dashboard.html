@@ -31,7 +31,7 @@
               brand: {
                 50: '#F0F4FA',
                 100: '#E0E9F4',
-                500: '#4F46E5', // Purple-ish primary
+                500: '#3b82f6',
                 800: '#1E293B',
                 900: '#0F172A', // Dark nav background
               },
@@ -52,6 +52,17 @@
         }
       }
     </script>
+    <style>
+      /* ── Primary gradient buttons ── */
+      .btn-primary-gradient {
+        background: linear-gradient(180deg, #60a5fa 0%, #2562eb 100%) !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+        color: #fff !important;
+      }
+      .btn-primary-gradient:hover {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+      }
+    </style>
 </head>
 <body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
 
@@ -59,17 +70,16 @@
     <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
         <!-- Logo -->
         <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='Ta_Dashboard.html'">
-            <i class="ph ph-cloud-check text-xl text-brand-500"></i>
-            <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+            <img src="../assets/ValidMate-logo-dark-navbar (1).svg" alt="ValidMate" class="h-7 w-auto" />
         </div>
 
         <!-- Main Nav Links -->
         <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center h-full">
-            <button type="button" onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-2 px-4 bg-brand-900 text-white rounded-lg h-10 my-auto text-p1 font-bold">
-                <i class="ph ph-squares-four text-sm"></i> Dashboard
+            <button type="button" onclick="window.location.href='Ta_Dashboard.html'" class="flex items-center gap-2 px-4 bg-brand-900 text-white rounded-lg h-10 mt-1.5 text-base font-medium font-bold">
+                <i class="ph ph-squares-four text-base"></i> Dashboard
             </button>
-            <button type="button" onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
-                <i class="ph ph-users text-sm"></i> Students
+            <button type="button" onclick="window.location.href='Ta_Dashboard.html#labGrid'" class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 mt-1.5 text-base font-medium">
+                <i class="ph ph-users text-base"></i> Students
             </button>
         </div>
 
@@ -222,7 +232,7 @@
                     <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
                     <input type="text" id="searchInput" placeholder="Search class or lab..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-layout-border bg-layout-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-p1 shadow-sm">
                 </div>
-                <button onclick="window.location.href='Ta_CreateLab.html'" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors cursor-pointer">
+                <button onclick="window.location.href='Ta_CreateLab.html'" class="btn-primary-gradient bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 transition-colors cursor-pointer">
                     <i class="ph-bold ph-plus-circle"></i> New Lab
                 </button>
             </div>

@@ -3,7 +3,7 @@ let courses = [];
 let currentTaUser = null;
 
 const COURSE_PALETTE = [
-  { color: 'indigo-500', lightColor: 'indigo-50' },
+  { color: 'blue-500', lightColor: 'blue-50' },
   { color: 'blue-500',   lightColor: 'blue-50' },
   { color: 'emerald-500',lightColor: 'emerald-50' },
   { color: 'amber-500',  lightColor: 'amber-50' },
@@ -144,12 +144,12 @@ function renderGrid(filter = "") {
     <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer" onclick="openCourse('${c.code}')">
       
       <!-- Top Color Bar -->
-      <div class="h-1.5 w-full bg-${c.color}"></div>
+      <div class="h-1.5 w-full" style="background: linear-gradient(90deg, #60a5fa, #2562eb)"></div>
       
       <div class="p-5 flex-1 flex flex-col">
         <!-- Header -->
         <div class="flex justify-between items-start mb-3">
-            <span class="bg-${c.lightColor} text-${c.color} text-xs font-bold px-2.5 py-1 rounded border border-${c.color} border-opacity-20">${c.code}</span>
+            <span style="background:#DBEAFE;color:#1D4ED8" class="text-xs font-bold px-2.5 py-1 rounded border border-blue-200">${c.code}</span>
             <button class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-brand-500 hover:text-white transition-colors" onclick="event.stopPropagation(); openCourse('${c.code}')">
                 <i class="ph ph-arrow-right text-sm"></i>
             </button>
@@ -165,7 +165,7 @@ function renderGrid(filter = "") {
                 <span class="text-p2 font-bold ${progressTextColor}">${c.progress}%</span>
             </div>
             <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full bg-${c.color} rounded-full" style="width: ${c.progress}%"></div>
+                <div class="h-full rounded-full" style="width: ${c.progress}%; background: linear-gradient(90deg, #60a5fa, #2562eb)"></div>
             </div>
         </div>
         

@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ValidMate – Result</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -14,40 +17,51 @@
           fontFamily: { sans: ['Inter', 'Sarabun', 'sans-serif'] },
           fontSize: {
             'display-1': ['72px', { lineHeight: '1.1', fontWeight: '700' }],
-            'h1':  ['56px', { lineHeight: '1.2', fontWeight: '700' }],
-            'h2':  ['48px', { lineHeight: '1.2', fontWeight: '700' }],
-            'h3':  ['20px', { lineHeight: '1.3', fontWeight: '700' }],
-            'h4':  ['16px', { lineHeight: '1.4', fontWeight: '700' }],
-            'p1':  ['14px', { lineHeight: '1.5', fontWeight: '400' }],
-            'p2':  ['12px', { lineHeight: '1.5', fontWeight: '400' }],
-            'btn': ['14px', { lineHeight: '1',   fontWeight: '700' }],
+            'h1': ['56px', { lineHeight: '1.2', fontWeight: '700' }],
+            'h2': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+            'h3': ['20px', { lineHeight: '1.3', fontWeight: '700' }],
+            'h4': ['16px', { lineHeight: '1.4', fontWeight: '700' }],
+            'p1': ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+            'p2': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
+            'btn': ['14px', { lineHeight: '1', fontWeight: '700' }],
           },
           colors: {
-            brand:  { 50:'#F0F4FA', 100:'#E0E9F4', 500:'#4F46E5', 800:'#1E293B', 900:'#0F172A' },
-            layout: { bg:'#F8FAFC', surface:'#FFFFFF', border:'#E2E8F0' },
-            status: { success:'#10B981', successBg:'#ECFDF5', error:'#EF4444', errorBg:'#FEF2F2', warning:'#F59E0B', warningBg:'#FFFBEB' }
+            brand: { 50: '#F0F4FA', 100: '#E0E9F4', 500: '#3b82f6', 800: '#1E293B', 900: '#0F172A' },
+            layout: { bg: '#F8FAFC', surface: '#FFFFFF', border: '#E2E8F0' },
+            status: { success: '#10B981', successBg: '#ECFDF5', error: '#EF4444', errorBg: '#FEF2F2', warning: '#F59E0B', warningBg: '#FFFBEB' }
           }
         }
       }
     }
   </script>
+  <style>
+    .btn-primary-gradient {
+      background: linear-gradient(180deg, #60a5fa 0%, #2562eb 100%) !important;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+      color: #fff !important;
+    }
+
+    .btn-primary-gradient:hover {
+      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    }
+  </style>
   <link rel="stylesheet" href="submissionResult_style.css" />
 </head>
+
 <body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
 
   <!-- Main Top Navbar (Dark) -->
   <nav class="bg-brand-900 text-white grid grid-cols-[auto_1fr_auto] items-center px-6 border-b border-brand-800 h-16">
     <!-- Logo -->
     <div class="flex items-center gap-2 mr-6 cursor-pointer" onclick="window.location.href='student_dashboard.html'">
-      <i class="ph ph-cloud-check text-xl text-brand-500"></i>
-      <span class="text-p1 font-bold tracking-wide">ValidMate</span>
+      <img src="../assets/ValidMate-logo-dark-navbar (1).svg" alt="ValidMate" class="h-7 w-auto" />
     </div>
 
     <!-- Nav Links -->
     <div class="grid grid-cols-[auto_1fr] gap-2 items-center h-full">
       <button onclick="window.location.href='student_dashboard.html'"
-        class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 my-auto text-p1">
-        <i class="ph ph-squares-four text-sm"></i> Dashboard
+        class="flex items-center gap-2 px-4 text-gray-400 hover:text-white rounded-md h-10 mt-1.5 text-base font-medium">
+        <i class="ph ph-squares-four text-base"></i> Dashboard
       </button>
     </div>
 
@@ -59,14 +73,17 @@
           <div class="text-p1 font-semibold leading-none"><span data-user-name>Alex Student</span></div>
           <div class="text-p2 text-gray-400 leading-none mt-1"><span data-user-role>Undergraduate</span></div>
         </div>
-        <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
+        <div
+          class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-p1 font-bold border border-brand-500">
           <span data-user-initials>AS</span>
         </div>
         <i class="ph ph-caret-down text-xs text-gray-400 transition-transform" id="profileCaret"></i>
       </button>
-      <div id="profileMenu" class="hidden absolute right-0 top-full mt-2 w-max min-w-[16rem] bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
+      <div id="profileMenu"
+        class="hidden absolute right-0 top-full mt-2 w-64 bg-layout-surface rounded-xl border border-layout-border shadow-lg overflow-hidden z-50">
         <div class="px-4 py-3 border-b border-layout-border grid grid-cols-[auto_1fr] gap-3 items-center">
-          <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
+          <div
+            class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-p1 font-bold text-brand-500 border border-brand-100">
             <span data-user-initials>AS</span>
           </div>
           <div>
@@ -114,15 +131,18 @@
 
   <div class="bg-layout-surface border-b border-layout-border px-6 h-10 flex items-center shadow-sm">
     <div class="flex items-center gap-2 text-p2 text-gray-700 font-semibold">
-      <button type="button" onclick="window.location.href='student_dashboard.html'" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+      <button type="button" onclick="window.location.href='student_dashboard.html'"
+        class="flex items-center gap-1 hover:text-brand-500 transition-colors">
         <i class="ph-fill ph-squares-four text-sm"></i> Overview
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
-      <button type="button" id="breadcrumbCourseBtn" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+      <button type="button" id="breadcrumbCourseBtn"
+        class="flex items-center gap-1 hover:text-brand-500 transition-colors">
         <i class="ph-fill ph-stack text-sm"></i> <span id="breadcrumbCourseName">—</span>
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
-      <button type="button" id="breadcrumbLabBtn" class="flex items-center gap-1 hover:text-brand-500 transition-colors">
+      <button type="button" id="breadcrumbLabBtn"
+        class="flex items-center gap-1 hover:text-brand-500 transition-colors">
         <i class="ph-fill ph-file-text text-sm"></i> <span id="breadcrumbLabName">—</span>
       </button>
       <i class="ph ph-caret-right text-xs text-gray-400"></i>
@@ -134,7 +154,7 @@
 
   <main class="overflow-y-auto p-6 md:p-8 flex flex-col items-center">
     <div class="w-full max-w-3xl">
-      
+
       <div class="bg-white rounded-xl border border-layout-border shadow-sm p-5 mb-6 flex items-center gap-4">
         <div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center">
           <i class="ph-fill ph-package text-slate-400 text-xl"></i>
@@ -145,8 +165,9 @@
         </div>
       </div>
 
-      <div id="result-container" class="bg-white rounded-[24px] border border-layout-border shadow-sm overflow-hidden min-h-[400px] flex items-center justify-center p-12 text-center relative">
-        
+      <div id="result-container"
+        class="bg-white rounded-[24px] border border-layout-border shadow-sm overflow-hidden min-h-[400px] flex items-center justify-center p-12 text-center relative">
+
         <div id="state-processing" class="status-view flex flex-col items-center">
           <div class="top-accent bg-amber-400"></div>
           <div class="loader-circle mb-8"></div>
@@ -183,7 +204,7 @@
             ระบบเกิดข้อผิดพลาดระหว่างการอัพโหลด<br>ไฟล์ของคุณยังไม่ถูกบันทึก กรุณาลองส่งใหม่อีกครั้ง
           </p>
           <div class="flex gap-3 mt-10 w-full justify-center">
-            <button id="tryAgainBtn" class="btn-dark">
+            <button id="tryAgainBtn" class="btn-primary-gradient px-6 py-3 rounded-lg text-btn flex items-center gap-2">
               <i class="ph ph-arrows-counter-clockwise"></i> Try Again
             </button>
             <button class="btn-outline" onclick="window.location.href='student_Lablist.html'">
@@ -199,4 +220,5 @@
   <script src="../api-config.js"></script>
   <script src="submissionResult_script.js"></script>
 </body>
+
 </html>

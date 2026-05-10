@@ -83,9 +83,9 @@ function switchTab(idx) {
     const b = document.getElementById('tab-'+i);
     if (!b) continue;
     if (i === idx) {
-      b.style.color       = '#4F46E5';
+      b.style.color       = '#3b82f6';
       b.style.fontWeight  = '700';
-      b.style.borderBottom = '2px solid #4F46E5';
+      b.style.borderBottom = '2px solid #3b82f6';
     } else {
       b.style.color       = '#94A3B8';
       b.style.fontWeight  = '500';
@@ -292,9 +292,9 @@ function updateStatus() {
     icon.className             = 'ph ph-hourglass-medium';
     label.textContent          = 'Pending Upload';
   } else if (n < numImagesRequired) {
-    card.style.borderLeftColor = '#4F46E5';
-    wrap.style.background      = '#EEF2FF';
-    icon.style.color           = '#4F46E5';
+    card.style.borderLeftColor = '#3b82f6';
+    wrap.style.background      = '#DBEAFE';
+    icon.style.color           = '#3b82f6';
     icon.className             = 'ph ph-upload-simple';
     label.textContent          = n + ' of ' + numImagesRequired + ' Uploaded';
   } else {

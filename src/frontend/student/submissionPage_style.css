@@ -15,7 +15,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #4F46E5;
+  background: #3b82f6;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -42,13 +42,13 @@
   display: inline-block;
 }
 .pic-tab:hover {
-  border-color: #4F46E5;
-  color: #4F46E5;
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 .pic-tab.active {
-  background: #EEF2FF;
-  border-color: #4F46E5;
-  color: #4F46E5;
+  background: #DBEAFE;
+  border-color: #3b82f6;
+  color: #3b82f6;
   font-weight: 700;
 }
 
@@ -69,8 +69,8 @@
 }
 .drop-zone:hover,
 .drop-zone.drop-over {
-  border-color: #4F46E5;
-  background: #EEF2FF;
+  border-color: #3b82f6;
+  background: #DBEAFE;
 }
 
 /* Dot indicators */
@@ -83,8 +83,8 @@
 }
 .upload-dot.filled    { background: #10B981; }
 .upload-dot.active-dot {
-  background: #4F46E5;
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+  background: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
 }
 
 /* Submit success */

@@ -1,35 +1,245 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ - ระบบส่งงานแล็บ</title>
-    <link rel="stylesheet" href="index_style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ValidMate - Sign In</title>
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Sarabun:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Sarabun', 'sans-serif'],
+          },
+          colors: {
+            layout: {
+              bg: '#F8FAFC',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="index_style.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background-color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .cursor {
+      display: inline-block;
+      color: #2563EB;
+      font-weight: 300;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes btnPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+      }
+
+      50% {
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+        transform: translateY(-1px);
+      }
+    }
+
+    .btn-signin {
+      background: linear-gradient(180deg, #60a5fa 0%, #2562eb 100%);
+      color: white;
+      border: none;
+      border-radius: 0.625rem;
+      padding: 14px 40px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+      animation: btnPulse 2.5s ease-in-out infinite;
+    }
+
+    .btn-signin:hover {
+      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 16px -4px rgba(59, 130, 246, 0.35);
+    }
+
+    .btn-signin:active {
+      transform: translateY(0);
+    }
+  </style>
+
+  <!-- STEP 1: tsParticles Setup -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
 </head>
+
 <body>
 
-    <div class="container" id="mainContent">
-        <h2>ยินดีต้อนรับสู่ระบบส่งงาน 🎓</h2>
-        <p>กรุณาเข้าสู่ระบบด้วยรหัสนักศึกษาหรือบัญชีผู้ช่วยสอน</p>
-        
-        <!-- login URL ดึงจาก api-config.js แทนการฝังตรง -->
-        <a id="loginLink" href="#" class="login-btn">
-            เข้าสู่ระบบ (Login)
-        </a>
+  <!-- STEP 3: Subtle glow background (z-index -1) -->
+  <div class="absolute inset-0 pointer-events-none flex justify-center items-center" style="z-index: -1;">
+    <div
+      class="absolute top-[10%] left-[15%] w-[500px] h-[500px] bg-[#4F46E5]/10 rounded-full blur-[100px] mix-blend-multiply opacity-70">
+    </div>
+    <div
+      class="absolute bottom-[10%] right-[15%] w-[450px] h-[450px] bg-[#F59E0B]/10 rounded-full blur-[120px] mix-blend-multiply opacity-70">
+    </div>
+  </div>
 
-        <div id="loadingMessage">กำลังตรวจสอบสิทธิ์และพาคุณเข้าสู่ระบบ... ⏳</div>
+  <!-- STEP 2: Full page particle background (z-index 0) -->
+  <div id="tsparticles" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;"></div>
 
+  <!-- STEP 4: Center layout (z-index 10) -->
+  <main
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 0; position: relative; z-index: 10;">
+
+    <!-- PART 2: Ambient glow behind logo -->
+    <div
+      style="position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, rgba(129, 140, 248, 0.05) 40%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; filter: blur(40px); z-index: 1;">
     </div>
 
-    
-<script src="api-config.js"></script>
-<script>
-  // ใส่ login URL จาก config ให้ปุ่ม — ไม่ hardcode ใน HTML อีกต่อไป
-  const loginLink = document.getElementById('loginLink');
-  if (loginLink && typeof COGNITO_LOGIN_URL !== 'undefined') {
-    loginLink.href = COGNITO_LOGIN_URL;
-  }
-</script>
-<script src="index_script.js"></script>
+    <!-- STEP 5: Logo -->
+    <img src="assets/ValidMate_welcome.svg" alt="ValidMate"
+      style="position: relative; z-index: 2; height: 64px; width: auto; display: block; margin: 0 auto 1.5rem auto; object-fit: contain;" />
+
+    <!-- STEP 6: Typing animation container -->
+    <p id="typed-welcome"
+      style="position: relative; z-index: 2; font-size: 1.25rem; color: #475569; font-weight: 400; min-height: 3rem; max-width: 700px; width: 90%; text-align: center; margin: 0; line-height: 1.5;">
+    </p>
+
+    <!-- Loading UI (safe integration) -->
+    <div id="loadingMessage" style="display: none; position: relative; z-index: 2; margin-top: 1rem;">
+      <div
+        class="flex items-center justify-center gap-3 bg-[#FFFBEB] border border-[#F59E0B]/20 px-4 py-3 rounded-lg text-[#F59E0B] font-semibold animate-pulse">
+        <i class="ph-bold ph-spinner-gap animate-spin text-lg"></i>
+        <span>Authenticating...</span>
+      </div>
+    </div>
+
+    <!-- STEP 7: Sign in button -->
+    <button class="btn-signin login-btn" style="position: relative; z-index: 2; margin-top: 2rem;"
+      onclick="signInWithCognito()">
+      <i class="ph ph-sign-in" style="font-size:18px; font-weight: bold;"></i>
+      Sign in via AWS Cognito
+    </button>
+
+  </main>
+
+  <script src="api-config.js"></script>
+  <script>
+    // STEP 6: Execute animated typing cycle
+    const phrases = [
+      "Welcome to ValidMate.",
+      "AI-Powered Grading for Teaching Assistants.",
+      "Tolerates paraphrasing, typos, and order.",
+      "Built for secure examination environments."
+    ];
+    const el = document.getElementById("typed-welcome");
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    function typeCycle() {
+      const currentPhrase = phrases[phraseIndex];
+      if (isDeleting) {
+        charIndex--;
+        el.innerHTML = currentPhrase.substring(0, charIndex) + '<span class="cursor">|</span>';
+      } else {
+        charIndex++;
+        el.innerHTML = currentPhrase.substring(0, charIndex) + '<span class="cursor">|</span>';
+      }
+
+      let typeSpeed = isDeleting ? 30 : 55;
+
+      if (!isDeleting && charIndex === currentPhrase.length) {
+        typeSpeed = 2000;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        typeSpeed = 400;
+      }
+
+      setTimeout(typeCycle, typeSpeed);
+    }
+    typeCycle();
+
+    // AWS Cognito redirect logic mapping
+    function signInWithCognito() {
+      if (typeof COGNITO_LOGIN_URL !== 'undefined') {
+        window.location.href = COGNITO_LOGIN_URL;
+      }
+    }
+
+    // STEP 2: Initialize tsParticles
+    tsParticles.load("tsparticles", {
+      background: { color: { value: "transparent" } },
+      particles: {
+        number: { value: 80 },
+        color: { value: ["#2563EB", "#4f46e5", "#818CF8"] },
+        opacity: { value: { min: 0.2, max: 0.45 } },
+        size: { value: { min: 1, max: 2.5 } },
+        links: {
+          enable: true,
+          color: "#2563EB",
+          opacity: 0.15,
+          distance: 150
+        },
+        move: {
+          enable: true,
+          speed: 0.8,
+          outModes: "bounce"
+        }
+      },
+      interactivity: {
+        events: {
+          onHover: {
+            enable: true,
+            mode: "grab"
+          }
+        },
+        modes: {
+          grab: {
+            distance: 180,
+            links: { opacity: 0.4 }
+          }
+        }
+      }
+    });
+  </script>
+  <script src="index_script.js"></script>
 </body>
+
 </html>
