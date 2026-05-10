@@ -187,7 +187,7 @@ td {
   padding: 0.75rem 0.9rem;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-left: 3px solid #4F46E5;
+  border-left: 3px solid #3b82f6;
   border-radius: 0.6rem;
   font-size: 12.5px;
   color: #475569;
@@ -213,12 +213,12 @@ td {
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  background: #EEF2FF;
+  background: #DBEAFE;
   border: 1px solid #E0E7FF;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #4F46E5;
+  color: #3b82f6;
   font-size: 12px;
   flex-shrink: 0;
 }
@@ -232,7 +232,7 @@ td {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #4F46E5;
+  color: #3b82f6;
 }
 .ai-feedback.ai-issue .ai-label { color: #EF4444; }
 
@@ -301,12 +301,12 @@ td {
   color: #64748B;
 }
 .page-btn:hover:not(:disabled) {
-  border-color: #4F46E5;
-  color: #4F46E5;
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 .page-btn.active {
-  background: #4F46E5;
-  border-color: #4F46E5;
+  background: #3b82f6;
+  border-color: #3b82f6;
   color: #fff;
 }
 .page-btn:disabled { opacity: 0.4; cursor: default; }
@@ -338,12 +338,12 @@ td {
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: #EEF2FF;
+  background: #DBEAFE;
   border: 1px solid #E0E7FF;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #4F46E5;
+  color: #3b82f6;
   font-size: 13px;
 }
 

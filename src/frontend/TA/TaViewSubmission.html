@@ -33,7 +33,7 @@
             brand: {
               50:  '#F0F4FA',
               100: '#E0E9F4',
-              500: '#4F46E5',
+              500: '#3b82f6',
               800: '#1E293B',
               900: '#0F172A',
             },
@@ -56,7 +56,17 @@
     }
   </script>
 
-  <link rel="stylesheet" href="TaViewSubmission_style.css" />
+    <style>
+      .btn-primary-gradient {
+        background: linear-gradient(180deg, #60a5fa 0%, #2562eb 100%) !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+        color: #fff !important;
+      }
+      .btn-primary-gradient:hover {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+      }
+    </style>
+    <link rel="stylesheet" href="TaViewSubmission_style.css" />
 </head>
 
 <!-- Same grid layout as Dashboard: navbar (64px) + subnav (48px) + content -->
@@ -171,7 +181,7 @@
       <!-- ── Lab Header ── -->
       <div class="flex items-start justify-between gap-4 fade-in">
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
             <i class="ph-fill ph-flask"></i>
           </div>
           <div>
@@ -222,7 +232,7 @@
       </div>
 
       <!-- ── Accent divider (matches Figma top bar) ── -->
-      <div class="h-0.5 w-full rounded-full bg-gradient-to-r from-brand-500 via-indigo-400 to-transparent fade-in" style="animation-delay:.1s"></div>
+      <div class="h-0.5 w-full rounded-full bg-gradient-to-r from-brand-500 via-blue-400 to-transparent fade-in" style="animation-delay:.1s"></div>
 
       <!-- ── Lab Description ── -->
       <section class="bg-layout-surface rounded-xl border border-layout-border shadow-sm p-6 fade-in" style="animation-delay:.12s">
@@ -255,7 +265,7 @@
         </table>
 
         <!-- Pass Criteria Banner -->
-        <div class="m-4 rounded-lg bg-indigo-50 border border-indigo-100 p-4 flex items-center gap-3">
+        <div class="m-4 rounded-lg bg-blue-50 border border-blue-100 p-4 flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-brand-500 bg-opacity-10 flex items-center justify-center flex-shrink-0">
             <i class="ph-fill ph-shield-check text-brand-500 text-base"></i>
           </div>
@@ -338,7 +348,7 @@
             </div>
 
             <!-- Download All -->
-            <button onclick="handleDownloadAll()" class="bg-brand-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors">
+            <button onclick="handleDownloadAll()" class="btn-primary-gradient text-white px-4 py-2 rounded-lg text-btn flex items-center gap-2 transition-colors">
               <i class="ph-bold ph-download-simple text-sm"></i> Download All
             </button>
           </div>

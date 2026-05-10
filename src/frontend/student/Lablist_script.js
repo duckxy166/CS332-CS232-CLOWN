@@ -119,8 +119,8 @@ function renderLabs() {
             <div class="flex items-center gap-4 w-full">
                 <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl
                     ${lab.status === 'PASSED' ? 'bg-status-successBg text-status-success' :
-                      lab.status === 'FAILED' ? 'bg-status-errorBg text-status-error' :
-                      lab.status === 'PENDING' ? 'bg-status-warningBg text-status-warning' : 'bg-layout-bg text-gray-400'}">
+                lab.status === 'FAILED' ? 'bg-status-errorBg text-status-error' :
+                    lab.status === 'PENDING' ? 'bg-status-warningBg text-status-warning' : 'bg-layout-bg text-gray-400'}">
                     <i class="ph-fill ph-file-text"></i>
                 </div>
                 <div>
@@ -133,7 +133,8 @@ function renderLabs() {
                 ${renderStatusUI(lab)}
             </div>
         </div>
-    `;}).join('');
+    `;
+    }).join('');
 }
 
 /**
@@ -170,7 +171,7 @@ function renderStatusUI(lab) {
         default:
             return `
                 <span class="text-p2 font-bold text-gray-400 bg-layout-bg px-3 py-1 rounded-lg uppercase tracking-wider whitespace-nowrap">Not Submitted</span>
-                <button type="button" onclick="window.location.href='submissionPage.html?labID=${labParam}&classID=${classParam}'" class="px-8 py-2.5 bg-brand-500 text-white rounded-lg text-btn hover:bg-indigo-600 transition-all shadow-sm whitespace-nowrap">Submit Lab</button>
+                <button type="button" onclick="window.location.href='submissionPage.html?labID=${labParam}&classID=${classParam}'" class="px-8 py-2.5 btn-primary-gradient text-white rounded-lg text-btn transition-all whitespace-nowrap">Submit Lab</button>
             `;
     }
 }
@@ -182,9 +183,9 @@ function filterLabs(type) {
     currentFilter = type;
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
-        const isTarget = (type === 'ALL' && btn.innerText.includes('All')) || 
-                         btn.innerText.toUpperCase().includes(type);
-        
+        const isTarget = (type === 'ALL' && btn.innerText.includes('All')) ||
+            btn.innerText.toUpperCase().includes(type);
+
         if (isTarget) {
             btn.classList.add('active', 'bg-brand-900', 'text-white');
             btn.classList.remove('text-gray-500', 'hover:bg-gray-50');

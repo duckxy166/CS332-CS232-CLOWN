@@ -238,16 +238,16 @@ function updateSetupProgress() {
   ];
   const done  = steps.filter(s => s.done).length;
   const pct   = Math.round((done / steps.length) * 100);
-  const color = pct === 100 ? '#059669' : '#4F46E5';
+  const color = pct === 100 ? '#059669' : '#3b82f6';
 
   const bar    = document.getElementById('setupBar');
   const pctEl  = document.getElementById('setupPct');
   const stepsEl = document.getElementById('setupSteps');
-  if (bar)    { bar.style.width = `${pct}%`; bar.style.background = color; }
-  if (pctEl)  { pctEl.textContent = `${pct}%`; pctEl.style.color = color; }
+  if (bar)    { bar.style.width = `${pct}%`; bar.style.background = 'linear-gradient(90deg, #34d399, #16a34a)'; }
+  if (pctEl)  { pctEl.textContent = `${pct}%`; pctEl.style.color = '#16a34a'; }
   if (stepsEl) {
     stepsEl.innerHTML = steps.map(s =>
-      `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:${s.done ? '#10B981' : '#94A3B8'}">`+
+      `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:${s.done ? '#16a34a' : '#94A3B8'}">`+
       `<i class="ph-fill ${s.done ? 'ph-check-circle' : 'ph-circle'}" style="font-size:12px;"></i>${s.key}</span>`
     ).join('');
   }

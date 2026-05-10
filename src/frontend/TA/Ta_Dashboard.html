@@ -31,7 +31,7 @@
               brand: {
                 50: '#F0F4FA',
                 100: '#E0E9F4',
-                500: '#4F46E5', // Purple-ish primary
+                500: '#3b82f6',
                 800: '#1E293B',
                 900: '#0F172A', // Dark nav background
               },
@@ -52,6 +52,17 @@
         }
       }
     </script>
+    <style>
+      /* ── Primary gradient buttons ── */
+      .btn-primary-gradient {
+        background: linear-gradient(180deg, #60a5fa 0%, #2562eb 100%) !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+        color: #fff !important;
+      }
+      .btn-primary-gradient:hover {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+      }
+    </style>
 </head>
 <body class="bg-layout-bg font-sans text-brand-800 m-0 p-0 h-screen grid grid-rows-[64px_48px_1fr]">
 
@@ -221,7 +232,7 @@
                     <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
                     <input type="text" id="searchInput" placeholder="Search class or lab..." class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-layout-border bg-layout-surface focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-p1 shadow-sm">
                 </div>
-                <button onclick="window.location.href='Ta_CreateLab.html'" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 shadow-sm transition-colors cursor-pointer">
+                <button onclick="window.location.href='Ta_CreateLab.html'" class="btn-primary-gradient bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-lg text-btn flex items-center gap-2 transition-colors cursor-pointer">
                     <i class="ph-bold ph-plus-circle"></i> New Lab
                 </button>
             </div>

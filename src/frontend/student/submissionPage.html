@@ -43,7 +43,7 @@
             'btn': ['14px', { lineHeight: '1',   fontWeight: '700' }],
           },
           colors: {
-            brand:  { 50:'#F0F4FA', 100:'#E0E9F4', 500:'#4F46E5', 600:'#4338CA', 800:'#1E293B', 900:'#0F172A' },
+            brand:  { 50:'#F0F4FA', 100:'#E0E9F4', 500:'#3b82f6', 600:'#1d4ed8', 800:'#1E293B', 900:'#0F172A' },
             layout: { bg:'#F8FAFC', surface:'#FFFFFF', border:'#E2E8F0' },
             status: { success:'#10B981', successBg:'#ECFDF5', error:'#EF4444', errorBg:'#FEF2F2', warning:'#F59E0B', warningBg:'#FFFBEB' }
           }
@@ -51,6 +51,16 @@
       }
     }
   </script>
+    <style>
+      .btn-primary-gradient {
+        background: linear-gradient(180deg, #60a5fa 0%, #2562eb 100%) !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+        color: #fff !important;
+      }
+      .btn-primary-gradient:hover {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+      }
+    </style>
   <link rel="stylesheet" href="submissionPage_style.css" />
 </head>
 
@@ -158,12 +168,12 @@
         <div class="lab-header-wrap flex items-center justify-between gap-4 w-full">
           <!-- Left: icon + title -->
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-brand-500 flex items-center justify-center text-2xl flex-shrink-0">
               <i class="ph-fill ph-package"></i>
             </div>
             <div>
               <div class="flex items-center gap-2 mb-1">
-                <span class="bg-indigo-50 text-brand-500 text-p2 font-bold px-2.5 py-0.5 rounded-md tracking-wide" data-lab-subject>—</span>
+                <span class="bg-blue-50 text-brand-500 text-p2 font-bold px-2.5 py-0.5 rounded-md tracking-wide" data-lab-subject>—</span>
                 <span class="text-p2 text-gray-400 font-medium">Active Assignment</span>
               </div>
               <h1 class="text-h3 font-bold text-brand-900 leading-tight" data-lab-name>—</h1>
@@ -185,7 +195,7 @@
 
         <!-- LEFT: Instructions -->
         <div class="bg-layout-surface rounded-xl border border-layout-border shadow-sm overflow-hidden fade-in" style="animation-delay:.06s">
-          <div class="h-0.5 w-full bg-gradient-to-r from-brand-500 via-indigo-400 to-transparent"></div>
+          <div class="h-0.5 w-full bg-gradient-to-r from-brand-500 via-blue-400 to-transparent"></div>
           <div class="p-6">
             <h2 class="flex items-center gap-2 text-p2 font-bold text-gray-400 uppercase tracking-widest mb-5">
               <i class="ph-fill ph-book-open-text text-brand-500 text-sm"></i> Lab Instructions
@@ -226,7 +236,7 @@
 
             <!-- Drop zone -->
             <div id="dropZone"
-              ondragover="event.preventDefault();this.style.borderColor='#4F46E5';this.style.background='#EEF2FF'"
+              ondragover="event.preventDefault();this.style.borderColor='#3b82f6';this.style.background='#DBEAFE'"
               ondragleave="this.style.borderColor='#CBD5E1';this.style.background='#FAFBFC'"
               ondrop="handleDrop(event)"
               style="border:2px dashed #CBD5E1;border-radius:12px;min-height:185px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;background:#FAFBFC">
@@ -264,7 +274,7 @@
 
             <!-- Submit inside the card -->
             <button id="submitBtn" onclick="handleSubmit()"
-              class="w-full mt-4 bg-brand-500 hover:bg-indigo-600 text-white px-5 py-3 rounded-lg text-btn flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer">
+              class="w-full mt-4 btn-primary-gradient text-white px-5 py-3 rounded-lg text-btn flex items-center justify-center gap-2 transition-colors cursor-pointer">
               <i class="ph-bold ph-paper-plane-tilt text-sm"></i>
               Submit Lab Evidence
             </button>

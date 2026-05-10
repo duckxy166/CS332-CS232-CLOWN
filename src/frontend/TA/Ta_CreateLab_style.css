@@ -10,9 +10,9 @@
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --brand:       #4F46E5;
-  --brand-hover: #4338CA;
-  --brand-soft:  #EEF2FF;
+  --brand:       #3b82f6;
+  --brand-hover: #1d4ed8;
+  --brand-soft:  #DBEAFE;
   --surface:     #FFFFFF;
   --border:      #E2E8F0;
   --bg:          #F8FAFC;
@@ -208,7 +208,7 @@
 }
 .weight-input-wrap input:focus {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(79,70,229,.10);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.10);
 }
 .weight-input-wrap span { color: var(--gray-400); font-size: 13px; }
 
@@ -239,9 +239,10 @@
   border-radius: 50%;
   transition: transform .2s;
 }
-.toggle input:checked + .slider { background: var(--success); }
+.toggle input:checked + .slider { background: linear-gradient(90deg, #60a5fa, #2562eb); box-shadow: 0 2px 8px rgba(59,130,246,0.4); }
 .toggle input:checked + .slider::before { transform: translateX(16px); }
-.toggle.toggle-indigo input:checked + .slider { background: #4f46e5; }
+.toggle.toggle-indigo input:checked + .slider { background: linear-gradient(90deg, #60a5fa, #2562eb); box-shadow: 0 2px 8px rgba(59,130,246,0.4); }
+.toggle-green input:checked + .slider { background: #10B981 !important; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4) !important; }
 .toggle.mandatory input:checked + .slider { background: #EF4444; }
 
 /* ── KEYWORD INPUT — underline only ── */
@@ -258,7 +259,7 @@
   transition: border-color 0.2s ease;
 }
 .keyword-input:focus {
-  border-bottom: 2px solid #4f46e5;
+  border-bottom: 2px solid #3b82f6;
 }
 .keyword-input::placeholder {
   color: #9CA3AF;
